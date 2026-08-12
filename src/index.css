@@ -1,0 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap");
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+/* Compact spacing for short viewports (e.g. 1366x768 laptops) */
+@custom-variant short (@media (max-height: 820px));
+
+@font-face {
+  font-family: "TachyonW00-Regular";
+  src:
+    url("/fonts/TachyonW00-Regular.woff2") format("woff2"),
+    url("/fonts/TachyonW00-Regular.woff") format("woff"),
+    url("/fonts/TachyonW00-Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "WinnerSans-CondBold";
+  /* Copied from this machine's installed copy (was only a system font,
+     registered under HKCU\...\Fonts as "Winner Sans Cond Bold (TrueType)" —
+     not previously a file in the repo). Embedding the actual file here
+     means every visitor sees it, not just machines that happen to have it
+     installed locally, which system-font-name matching alone would not do. */
+  src: url("/fonts/WinnerSans-CondBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  /* named "night" (not "base") so it can't shadow the text-base font-size utility */
+  --color-night: #150c05;
+  --color-amber-deep: #3a1c05;
+  --color-glow: #c85a12;
+  --color-accent-from: #ff7a1a;
+  --color-accent-to: #ffb300;
+  --color-body-light: #e5e5e5;
+  --color-body-dim: #cfcfcf;
+  --color-status-green: #22c55e;
+  --color-glass-border: rgba(255, 255, 255, 0.15);
+
+  /* Motion curves. The stock CSS easings are too weak to read as intentional —
+     these are the strong variants used for every transition on the site so
+     the whole page shares one motion personality. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --font-sans: "Manrope", sans-serif;
+  /* Squared technical face — preloader wordmark, counters, and data labels */
+  --font-mono-tech: "Chakra Petch", "Archivo Black", sans-serif;
+  /* Montserrat ExtraBold (800) for headings everywhere except the Home
+     page hero's main headline, which keeps the original display font via
+     font-heading-hero below. */
+  --font-heading: "Montserrat", "Inter", "Archivo Black", sans-serif;
+  --font-heading-hero: "TachyonW00-Regular", "Archivo Black", sans-serif;
+
+  --animate-scroll-cue: scroll-cue 2.2s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  --animate-dot-glow: dot-glow 2s ease-in-out infinite;
+
+  /* Light travelling down the hero's scroll indicator */
+  @keyframes scroll-cue {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(200%);
+    }
+  }
+
+  --animate-node-breathe: node-breathe 2.6s ease-in-out infinite;
+  --animate-marquee: marquee var(--duration, 40s) linear infinite;
+
+  /* Translates by exactly one duplicated set's width (100% / sets), not the
+     whole multi-copy track — otherwise the last stretch of the cycle scrolls
+     past blank space (nothing left in the track) before snapping back. */
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% / var(--sets, 6)));
+    }
+  }
+
+  @keyframes dot-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 0px rgba(34, 197, 94, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 8px 4px rgba(34, 197, 94, 0.6);
+    }
+  }
+
+  /* Idle ambient glow for workflow nodes — separate from the framer-driven
+     pulse-arrival flash so the two animations don't fight over box-shadow */
+  @keyframes node-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0px rgba(255, 122, 26, 0);
+    }
+    50% {
+      box-shadow: 0 0 14px 2px rgba(255, 122, 26, 0.28);
+    }
+  }
+}
+
+/* Lenis owns scroll position now — native smooth-scroll would fight it, and
+   `scroll-behavior: smooth` on <html> makes Lenis's own scrollTo stutter. */
+html {
+  scroll-behavior: auto;
+}
+
+
+/* Hide the scrollbar on the horizontal filter-chip row while keeping it scrollable */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #000000;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Site-wide heading treatment — bold, all caps. Scoped to the .font-heading
+   utility class only, so the hero's separate font-heading-hero class (and
+   its font) is untouched. */
+.font-heading {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* ── Motion primitives ───────────────────────────────────────────────────── */
+
+/* Applied to <html> by SmoothScroll until the preloader hands off, so nothing
+   below the fold can flash into view before the reveal plays. */
+html.is-loading body {
+  overflow: hidden;
+}
+
+/* Split-text reveal. Each line gets a clipping mask and the words inside slide
+   up out of it — the mask is what makes it read as "typeset" rather than a
+   plain fade. GSAP animates .split-word; these are just the resting styles. */
+.split-line {
+  /* inline-block (not block) so each word masks itself and the heading still
+     wraps naturally at any width — a per-line mask would need measurement and
+     would break on resize. */
+  display: inline-block;
+  overflow: hidden;
+  /* overflow:hidden moves an inline-block's baseline to its bottom margin
+     edge, which drops the word below the line; bottom alignment cancels it. */
+  vertical-align: bottom;
+  /* Descenders (g, y, p) sit below the baseline and get clipped by the mask
+     without a little room; the negative margin keeps the leading unchanged. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.split-word {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* Pressable elements. Instant physical feedback beats any entrance animation —
+   160ms ease-out is the window where a press still feels like a press. */
+.pressable {
+  transition: transform 160ms var(--ease-out-strong);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Hover lifts are gated behind a real pointer: on touch, :hover latches after
+   a tap and the element stays stuck in its hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift {
+    transition:
+      transform 320ms var(--ease-out-expo),
+      border-color 320ms var(--ease-out-expo),
+      box-shadow 320ms var(--ease-out-expo);
+  }
+  .hover-lift:hover {
+    transform: translateY(-6px);
+  }
+}
+
+/* Sweep of light that crosses a card on hover. clip-path/translate only, so it
+   never triggers layout. */
+.sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.13) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  transition: transform 900ms var(--ease-out-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sheen:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* Grain — a single tiled SVG noise plate over the whole page. Cheap, and it
+   stops the big gradient washes from banding on 8-bit displays. */
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+}
+
+/* Reduced motion: fewer and gentler, not zero. Opacity still carries meaning
+   (things appearing/leaving), so only movement is stripped out. */
+@media (prefers-reduced-motion: reduce) {
+  .split-word,
+  .hover-lift:hover,
+  .pressable:active {
+    transform: none !important;
+  }
+  .sheen::after {
+    display: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

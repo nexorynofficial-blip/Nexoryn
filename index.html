@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Nexoryn — Where Automation Meets Ambition."
+    />
+    <title>Nexoryn — Where Automation Meets Ambition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Anton&family=Chakra+Petch:wght@500;600;700&family=Unbounded:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Site base colour as the very first paint, so there's no white flash
+         between the browser's default canvas and React mounting.
+         Deliberately NOT the preloader's orange: if the app ever fails to
+         mount, that background is all the user sees, and an orange screen
+         looks like the preloader hung forever with no way to tell. Dark just
+         reads as a page still loading. -->
+    <style>
+      html {
+        background: #150c05;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
