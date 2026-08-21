@@ -14,6 +14,9 @@ import PortfolioPage from "./pages/PortfolioPage";
 import CaseStudyPage from "./pages/CaseStudyPage";
 import ReviewsPage from "./pages/ReviewsPage";
 import ContactPage from "./pages/ContactPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
+import CookiePolicyPage from "./pages/CookiePolicyPage";
 import { SiteBackground } from "./components/SiteBackground";
 
 function AppRoutes() {
@@ -31,6 +34,9 @@ function AppRoutes() {
       <Route path="/portfolio/:slug" element={<CaseStudyPage />} />
       <Route path="/reviews" element={<ReviewsPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="/cookie-policy" element={<CookiePolicyPage />} />
     </Routes>
   );
 }

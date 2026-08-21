@@ -141,6 +141,36 @@ body {
   text-transform: uppercase;
 }
 
+/* Chrome/Safari paint autofilled fields with an opaque yellow/white
+   background that ignores background-color entirely — this is the standard
+   workaround: an absurdly long background-color transition delay defeats it,
+   and the inset box-shadow repaints the same tint FloatingField.jsx already
+   uses (bg-white/[0.04]) so an autofilled field looks identical to one the
+   visitor typed into by hand. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.04) inset;
+  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.04) inset;
+  transition: background-color 600000s ease-in-out 0s;
+}
+
+/* Shared glass morphism for cards, panels, and form boxes */
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.58);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+
 /* ── Motion primitives ───────────────────────────────────────────────────── */
 
 /* Applied to <html> by SmoothScroll until the preloader hands off, so nothing

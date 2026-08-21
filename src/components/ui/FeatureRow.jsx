@@ -1,7 +1,7 @@
 export function FeatureRow({ icon, title, description }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-accent-to">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl glass-panel text-accent-to">
         {icon}
       </div>
       <div>

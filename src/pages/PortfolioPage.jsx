@@ -34,6 +34,8 @@ const INDUSTRIES = [
   "Education",
   "Retail",
   "Manufacturing",
+  "Sports & Recruitment",
+  "Nonprofit & Advocacy",
 ];
 
 // Icon shown in each card's header tile, chosen by the project's service type
@@ -46,7 +48,7 @@ const SERVICE_ICON = {
 function ProjectCard({ project }) {
   const Icon = SERVICE_ICON[project.service] ?? Workflow;
   return (
-    <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur-xl">
+    <article className="glass-panel relative overflow-hidden rounded-3xl backdrop-blur-xl">
       {/* Soft orange inner glow from the left edge (opposite the image),
           reading as an ambient light behind the text content */}
       <div
@@ -196,7 +198,7 @@ export default function PortfolioPage() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
   useEffect(() => {
-    document.title = "Portfolio — Nexoryn";
+    document.title = "Portfolio - Nexoryn";
     window.scrollTo(0, 0);
   }, []);
 
@@ -241,7 +243,7 @@ export default function PortfolioPage() {
       {/* Shared section backdrop overlays (shader is site-wide in SiteBackground) */}
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
           {/* Header */}
           <div className="mx-auto max-w-5xl text-center">
             <SplitText

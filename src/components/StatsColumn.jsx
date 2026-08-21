@@ -1,9 +1,9 @@
 import { EncryptedText } from "./ui/EncryptedText";
 
 const STATS = [
-  { label: ["Project", "Delivered"], value: "120+" },
-  { label: ["Client", "Retention"], value: "98%" },
-  { label: ["Country", "Served"], value: "24+" },
+  { label: ["Project", "Delivered"], value: "200+" },
+  { label: ["Client", "Retention"], value: "87%" },
+  { label: ["Country", "Served"], value: "25+" },
 ];
 
 export default function StatsColumn({ className = "" }) {

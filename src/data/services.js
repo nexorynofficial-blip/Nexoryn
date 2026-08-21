@@ -6,7 +6,7 @@ export const SERVICE_CATEGORIES = [
     overviewIcon: "Zap",
     overview: {
       heading: "Automation",
-      body: "Manual, repetitive work is the single biggest drag on a growing team. We replace that busywork with workflow automations, voice agents, and AI agents that just run — so your business operates faster and more consistently without a bigger headcount.",
+      body: "Manual, repetitive work is the single biggest drag on a growing team. We replace that busywork with workflow automations, voice agents, and AI agents that just run, so your business operates faster and more consistently without a bigger headcount.",
     },
     subServices: [
       {
@@ -14,7 +14,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Workflow",
         name: "Workflow Automation",
         description:
-          "We build the automations that sit quietly behind your CRM, inbox, and internal tools — routing leads, updating records, generating documents, and keeping reports current without anyone lifting a finger. Every workflow is mapped to how your team actually operates today, then rebuilt so the repetitive steps disappear and only the decisions that need a human reach a human. It's less about replacing your stack and more about making every tool in it finally talk to each other.",
+          "We build the automations that sit quietly behind your CRM, inbox, and internal tools, routing leads, updating records, generating documents, and keeping reports current without anyone lifting a finger. Every workflow is mapped to how your team actually operates today, then rebuilt so the repetitive steps disappear and only the decisions that need a human reach a human. It's less about replacing your stack and more about making every tool in it finally talk to each other.",
         howWeWork: [
           "We map your current process end-to-end before writing a single automation.",
           "We identify every repetitive, rule-based step that doesn't need human judgment.",
@@ -53,7 +53,7 @@ export const SERVICE_CATEGORIES = [
         icon: "PhoneCall",
         name: "Voice AI Agents",
         description:
-          "Our voice agents answer the phone the way your best front-desk hire would — every time, at any hour, without a hold queue. They qualify leads, book appointments directly into your calendar, and resolve the support questions that don't need a human, escalating the ones that do with full context already attached. Built on natural-sounding speech models and wired straight into your CRM and scheduling tools, they close the gap between a ringing phone and a booked, qualified call.",
+          "Our voice agents answer the phone the way your best front-desk hire would, every time, at any hour, without a hold queue. They qualify leads, book appointments directly into your calendar, and resolve the support questions that don't need a human, escalating the ones that do with full context already attached. Built on natural-sounding speech models and wired straight into your CRM and scheduling tools, they close the gap between a ringing phone and a booked, qualified call.",
         howWeWork: [
           "We script the agent's conversation flow around your actual sales or support process.",
           "We train it on your FAQs, policies, and product details.",
@@ -90,7 +90,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Bot",
         name: "LLM Workflows & AI Agents",
         description:
-          "For work that needs judgment rather than a fixed script, we build custom AI agents on top of Claude and GPT-class models — systems that read, reason, and act instead of just generating text. That includes research agents that synthesize across sources, contract-review agents that flag risk before a human sees the document, and multi-agent systems where several specialized agents hand work off to each other, all grounded in your own data so answers are specific to your business.",
+          "For work that needs judgment rather than a fixed script, we build custom AI agents on top of Claude and GPT-class models, systems that read, reason, and act instead of just generating text. That includes research agents that synthesize across sources, contract-review agents that flag risk before a human sees the document, and multi-agent systems where several specialized agents hand work off to each other, all grounded in your own data so answers are specific to your business.",
         howWeWork: [
           "We identify the judgment-based tasks eating the most senior hours.",
           "We ground the agent in your own documents, data, and policies.",
@@ -131,7 +131,7 @@ export const SERVICE_CATEGORIES = [
     overviewIcon: "Code2",
     overview: {
       heading: "Web Development",
-      body: "A slow or generic website costs you leads before a conversation even starts. We build fast, scalable, conversion-focused sites and web applications tailored to how your business actually operates — production-ready and wired into the tools running behind the scenes.",
+      body: "A slow or generic website costs you leads before a conversation even starts. We build fast, scalable, conversion-focused sites and web applications tailored to how your business actually operates, production-ready and wired into the tools running behind the scenes.",
     },
     subServices: [
       {
@@ -178,7 +178,7 @@ export const SERVICE_CATEGORIES = [
         icon: "AppWindow",
         name: "Web Applications",
         description:
-          "Custom SaaS products, internal tools, and dashboards built around real business logic — logins, permissions, data models, and workflows that a static page can't handle. We build these to scale with your user base from day one, with the same attention to performance and usability as a consumer-facing product.",
+          "Custom SaaS products, internal tools, and dashboards built around real business logic, logins, permissions, data models, and workflows that a static page can't handle. We build these to scale with your user base from day one, with the same attention to performance and usability as a consumer-facing product.",
         howWeWork: [
           "We map the core user flows and data model before writing any code.",
           "We architect the app to scale from your first users to your thousandth.",
@@ -217,7 +217,7 @@ export const SERVICE_CATEGORIES = [
         icon: "ShoppingCart",
         name: "E-Commerce Development",
         description:
-          "Storefronts built for conversion — fast product pages, a checkout with the friction stripped out, and a design that can flex as your catalog grows. We connect every store to the inventory, fulfillment, and payment tools you already use, so the storefront is the easy part and the backend keeps running itself.",
+          "Storefronts built for conversion, fast product pages, a checkout with the friction stripped out, and a design that can flex as your catalog grows. We connect every store to the inventory, fulfillment, and payment tools you already use, so the storefront is the easy part and the backend keeps running itself.",
         howWeWork: [
           "We audit your current catalog, checkout flow, and drop-off points.",
           "We design product and category pages built to convert, not just display.",
@@ -292,7 +292,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Gauge",
         name: "Performance & SEO Optimization",
         description:
-          "A slow site loses visitors and search ranking before anyone reads a word of copy. We audit and rebuild the technical foundation — load times, Core Web Vitals, crawlability — so the site both performs and gets found, without a full redesign if you don't need one.",
+          "A slow site loses visitors and search ranking before anyone reads a word of copy. We audit and rebuild the technical foundation, load times, Core Web Vitals, crawlability, so the site both performs and gets found, without a full redesign if you don't need one.",
         howWeWork: [
           "We run a full technical and performance audit of the existing site.",
           "We fix Core Web Vitals issues at the code and asset level.",
@@ -328,7 +328,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Plug",
         name: "API & Third-Party Integrations",
         description:
-          "Most sites need to talk to other systems — payment processors, CRMs, analytics, internal tools. We build and maintain the integrations that keep data flowing between them accurately, so nothing has to be re-entered by hand or reconciled manually at the end of the month.",
+          "Most sites need to talk to other systems, payment processors, CRMs, analytics, internal tools. We build and maintain the integrations that keep data flowing between them accurately, so nothing has to be re-entered by hand or reconciled manually at the end of the month.",
         howWeWork: [
           "We map every system that needs to send or receive data from your site.",
           "We build secure, authenticated connections to each third-party API.",
@@ -368,7 +368,7 @@ export const SERVICE_CATEGORIES = [
     overviewIcon: "PenTool",
     overview: {
       heading: "Graphic Design",
-      body: "Good design isn't decoration — it's the visual shorthand that tells people whether to trust you before they've read a word. We build brand identities, marketing assets, and interfaces that make your business look as sharp as it runs.",
+      body: "Good design isn't decoration, it's the visual shorthand that tells people whether to trust you before they've read a word. We build brand identities, marketing assets, and interfaces that make your business look as sharp as it runs.",
     },
     subServices: [
       {
@@ -376,9 +376,9 @@ export const SERVICE_CATEGORIES = [
         icon: "Palette",
         name: "Brand Identity & Logo Design",
         description:
-          "A full identity system — logo, color palette, typography, and usage guidelines — built to hold up across everything from a business card to a billboard. We design identities meant to be used, not just admired once and shelved, with clear rules so your brand stays consistent no matter who's applying it.",
+          "A full identity system, logo, color palette, typography, and usage guidelines, built to hold up across everything from a business card to a billboard. We design identities meant to be used, not just admired once and shelved, with clear rules so your brand stays consistent no matter who's applying it.",
         howWeWork: [
-          "We start with discovery — your positioning, audience, and competitors.",
+          "We start with discovery: your positioning, audience, and competitors.",
           "We explore multiple logo and identity directions before narrowing in.",
           "We build out a full color, type, and usage system around the chosen direction.",
           "We stress-test the identity across real applications, not just a mockup.",
@@ -414,7 +414,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Megaphone",
         name: "Marketing & Social Media Design",
         description:
-          "Ongoing creative for the channels where your brand shows up daily — social posts, ad creatives, and campaign assets that stay on-brand without slowing down your posting schedule. We build reusable templates and one-off campaign pieces so your marketing team never has to start from a blank canvas.",
+          "Ongoing creative for the channels where your brand shows up daily, social posts, ad creatives, and campaign assets that stay on-brand without slowing down your posting schedule. We build reusable templates and one-off campaign pieces so your marketing team never has to start from a blank canvas.",
         howWeWork: [
           "We audit your current channels and content cadence.",
           "We build a flexible template system for recurring post types.",
@@ -491,7 +491,7 @@ export const SERVICE_CATEGORIES = [
         icon: "Package",
         name: "Print & Packaging Design",
         description:
-          "Business cards, brochures, and packaging that hold up in the physical world, not just on a screen. We design for the realities of print production — bleed, stock, finishing — so what you approve on screen is exactly what shows up when it's printed.",
+          "Business cards, brochures, and packaging that hold up in the physical world, not just on a screen. We design for the realities of print production: bleed, stock, finishing, so what you approve on screen is exactly what shows up when it's printed.",
         howWeWork: [
           "We confirm print specs, materials, and finishing early, not after design.",
           "We design with real bleed, trim, and safe-zone requirements in mind.",
@@ -533,7 +533,7 @@ export const SERVICE_CATEGORIES = [
           "We start from the story or message the piece needs to land.",
           "We storyboard key moments before animating anything.",
           "We design a slide or motion system consistent with your brand.",
-          "We animate with restraint — motion that supports content, not noise.",
+          "We animate with restraint: motion that supports content, not noise.",
           "We deliver in every format and aspect ratio you need.",
         ],
         whatYouGet: [
@@ -544,7 +544,7 @@ export const SERVICE_CATEGORIES = [
           "Slide templates your team can reuse",
           "Kinetic typography for key messaging",
           "Icon and illustration animation",
-          "Multi-format exports — 16:9, 9:16, 1:1",
+          "Multi-format exports: 16:9, 9:16, 1:1",
           "Sound-synced motion where relevant",
           "Source project files",
           "Revisions through final cut",

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import nexorynFullLogo from "../assets/nexoryn-full-logo.png";
+import { ContactShortcuts } from "./ui/ContactShortcuts";
 
-// Links get a real href wherever a matching page exists; Socials, Legal, and
-// FAQ have no real destination yet (no social accounts or legal pages exist
-// on the site) so those stay inert placeholders.
+// Links get a real href wherever a matching page/account exists; FAQ has no
+// dedicated page yet (it lives inline on the Contact page) so it stays an
+// inert placeholder.
 const COLUMNS = [
   {
     heading: "Company",
@@ -17,11 +18,36 @@ const COLUMNS = [
   },
   {
     heading: "Socials",
-    links: ["Facebook", "Instagram", "Behance", "Threads", "LinkedIn"],
+    links: [
+      {
+        label: "Facebook",
+        href: "https://www.facebook.com/profile.php?id=61592138765653",
+        external: true,
+      },
+      {
+        label: "Instagram",
+        href: "https://www.instagram.com/nexoryn.ai/",
+        external: true,
+      },
+      {
+        label: "Threads",
+        href: "https://www.threads.com/@nexoryn.ai",
+        external: true,
+      },
+      {
+        label: "LinkedIn",
+        href: "https://www.linkedin.com/company/nexoryn-ai/",
+        external: true,
+      },
+    ],
   },
   {
     heading: "Legal",
-    links: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+    links: [
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms of Service", href: "/terms-of-service" },
+      { label: "Cookie Policy", href: "/cookie-policy" },
+    ],
   },
   {
     heading: "Get Started",
@@ -59,9 +85,19 @@ export default function Footer() {
                   {col.links.map((link) => {
                     const label = typeof link === "string" ? link : link.label;
                     const href = typeof link === "string" ? null : link.href;
+                    const external = typeof link === "object" && link.external;
                     return (
                       <li key={label}>
-                        {href ? (
+                        {external ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-white/60 transition-colors duration-300 hover:text-orange-400"
+                          >
+                            {label}
+                          </a>
+                        ) : href ? (
                           <Link
                             to={href}
                             className="text-sm text-white/60 transition-colors duration-300 hover:text-orange-400"
@@ -85,6 +121,10 @@ export default function Footer() {
             ))}
           </div>
         </div>
+
+        {/* Same component, same spot, on every page — Call Us / WhatsApp Us
+            live in the footer instead of floating over page content. */}
+        <ContactShortcuts className="mt-12" />
       </div>
 
       {/* Giant faint decorative wordmark, clipped so only the top of the

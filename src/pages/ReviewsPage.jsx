@@ -9,7 +9,7 @@ import Footer from "../components/Footer";
 
 export default function ReviewsPage() {
   useEffect(() => {
-    document.title = "Reviews — Nexoryn";
+    document.title = "Reviews - Nexoryn";
   }, []);
 
   return (
@@ -17,7 +17,7 @@ export default function ReviewsPage() {
       {/* Shared section backdrop overlays (shader is site-wide in SiteBackground) */}
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
           {/* Header */}
           <div className="mx-auto max-w-4xl text-center">
             <SplitText
@@ -37,7 +37,7 @@ export default function ReviewsPage() {
               animateOnMount
               className="mt-5 text-lg font-light leading-relaxed text-body-dim"
             >
-              Real feedback from the teams who no longer do the busywork — open
+              Real feedback from the teams who no longer do the busywork, open
               any review to read the full story.
             </Reveal>
           </div>

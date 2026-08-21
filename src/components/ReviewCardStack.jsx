@@ -1,45 +1,40 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/Avatar";
 import { GlowCard } from "./ui/GlowCard";
+import { DefaultAvatar } from "./ui/DefaultAvatar";
 import { ShowMoreButton } from "./ui/ShowMoreButton";
 import { useOutsideClick } from "../hooks/useOutsideClick";
 import { REVIEWS } from "../data/reviews";
+import { truncate } from "../lib/truncate";
 
-// "Show more" pagination: start with 3 rows (9 cards) and reveal the next
-// batch of 9 on each click until the whole dataset is shown.
 const INITIAL_COUNT = 9;
 const BATCH = 9;
-
-const initials = (name) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("");
-
-function truncate(text, wordCount) {
-  const words = text.split(" ");
-  if (words.length <= wordCount) return text;
-  return `${words.slice(0, wordCount).join(" ")}…`;
-}
 
 export function ReviewCardStack() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [active, setActive] = useState(null);
+  const [anchorRect, setAnchorRect] = useState(null);
   const modalRef = useRef(null);
+  const cardRefs = useRef({});
 
   const visible = REVIEWS.slice(0, visibleCount);
   const allShown = visibleCount >= REVIEWS.length;
   const revealMore = () =>
     setVisibleCount((c) => Math.min(c + BATCH, REVIEWS.length));
 
-  useOutsideClick(modalRef, () => setActive(null));
+  useOutsideClick(modalRef, () => {
+    setActive(null);
+    setAnchorRect(null);
+  });
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === "Escape") setActive(null);
+      if (event.key === "Escape") {
+        setActive(null);
+        setAnchorRect(null);
+      }
     }
     if (active) {
       document.body.style.overflow = "hidden";
@@ -53,67 +48,81 @@ export function ReviewCardStack() {
     };
   }, [active]);
 
+  const openReview = (review) => {
+    const el = cardRefs.current[review.id];
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      // Anchor the expanded box to the card's own top-left corner — it should
+      // grow outward from exactly where it already sits, never jump to a
+      // recalculated position.
+      const maxWidth = Math.min(512, window.innerWidth - rect.left - 16);
+      const maxHeight = window.innerHeight - rect.top - 24;
+
+      setAnchorRect({
+        top: rect.top,
+        left: rect.left,
+        width: Math.max(rect.width, Math.min(320, maxWidth)),
+        maxWidth,
+        maxHeight,
+      });
+    }
+    setActive(review);
+  };
+
+  const closeReview = () => {
+    setActive(null);
+    setAnchorRect(null);
+  };
+
   return (
     <div className="w-full">
-      {/* Three per row on desktop, collapsing to two then one on smaller
-          breakpoints. Each card is a tight vertical stack — no forced
-          equal-height. */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {visible.map((review) => (
-          <motion.div
-            key={review.id}
-            layout
-            layoutId={`card-${review.id}`}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <GlowCard
-              glowColor="orange"
-              customSize
-              className="w-full border-orange-500/20! bg-black! p-4! shadow-[0_0_20px_rgba(255,122,26,0.08)]!"
+        {visible.map((review) => {
+          // While this review's modal is open, its grid card is hidden (kept
+          // in the grid so nothing reflows, just invisible) so the box the
+          // user sees expanding is unambiguous — there's exactly one on
+          // screen at a time, at exactly one position.
+          const isOpen = active?.id === review.id;
+          return (
+            <motion.div
+              key={review.id}
+              ref={(el) => {
+                cardRefs.current[review.id] = el;
+              }}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: isOpen ? 0 : 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              style={isOpen ? { visibility: "hidden" } : undefined}
             >
-              {/* Name/avatar, address, review snippet, and button stacked
-                  with an exact 10px gap between each, so the card hugs its
-                  content with no extra dead space. */}
-              <div className="flex flex-col gap-[10px]">
-                <div className="flex items-center gap-3">
-                  <motion.div layoutId={`avatar-${review.id}`}>
-                    <Avatar className="h-11 w-11">
-                      <AvatarImage src={review.avatar} alt={review.name} />
-                      <AvatarFallback>{initials(review.name)}</AvatarFallback>
-                    </Avatar>
-                  </motion.div>
-                  <div className="min-w-0">
-                    <motion.h3
-                      layoutId={`title-${review.id}`}
-                      className="truncate font-sans text-base font-semibold text-white"
-                    >
-                      {review.name}
-                    </motion.h3>
+              <GlowCard glowColor="orange" customSize className="w-full p-4!">
+                <div className="flex flex-col gap-[10px]">
+                  <div className="flex items-center gap-3">
+                    <DefaultAvatar className="h-11 w-11" />
+                    <div className="min-w-0">
+                      <h3 className="truncate font-sans text-base font-semibold text-white">
+                        {review.name}
+                      </h3>
+                    </div>
                   </div>
+
+                  <p className="truncate text-sm text-white/50">{review.location}</p>
+
+                  <p className="text-sm leading-relaxed text-white/60">
+                    {truncate(review.text, 22)}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => openReview(review)}
+                    className="w-fit rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-5 py-2 text-sm font-bold text-white transition duration-300 hover:scale-105 hover:brightness-110"
+                  >
+                    Read Full Review
+                  </button>
                 </div>
-
-                <p className="truncate text-sm text-white/50">{review.location}</p>
-
-                <motion.p
-                  layoutId={`text-${review.id}`}
-                  className="text-sm leading-relaxed text-white/60"
-                >
-                  {truncate(review.text, 22)}
-                </motion.p>
-
-                <button
-                  type="button"
-                  onClick={() => setActive(review)}
-                  className="w-fit rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-5 py-2 text-sm font-bold text-white transition duration-300 hover:scale-105 hover:brightness-110"
-                >
-                  Read Full Review
-                </button>
-              </div>
-            </GlowCard>
-          </motion.div>
-        ))}
+              </GlowCard>
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="mt-10 flex justify-center">
@@ -124,25 +133,46 @@ export function ReviewCardStack() {
         )}
       </div>
 
-      <AnimatePresence>
-        {active && (
-          <>
-            <motion.div
-              key="overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm"
-            />
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {createPortal(
+        <AnimatePresence>
+          {active && anchorRect && (
+            <>
+              <motion.div
+                key="overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm"
+                onClick={closeReview}
+              />
               <motion.div
                 ref={modalRef}
-                layoutId={`card-${active.id}`}
-                className="relative w-full max-w-lg rounded-3xl border border-orange-500/20 bg-black/50 p-8 shadow-[0_0_30px_rgba(255,122,26,0.12)] backdrop-blur-xl"
+                // Rendered via a portal straight onto <body> on purpose: any
+                // transformed ancestor (Framer Motion leaves a lingering
+                // `transform: translateY(0px)` on the entrance wrapper even
+                // at rest) creates a new CSS containing block, which silently
+                // turns `position: fixed` into "fixed relative to that
+                // ancestor" instead of the real viewport — and the resulting
+                // offset grows with scroll depth. Escaping to <body> makes
+                // this immune to that regardless of where this component is
+                // mounted.
+                initial={{ opacity: 0, scale: 0.55 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.55 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                className="glass-panel fixed z-[100] overflow-y-auto rounded-3xl p-6 shadow-[0_0_30px_rgba(255,122,26,0.12)] md:p-8"
+                style={{
+                  top: anchorRect.top,
+                  left: anchorRect.left,
+                  width: anchorRect.width,
+                  maxWidth: anchorRect.maxWidth,
+                  maxHeight: anchorRect.maxHeight,
+                  transformOrigin: "top left",
+                }}
               >
                 <button
                   type="button"
-                  onClick={() => setActive(null)}
+                  onClick={closeReview}
                   aria-label="Close review"
                   className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white transition duration-300 hover:bg-white/20"
                 >
@@ -150,36 +180,26 @@ export function ReviewCardStack() {
                 </button>
 
                 <div className="flex items-center gap-4">
-                  <motion.div layoutId={`avatar-${active.id}`}>
-                    <Avatar className="h-14 w-14">
-                      <AvatarImage src={active.avatar} alt={active.name} />
-                      <AvatarFallback>{initials(active.name)}</AvatarFallback>
-                    </Avatar>
-                  </motion.div>
+                  <DefaultAvatar className="h-14 w-14" />
                   <div className="min-w-0">
-                    <motion.h3
-                      layoutId={`title-${active.id}`}
-                      className="font-heading text-2xl text-white"
-                    >
+                    <h3 className="font-heading text-2xl text-white">
                       {active.name}
-                    </motion.h3>
+                    </h3>
                     <p className="mt-0.5 truncate text-sm text-white/50">
-                      {active.role}
+                      {active.location}
                     </p>
                   </div>
                 </div>
 
-                <motion.p
-                  layoutId={`text-${active.id}`}
-                  className="mt-5 text-base font-light leading-relaxed text-body-dim"
-                >
+                <p className="mt-5 text-base font-light leading-relaxed text-body-dim">
                   {active.text}
-                </motion.p>
+                </p>
               </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   );
 }

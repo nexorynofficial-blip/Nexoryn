@@ -1,48 +1,21 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import StickyCardStack from "./ui/StickyCardStack";
+import { CardStack } from "./ui/CardStack";
 import SplitText from "./ui/SplitText";
+import { getProjectBySlug } from "../data/projects";
 
-// Trimmed to 4: one from each discipline plus a second automation project,
-// since the site's one real case study is itself an automation build.
-const PROJECTS = [
-  {
-    common: "Fintech Onboarding Automation",
-    binomial: "Workflow Automation",
-    photo: {
-      url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop&q=80",
-      text: "Analytics dashboard on a laptop screen",
-      by: "Nexoryn Studio",
-    },
-  },
-  {
-    common: "E-Commerce Storefront Rebuild",
-    binomial: "Web Development",
-    photo: {
-      url: "https://images.unsplash.com/photo-1487014679447-9f8336841d58?w=1200&auto=format&fit=crop&q=80",
-      text: "Code editor on a dark laptop screen",
-      by: "Nexoryn Studio",
-    },
-  },
-  {
-    common: "Brand Identity — Aurora Coffee Co.",
-    binomial: "Brand & Graphic Design",
-    photo: {
-      url: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&auto=format&fit=crop&q=80",
-      text: "Branding mockups laid out on a desk",
-      by: "Nexoryn Studio",
-    },
-  },
-  {
-    common: "Support Ticket Auto-Triage",
-    binomial: "Workflow Automation",
-    photo: {
-      url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80",
-      text: "Team reviewing analytics on screens",
-      by: "Nexoryn Studio",
-    },
-  },
+// Fixed home-page teaser: always exactly 3 automation projects + 2 web
+// development projects, regardless of how many more get added to PROJECTS
+// later. The full set is always available on the /portfolio grid page.
+const FEATURED_SLUGS = [
+  "ai-customer-support-chatbot",
+  "personalized-cold-email-outreach",
+  "intelligent-content-repurposing-approval-workflow",
+  "aurum-luxury-ecommerce-platform",
+  "analytics-hub-saas-dashboard-platform",
 ];
+
+const FEATURED_PROJECTS = FEATURED_SLUGS.map(getProjectBySlug).filter(Boolean);
 
 export default function Portfolio() {
   return (
@@ -56,7 +29,20 @@ export default function Portfolio() {
         </SplitText>
       </div>
 
-      <StickyCardStack projects={PROJECTS} />
+      <div className="mx-auto mt-8 max-w-[1400px] px-4 md:px-10">
+        <CardStack
+          items={FEATURED_PROJECTS.map((project) => ({
+            id: project.slug,
+            title: project.title,
+            description: project.service,
+            imageSrc: project.photo,
+            href: `/portfolio/${project.slug}`,
+          }))}
+          cardWidth={520}
+          cardHeight={380}
+          showDots
+        />
+      </div>
 
       <div className="relative z-10 mt-[30px] flex justify-center">
         <Link

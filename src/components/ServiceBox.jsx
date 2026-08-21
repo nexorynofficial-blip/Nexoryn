@@ -141,7 +141,7 @@ function InfoPanel({ icon: OverviewIcon, heading, body }) {
         initial="hidden"
         whileInView="show"
         viewport={viewportOnce}
-        className="relative mt-5 min-h-[240px] w-full flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black/25 backdrop-blur-xl"
+        className="relative mt-5 min-h-[240px] w-full flex-1 overflow-hidden rounded-2xl glass-panel backdrop-blur-xl"
       >
         <div
           aria-hidden="true"
@@ -232,7 +232,7 @@ export function ServiceBox({ gooeyId, serviceName, overviewIcon, overview, subSe
   const activeId = tabs[activeIndex].id;
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-xl md:p-8">
+    <div className="rounded-3xl glass-panel p-6 backdrop-blur-xl md:p-8">
       <GooeyFilter id={gooeyId} strength={9} />
 
       <motion.div

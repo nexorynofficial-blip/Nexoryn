@@ -17,14 +17,14 @@ const SERVICES = [
     id: "web-development",
     title: "WEB DEVELOPMENT",
     description:
-      "Fast, modern sites and web apps built to convert — production-ready, fully responsive, and wired straight into your automations from day one.",
+      "Fast, modern sites and web apps built to convert, production-ready, fully responsive, and wired straight into your automations from day one.",
     pills: ["Website Design & Development", "Web Applications", "E-Commerce Development"],
   },
   {
     id: "graphic-design",
     title: "GRAPHIC DESIGN",
     description:
-      "Brand identities, interfaces, and campaign assets that make your business look as sharp as it runs — designed to be used, not just admired once.",
+      "Brand identities, interfaces, and campaign assets that make your business look as sharp as it runs, designed to be used, not just admired once.",
     pills: ["Brand Identity & Logo Design", "UI/UX & Product Design", "Marketing & Social Media Design"],
   },
 ];
@@ -56,13 +56,15 @@ function ServiceCard({ service }) {
             </li>
           ))}
         </ul>
-        <Link
-          to="/services"
-          className="group/link mt-8 inline-flex items-center justify-center gap-2 rounded-full border border-accent-from px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.1em] text-accent-from transition duration-300 hover:bg-accent-from hover:text-black"
-        >
-          Explore This Service in Detail
-          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/link:translate-x-1" />
-        </Link>
+        <div className="mt-auto flex justify-center pt-8">
+          <Link
+            to={`/services?category=${service.id}`}
+            className="group/link inline-flex items-center justify-center gap-1.5 rounded-full border border-accent-from px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-accent-from transition duration-300 hover:bg-accent-from hover:text-black"
+          >
+            Explore This Service in Detail
+            <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover/link:translate-x-1" />
+          </Link>
+        </div>
       </div>
     </div>
   );

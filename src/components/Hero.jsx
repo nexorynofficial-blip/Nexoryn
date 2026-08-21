@@ -137,11 +137,10 @@ export default function Hero() {
               Where Automation Meets Ambition.
             </p>
             <p className="hero-body mt-10 max-w-md text-lg font-light leading-relaxed text-body-dim short:mt-5 lg:mt-[6vh] short:lg:mt-5">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry.
-              <br />
-              Lorem Ipsum has been the industry's standard dummy text ever
-              since 1966,
+              At Nexoryn, we build websites that convert and automation
+              systems that eliminate the repetitive work slowing businesses
+              down. We don't rely on templates or one-size-fits-all
+              solutions.
             </p>
           </div>
 

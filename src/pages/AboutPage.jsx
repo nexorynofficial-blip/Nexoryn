@@ -5,13 +5,12 @@ import { staggerContainer, blurFadeIn, viewportOnce } from "../lib/motion";
 import SplitText from "../components/ui/SplitText";
 import { SectionsBackground } from "../components/SectionsBackground";
 import { AboutGlobe } from "../components/AboutGlobe";
-import { useTilt3D } from "../hooks/useTilt3D";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import nexorynLogo from "../assets/nexoryn-logo.png";
 
 const INTRO_PARAGRAPH =
-  "Nexoryn brings automation, web development, and graphic design together under one roof, building systems custom-fit to how your business actually runs instead of generic templates. The result: less manual work, faster-moving operations, and a brand that looks as sharp as it performs.";
+  "At Nexoryn, we build websites that convert and automation systems that eliminate the repetitive work slowing businesses down. We don't rely on templates or one-size-fits-all solutions. Instead, we analyze how your business operates, identify inefficiencies, and create custom systems designed specifically for your workflow. Our goal is simple: help businesses save time, improve efficiency, and focus on growth by replacing manual processes with smarter, scalable solutions.";
 
 const MISSION_VISION = [
   {
@@ -31,30 +30,44 @@ const face = (id) =>
 
 const TEAM = [
   {
-    name: "Alex Rivera",
-    role: "Founder & Automation Lead",
+    name: "Waseem Farooq",
+    role: "Co Founder",
     photo: face("photo-1560250097-0b93528c311a"),
-    bio: "Oversees workflow automation and AI agent strategy across every engagement. Translates the day-to-day chaos of running a business into systems that run themselves, from lead intake to reporting. Focused on finding the highest-leverage process to automate first, then building outward from there.",
   },
   {
-    name: "Jordan Blake",
-    role: "Lead Web Developer",
+    name: "Abdul Ahad Khan",
+    role: "Co Founder",
     photo: face("photo-1519244703995-f4e0f30006d5"),
-    bio: "Designs and builds every website and web application Nexoryn ships, from marketing sites to full custom platforms. Prioritizes performance, scalability, and clean architecture over shortcuts that break under real traffic. Works closely with clients so the finished build actually fits how their business runs.",
   },
   {
-    name: "Morgan Ellis",
-    role: "Creative Director",
+    name: "Akbar Khan",
+    role: "Co Founder",
     photo: face("photo-1573496359142-b8d87734a5a2"),
-    bio: "Leads brand identity and visual design work across every client touchpoint — logos, web design, and marketing assets. Focused on making sure a brand looks as sharp and considered as the systems running behind it. Keeps every visual choice tied back to how clients want to be perceived by their customers.",
   },
 ];
+
+function TeamCard({ photo, name, role }) {
+  return (
+    <motion.div
+      variants={blurFadeIn}
+      className="mx-auto flex w-full max-w-[380px] flex-col overflow-hidden rounded-2xl glass-panel p-6"
+    >
+      <div className="overflow-hidden rounded-xl">
+        <img src={photo} alt={name} className="aspect-[3/4] w-full object-cover" />
+      </div>
+      <h3 className="mt-4 font-heading text-lg tracking-tight text-white">
+        {name}
+      </h3>
+      <p className="mt-1 text-sm font-light text-white/50">{role}</p>
+    </motion.div>
+  );
+}
 
 function MissionVisionBox({ icon: Icon, heading, body }) {
   return (
     <motion.div
       variants={blurFadeIn}
-      className="rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-xl md:p-8"
+      className="rounded-3xl glass-panel p-6 backdrop-blur-xl md:p-8"
     >
       <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-orange-400/20 bg-orange-500/10">
         <Icon className="h-5 w-5 text-orange-400" />
@@ -69,37 +82,9 @@ function MissionVisionBox({ icon: Icon, heading, body }) {
   );
 }
 
-function TeamCard({ photo, name, role, bio }) {
-  const tilt = useTilt3D();
-
-  return (
-    <div style={{ perspective: 1000 }}>
-      <motion.div
-        variants={blurFadeIn}
-        ref={tilt.ref}
-        onMouseMove={tilt.onMouseMove}
-        onMouseLeave={tilt.onMouseLeave}
-        style={tilt.style}
-        className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-xl"
-      >
-        <div className="overflow-hidden rounded-2xl">
-          <img src={photo} alt={name} className="aspect-[2/3] w-full object-cover" />
-        </div>
-        <h3 className="mt-5 font-heading text-lg tracking-tight text-white">
-          {name}
-        </h3>
-        <p className="mt-1 text-sm font-light text-white/50">{role}</p>
-        <p className="mt-3 text-sm font-light leading-relaxed text-body-dim">
-          {bio}
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
 export default function AboutPage() {
   useEffect(() => {
-    document.title = "About — Nexoryn";
+    document.title = "About - Nexoryn";
     window.scrollTo(0, 0);
   }, []);
 
@@ -107,7 +92,7 @@ export default function AboutPage() {
     <>
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:px-[300px] lg:pt-40">
           {/* Section 1 — Agency Intro */}
           <motion.div
             variants={staggerContainer}
@@ -117,7 +102,7 @@ export default function AboutPage() {
           >
             <motion.div
               variants={blurFadeIn}
-              className="mx-auto w-full max-w-[300px] sm:max-w-[420px] lg:mx-0 lg:max-w-[540px]"
+              className="mx-auto w-full max-w-[300px] sm:max-w-[420px] lg:mx-0 lg:ml-[-40px] lg:max-w-[540px]"
             >
               <img src={nexorynLogo} alt="Nexoryn logo" className="h-auto w-full" />
             </motion.div>
@@ -128,7 +113,7 @@ export default function AboutPage() {
                 delay={0.15}
                 className="mt-6 font-heading text-3xl leading-tight tracking-tight text-white md:text-4xl"
               >
-                WHAT NEXORYN IS ABOUT
+                WHAT <span className="text-accent-from">NEXORYN</span> IS ABOUT
               </SplitText>
               <p className="mt-5 text-lg font-light leading-relaxed text-body-dim">
                 {INTRO_PARAGRAPH}
@@ -146,7 +131,8 @@ export default function AboutPage() {
           >
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <SplitText className="mt-6 font-heading text-3xl leading-tight tracking-tight text-white md:text-5xl">
-                Our Mission & Our Vision
+                Our <span className="text-accent-from">Mission</span> & Our{" "}
+                <span className="text-accent-from">Vision</span>
               </SplitText>
             </div>
 
@@ -167,11 +153,11 @@ export default function AboutPage() {
           >
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <SplitText className="mt-6 font-heading text-3xl leading-tight tracking-tight text-white md:text-5xl">
-                Our Team
+                Our <span className="text-accent-from">Team</span>
               </SplitText>
             </div>
 
-            <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+            <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {TEAM.map((member) => (
                 <TeamCard key={member.name} {...member} />
               ))}
@@ -188,14 +174,14 @@ export default function AboutPage() {
               className="order-2 lg:order-1"
             >
               <SplitText className="mt-6 font-heading text-3xl leading-tight tracking-tight text-white md:text-5xl">
-                Global Reach
+                Global <span className="text-accent-from">Reach</span>
               </SplitText>
               <motion.p
                 variants={blurFadeIn}
                 className="mt-5 text-lg font-light leading-relaxed text-body-dim"
               >
                 Nexoryn works with clients across multiple countries and time
-                zones — automation and design don't stop at a border.
+                zones, automation and design don't stop at a border.
               </motion.p>
             </motion.div>
 

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
@@ -9,16 +10,36 @@ import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 
 export default function ServicesPage() {
+  const [searchParams] = useSearchParams();
+  // Set by the Hero card's service tags and the home Services section's
+  // "Explore This Service in Detail" buttons — links straight into a single
+  // category instead of always landing on the top of the page.
+  const targetCategory = searchParams.get("category");
+
   useEffect(() => {
-    document.title = "Services — Nexoryn";
-    window.scrollTo(0, 0);
-  }, []);
+    document.title = "Services - Nexoryn";
+
+    if (targetCategory) {
+      // Wait a frame so the page has laid out before measuring its position.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`service-${targetCategory}`);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 96;
+          window.scrollTo({ top: y, behavior: "smooth" });
+          return;
+        }
+        window.scrollTo(0, 0);
+      });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [targetCategory]);
 
   return (
     <>
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
           {/* Header */}
           <div className="mx-auto max-w-5xl text-center">
             <SplitText
@@ -46,9 +67,15 @@ export default function ServicesPage() {
             {SERVICE_CATEGORIES.map((category, i) => (
               <motion.div
                 key={category.id}
+                id={`service-${category.id}`}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 * i, ease: "easeOut" }}
+                className={
+                  targetCategory === category.id
+                    ? "rounded-3xl ring-2 ring-accent-from/60 ring-offset-4 ring-offset-night transition-shadow duration-700"
+                    : ""
+                }
               >
                 <ServiceBox
                   gooeyId={category.gooeyId}

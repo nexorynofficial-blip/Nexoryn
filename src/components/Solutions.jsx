@@ -10,7 +10,7 @@ const SOLUTION_POINTS = [
     icon: <RefreshIcon />,
     title: "Automated data entry & syncing",
     description:
-      "Every record captured, cleaned, and synced across your stack — hands-free.",
+      "Every record captured, cleaned, and synced across your stack, hands-free.",
   },
   {
     icon: <ZapIcon />,
@@ -52,7 +52,7 @@ export default function Solutions() {
             className="mt-5 max-w-lg text-lg font-light leading-relaxed text-body-dim"
           >
             Nexoryn designs automation systems that plug into the tools you
-            already use — so data moves itself, leads hear back instantly, and
+            already use, so data moves itself, leads hear back instantly, and
             your team gets its week back.
           </Reveal>
           <Reveal stagger={0.09} y={28} className="mt-10 flex flex-col gap-6">

@@ -25,7 +25,7 @@ export function GlowCard({
   return (
     <div
       style={inlineStyles}
-      className={`${customSize ? "" : `${sizeMap[size]} aspect-[3/4]`} relative grid grid-rows-[1fr_auto] gap-4 rounded-3xl border border-white/10 bg-white/[0.05] p-4 shadow-[0_1rem_2rem_-1rem_black] backdrop-blur-xl transition-colors duration-300 hover:border-orange-400/30 ${className}`}
+      className={`${customSize ? "" : `${sizeMap[size]} aspect-[3/4]`} glass-panel relative grid grid-rows-[1fr_auto] gap-4 rounded-3xl p-4 shadow-[0_1rem_2rem_-1rem_black] transition-colors duration-300 hover:border-orange-400/30 ${className}`}
     >
       {children}
     </div>

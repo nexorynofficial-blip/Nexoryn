@@ -43,7 +43,7 @@ function TrendChip({ after, upWhenAfter = true, beforeText, afterText }) {
 
 function StatTile({ label, value, unit, trend }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <div className="rounded-2xl glass-panel p-4">
       <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50">
         {label}
       </p>
@@ -191,7 +191,7 @@ export default function BeforeAfterCard({ className = "" }) {
   return (
     <div
       ref={cardRef}
-      className={`group relative w-full max-w-2xl rounded-3xl border bg-white/[0.05] p-7 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] md:p-9 ${
+      className={`group relative w-full max-w-2xl rounded-3xl glass-panel p-7 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] md:p-9 ${
         after
           ? "border-accent-from/40 shadow-[0_0_40px_rgba(255,122,26,0.4)] hover:shadow-[0_0_55px_rgba(255,122,26,0.5)]"
           : "border-red-500/40 shadow-[0_0_40px_rgba(239,68,68,0.35)] hover:shadow-[0_0_55px_rgba(239,68,68,0.45)]"

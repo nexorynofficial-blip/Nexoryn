@@ -134,7 +134,7 @@ export const CircularGallery = forwardRef(function CircularGallery(
                     team cards. */}
                 <div
                   style={{ backfaceVisibility: "hidden" }}
-                  className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl transition-colors duration-300 hover:border-orange-400/30"
+                  className="group glass-panel flex h-full w-full flex-col overflow-hidden rounded-2xl p-4 shadow-2xl transition-colors duration-300 hover:border-orange-400/30"
                 >
                   <div className="overflow-hidden rounded-xl">
                     <img

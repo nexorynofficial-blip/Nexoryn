@@ -1,17 +1,53 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
-import { ChevronDown, CheckCircle2 } from "lucide-react";
+import {
+  ChevronDown,
+  CheckCircle2,
+  X,
+  Monitor,
+  RefreshCw,
+  Maximize2,
+  ExternalLink,
+} from "lucide-react";
 import { staggerContainer, blurFadeIn } from "../lib/motion";
 import { gsap, useGSAP } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
+import { useOutsideClick } from "../hooks/useOutsideClick";
 import { SectionsBackground } from "../components/SectionsBackground";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Reveal from "../components/ui/Reveal";
 import { getProjectBySlug } from "../data/projects";
 
-const TABS = ["Overview", "Results", "Tech Stack", "Scalability & Flexibility"];
+const BASE_TABS = ["Overview", "Results", "Tech Stack", "Scalability & Flexibility"];
+
+// Graphic-design case studies (identified by the presence of `designProcess`)
+// use a fixed 6-tab structure instead — no technical breakdown, no tech
+// stack, and the visual gallery is its own tab rather than living inside
+// Overview.
+const DESIGN_TABS = [
+  "Overview",
+  "Design Process",
+  "Key Features",
+  "Use Cases",
+  "Customization & Scalability",
+  "Gallery",
+];
+
+// The final tab depends on what a project actually has to show — automation
+// projects get real workflow screenshots, but a web-dev project with no
+// deployment yet has nothing to screenshot, so it gets an (empty-for-now)
+// Live Preview tab instead. Computed per-project rather than a fixed global
+// list so each case study only shows the tab it can actually back with data.
+function tabsForCaseStudy(caseStudy) {
+  if (caseStudy.designProcess) return DESIGN_TABS;
+  if (caseStudy.gallery) return [...BASE_TABS, "Gallery"];
+  if (caseStudy.screenshots) return [...BASE_TABS, "Screenshots"];
+  if (caseStudy.livePreview) return [...BASE_TABS, "Live Preview"];
+  return BASE_TABS;
+}
 
 /* ── Small shared pieces ─────────────────────────────────────────────── */
 
@@ -21,7 +57,7 @@ const TABS = ["Overview", "Results", "Tech Stack", "Scalability & Flexibility"];
 // the tab bar + tab content. The nested `inner` cards below are already
 // translucent themselves; if this were as sheer as a typical glass card too,
 // the shader backdrop would bleed through both layers and wash them out.
-const OUTER = "rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl";
+const OUTER = "rounded-3xl glass-panel backdrop-blur-xl";
 
 // Inner panel — the cards nested inside an OUTER box (problem/solution,
 // workflow, stat tiles, tool cards, etc). A thin orange-tinted outline all
@@ -90,10 +126,10 @@ function Sidebar({ project }) {
 
 /* ── Tab bar ──────────────────────────────────────────────────────────── */
 
-function TabBar({ active, onSelect }) {
+function TabBar({ tabs, active, onSelect }) {
   return (
     <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab === active;
         return (
           <button
@@ -345,6 +381,173 @@ function OverviewTab({ overview }) {
   );
 }
 
+/* ── Design tab 1: Overview (Problem, Solution) ──────────────────────────── */
+
+function DesignOverviewTab({ overview }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <ProblemSolution problem={overview.problem} solution={overview.solution} />
+    </div>
+  );
+}
+
+/* ── Design tab 1b: Gallery ───────────────────────────────────────────────
+   Its own tab rather than inline on Overview, laid out in a large single-
+   or two-column grid (not the 3-column masonry) so each design is shown
+   big enough to actually read the work. */
+
+function DesignGalleryTab({ gallery }) {
+  const [active, setActive] = useState(null);
+
+  return (
+    <>
+      <div
+        className={`grid grid-cols-1 gap-6 ${
+          gallery.length > 1 ? "md:grid-cols-2" : ""
+        }`}
+      >
+        {gallery.map((shot) => (
+          <button
+            key={shot.src}
+            type="button"
+            onClick={() => setActive(shot)}
+            className={`${inner()} block w-full overflow-hidden rounded-2xl transition duration-300 hover:border-orange-400/60`}
+          >
+            <img
+              src={shot.src}
+              alt={shot.alt}
+              width={shot.width}
+              height={shot.height}
+              className="h-auto w-full"
+              loading="lazy"
+            />
+          </button>
+        ))}
+      </div>
+
+      <ScreenshotLightbox shot={active} onClose={() => setActive(null)} />
+    </>
+  );
+}
+
+/* ── Design tab 2: Design Process ────────────────────────────────────────
+   Input requirements → workflow → design engine processing → refinements
+   & QA. No numbered technical breakdown — that's automation-project only. */
+
+function DesignProcessTab({ designProcess }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className={`${inner()} rounded-2xl p-6 md:p-7`}>
+        <h3 className="font-heading text-lg text-accent-to">
+          Input Requirements
+        </h3>
+        <ul className="mt-4 flex flex-col gap-3">
+          {designProcess.input.map((line) => (
+            <li key={line} className="flex gap-3 text-sm leading-relaxed text-body-dim">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-from" />
+              {line}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <SolutionWorkflow steps={designProcess.workflow} />
+
+      <div className={`${inner()} rounded-2xl p-6 md:p-8`}>
+        <h3 className="font-heading text-lg text-accent-to">
+          Design Engine Processing
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-body-dim md:text-base">
+          {designProcess.engine}
+        </p>
+      </div>
+
+      <div className={`${inner()} rounded-2xl p-6 md:p-8`}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:divide-x md:divide-white/10">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent-to">
+              Refinements
+            </span>
+            <p className="mt-3 text-sm leading-relaxed text-body-dim">
+              {designProcess.refinements}
+            </p>
+          </div>
+          <div className="md:pl-6">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent-to">
+              Quality Assurance
+            </span>
+            <p className="mt-3 text-sm leading-relaxed text-body-dim">
+              {designProcess.qa}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Design tab 3: Key Features ──────────────────────────────────────────
+   Same card grid as the automation Results tab's feature grid, just
+   standalone since design case studies have no before/after/proof. */
+
+function KeyFeaturesTab({ items }) {
+  return (
+    <Reveal
+      stagger={0.08}
+      y={24}
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {items.map((feature) => (
+        <div key={feature.title} className={`${inner()} rounded-2xl p-5`}>
+          <div className="flex items-start gap-2.5">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent-from" />
+            <div>
+              <p className="font-heading text-sm text-white">
+                {feature.title}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-body-dim">
+                {feature.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </Reveal>
+  );
+}
+
+/* ── Design tab 4: Use Cases ──────────────────────────────────────────────
+   Same card grid as Key Features but numbered instead of check-marked, so
+   the two tabs read as distinct even though the layout is shared. */
+
+function UseCasesTab({ items }) {
+  return (
+    <Reveal
+      stagger={0.08}
+      y={24}
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {items.map((useCase, i) => (
+        <div key={useCase.title} className={`${inner()} rounded-2xl p-5`}>
+          <div className="flex items-start gap-2.5">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-orange-400/25 bg-orange-500/10 text-[10px] font-bold text-accent-to">
+              {i + 1}
+            </span>
+            <div>
+              <p className="font-heading text-sm text-white">
+                {useCase.title}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-body-dim">
+                {useCase.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </Reveal>
+  );
+}
+
 /* ── Tab 2: Results ───────────────────────────────────────────────────── */
 
 function ResultsTab({ results }) {
@@ -451,12 +654,10 @@ function TechStackTab({ techStack }) {
 
 /* ── Tab 4: Scalability & Flexibility ─────────────────────────────────── */
 
-function ScalabilityTab({ items }) {
+function ScalabilityTab({ items, heading = "Scalability & Flexibility" }) {
   return (
     <div className={`${inner()} rounded-2xl p-6 md:p-8`}>
-      <h3 className="font-heading text-lg text-accent-to">
-        Scalability &amp; Flexibility
-      </h3>
+      <h3 className="font-heading text-lg text-accent-to">{heading}</h3>
       <Reveal
         as="ul"
         stagger={0.05}
@@ -473,7 +674,7 @@ function ScalabilityTab({ items }) {
               <span className="font-heading text-sm text-white">
                 {item.title}
               </span>
-              {" — "}
+              {": "}
               {item.description}
             </span>
           </li>
@@ -483,17 +684,277 @@ function ScalabilityTab({ items }) {
   );
 }
 
+/* ── Tab 5: Screenshots ───────────────────────────────────────────────── */
+
+// A rigid grid leaves dead space next to any tile shorter than its row's
+// tallest neighbor — mixed portrait/landscape screenshots guarantee that.
+// CSS multi-column layout is real masonry instead: each tile just flows into
+// the next open spot in its column at its own natural (unmodified) aspect
+// ratio, so tiles pack tightly with no forced row-matching gaps.
+function ScreenshotsTab({ screenshots }) {
+  const [active, setActive] = useState(null);
+
+  return (
+    <>
+      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+        {screenshots.map((shot) => (
+          <button
+            key={shot.src}
+            type="button"
+            onClick={() => setActive(shot)}
+            className={`${inner()} mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl transition duration-300 hover:border-orange-400/60`}
+          >
+            <img
+              src={shot.src}
+              alt={shot.alt}
+              width={shot.width}
+              height={shot.height}
+              className="h-auto w-full"
+              loading="lazy"
+            />
+          </button>
+        ))}
+      </div>
+
+      <ScreenshotLightbox shot={active} onClose={() => setActive(null)} />
+    </>
+  );
+}
+
+// Portal straight onto <body>: this tab sits inside several ancestor
+// motion.div's that animate in with a filter/transform, and Framer leaves
+// that transform on the element (even at rest) once the animation settles —
+// any non-"none" transform on an ancestor turns a descendant's
+// `position: fixed` into "fixed relative to that ancestor" instead of the
+// real viewport. Escaping to <body> sidesteps that regardless of where this
+// tab is scrolled to.
+function ScreenshotLightbox({ shot, onClose }) {
+  const panelRef = useRef(null);
+  useOutsideClick(panelRef, onClose);
+
+  useEffect(() => {
+    if (!shot) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "auto";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [shot, onClose]);
+
+  return createPortal(
+    <AnimatePresence>
+      {shot && (
+        <motion.div
+          key="lightbox-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-6 md:p-12"
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute left-5 top-5 z-10 flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition duration-300 hover:bg-white/20"
+          >
+            <X className="h-4 w-4" />
+            Close
+          </button>
+
+          <motion.img
+            ref={panelRef}
+            key={shot.src}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            src={shot.src}
+            alt={shot.alt}
+            className="max-h-full max-w-full rounded-2xl object-contain shadow-[0_0_60px_rgba(0,0,0,0.6)]"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
+
+/* ── Tab 6: Live Preview ──────────────────────────────────────────────── */
+
+// `livePreview` on a caseStudy is either `true` (no deployment yet — shows
+// the "coming soon" placeholder) or the deployed site's URL (renders the
+// browser-chrome iframe embed below).
+function LivePreviewComingSoon() {
+  return (
+    <div
+      className={`${inner()} flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-2xl p-10 text-center`}
+    >
+      <div className="flex h-14 w-14 items-center justify-center rounded-full border border-orange-400/25 bg-orange-500/10 text-orange-400">
+        <Monitor className="h-6 w-6" />
+      </div>
+      <div>
+        <h3 className="font-heading text-lg text-white">
+          Live Preview Coming Soon
+        </h3>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-body-dim">
+          This project is still in development. Once it's deployed, an
+          interactive preview of the live site will appear here.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Browser-chrome window embedding the live deployed site. `key`-remounting
+// the iframe (via reloadCount) is the reload mechanism — iframes have no
+// imperative reload() API, and reassigning .src to itself is a no-op in most
+// browsers for same-URL loads.
+function LivePreviewEmbed({ url, siteName = "Live Site" }) {
+  const [reloadCount, setReloadCount] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const frameWrapRef = useRef(null);
+
+  const displayUrl = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  const handleReload = () => {
+    setLoaded(false);
+    setReloadCount((count) => count + 1);
+  };
+
+  const handleFullscreen = () => {
+    const el = frameWrapRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen?.();
+    }
+  };
+
+  return (
+    <div className={`${inner()} overflow-hidden rounded-2xl`}>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-accent-from/20 bg-white/[0.03] px-4 py-3 sm:px-5">
+        {/* Traffic-light dots — purely decorative browser-chrome flourish */}
+        <div className="flex items-center gap-1.5" aria-hidden="true">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
+          <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+        </div>
+
+        {/* URL bar */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-accent-from/25 bg-black/30 px-3.5 py-1.5">
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full bg-status-green"
+            aria-hidden="true"
+          />
+          <span className="truncate font-mono-tech text-xs text-body-dim sm:text-sm">
+            {displayUrl}
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleReload}
+            title="Reload preview"
+            aria-label="Reload preview"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-accent-from/25 text-body-dim transition-colors duration-200 hover:border-orange-400/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-to"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleFullscreen}
+            title="View fullscreen"
+            aria-label="View preview fullscreen"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-accent-from/25 text-body-dim transition-colors duration-200 hover:border-orange-400/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-to"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-accent-from to-accent-to px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-black transition duration-300 hover:scale-105 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-to"
+          >
+            Visit Live Site
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+
+      {/* Frame */}
+      <div
+        ref={frameWrapRef}
+        className="relative aspect-[16/10] w-full bg-night sm:aspect-[16/9]"
+      >
+        {!loaded && (
+          <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-body-dim">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Loading {siteName}…
+          </div>
+        )}
+        <iframe
+          key={reloadCount}
+          src={url}
+          title={`${siteName} — live preview`}
+          onLoad={() => setLoaded(true)}
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      </div>
+
+      {/* Some sites send X-Frame-Options / CSP headers that block embedding
+          entirely — JS can't detect that reliably across origins, so this
+          stays visible as a permanent escape hatch rather than trying to
+          guess when the frame failed. */}
+      <p className="border-t border-accent-from/20 bg-white/[0.02] px-4 py-2.5 text-center text-xs text-body-dim sm:px-5">
+        Preview not loading? The site may block embedded previews for
+        security —{" "}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-accent-to underline underline-offset-2 hover:text-white"
+        >
+          open it directly
+        </a>
+        .
+      </p>
+    </div>
+  );
+}
+
+function LivePreviewTab({ livePreview, siteName }) {
+  if (typeof livePreview === "string") {
+    return <LivePreviewEmbed url={livePreview} siteName={siteName} />;
+  }
+  return <LivePreviewComingSoon />;
+}
+
 /* ── Page ─────────────────────────────────────────────────────────────── */
 
 export default function CaseStudyPage() {
   const { slug } = useParams();
   const project = getProjectBySlug(slug);
-  const [activeTab, setActiveTab] = useState(TABS[0]);
+  const [activeTab, setActiveTab] = useState(BASE_TABS[0]);
 
   useEffect(() => {
     document.title = project
-      ? `${project.title} Case Study — Nexoryn`
-      : "Case Study — Nexoryn";
+      ? `${project.title} Case Study - Nexoryn`
+      : "Case Study - Nexoryn";
+    // Different projects can offer different trailing tabs (Screenshots vs
+    // Live Preview) — reset to Overview on navigation so switching projects
+    // never leaves activeTab pointing at a tab the new project doesn't have.
+    setActiveTab(BASE_TABS[0]);
   }, [project]);
 
   if (!project) {
@@ -513,12 +974,14 @@ export default function CaseStudyPage() {
   }
 
   const { caseStudy } = project;
+  const tabs = tabsForCaseStudy(caseStudy);
+  const isDesignCaseStudy = Boolean(caseStudy.designProcess);
 
   return (
     <>
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
           <motion.div
             variants={staggerContainer}
             initial="hidden"
@@ -546,7 +1009,7 @@ export default function CaseStudyPage() {
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
               className={`${OUTER} min-w-0 p-6 md:p-8`}
             >
-              <TabBar active={activeTab} onSelect={setActiveTab} />
+              <TabBar tabs={tabs} active={activeTab} onSelect={setActiveTab} />
 
               <div className="relative mt-6">
                 <AnimatePresence mode="wait">
@@ -557,17 +1020,57 @@ export default function CaseStudyPage() {
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    {activeTab === "Overview" && (
-                      <OverviewTab overview={caseStudy.overview} />
-                    )}
-                    {activeTab === "Results" && (
-                      <ResultsTab results={caseStudy.results} />
-                    )}
-                    {activeTab === "Tech Stack" && (
-                      <TechStackTab techStack={caseStudy.techStack} />
-                    )}
-                    {activeTab === "Scalability & Flexibility" && (
-                      <ScalabilityTab items={caseStudy.scalability} />
+                    {isDesignCaseStudy ? (
+                      <>
+                        {activeTab === "Overview" && (
+                          <DesignOverviewTab overview={caseStudy.overview} />
+                        )}
+                        {activeTab === "Gallery" && (
+                          <DesignGalleryTab gallery={caseStudy.gallery} />
+                        )}
+                        {activeTab === "Design Process" && (
+                          <DesignProcessTab designProcess={caseStudy.designProcess} />
+                        )}
+                        {activeTab === "Key Features" && (
+                          <KeyFeaturesTab items={caseStudy.keyFeatures} />
+                        )}
+                        {activeTab === "Use Cases" && (
+                          <UseCasesTab items={caseStudy.useCases} />
+                        )}
+                        {activeTab === "Customization & Scalability" && (
+                          <ScalabilityTab
+                            items={caseStudy.scalability}
+                            heading="Customization & Scalability"
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {activeTab === "Overview" && (
+                          <OverviewTab overview={caseStudy.overview} />
+                        )}
+                        {activeTab === "Results" && (
+                          <ResultsTab results={caseStudy.results} />
+                        )}
+                        {activeTab === "Tech Stack" && (
+                          <TechStackTab techStack={caseStudy.techStack} />
+                        )}
+                        {activeTab === "Scalability & Flexibility" && (
+                          <ScalabilityTab items={caseStudy.scalability} />
+                        )}
+                        {activeTab === "Screenshots" && (
+                          <ScreenshotsTab screenshots={caseStudy.screenshots} />
+                        )}
+                        {activeTab === "Gallery" && (
+                          <ScreenshotsTab screenshots={caseStudy.gallery} />
+                        )}
+                        {activeTab === "Live Preview" && (
+                          <LivePreviewTab
+                            livePreview={caseStudy.livePreview}
+                            siteName={project.title}
+                          />
+                        )}
+                      </>
                     )}
                   </motion.div>
                 </AnimatePresence>

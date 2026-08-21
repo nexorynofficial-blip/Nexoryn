@@ -1,14 +1,17 @@
 import { Phone, MessageCircle } from "lucide-react";
 
-const PHONE_DISPLAY = "+1 (555) 123-4567";
-const PHONE_HREF = "tel:+15551234567";
-const WHATSAPP_HREF = "https://wa.me/15551234567";
+const PHONE_DISPLAY = "0334-1236462";
+const PHONE_HREF = "tel:+923341236462";
+const WHATSAPP_HREF = "https://wa.me/923341236462";
 
-// Floating on desktop (bottom-right corner widget), a full-width sticky bar
-// on mobile — stays reachable no matter how far the page is scrolled.
-export function ContactShortcuts() {
+// Lives inline at the bottom-right of the footer (rendered once, from
+// Footer.jsx) rather than floating over page content on every route.
+export function ContactShortcuts({ className = "" }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-3 border-t border-white/10 bg-black/80 p-3 backdrop-blur-xl md:inset-x-auto md:bottom-6 md:right-6 md:flex-col md:items-stretch md:border-0 md:bg-transparent md:p-0">
+    <div
+      className={`flex flex-wrap items-center justify-center gap-3 md:justify-end ${className}`}
+    >
+
       <a
         href={PHONE_HREF}
         aria-label={`Call us at ${PHONE_DISPLAY}`}
