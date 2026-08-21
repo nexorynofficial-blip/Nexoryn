@@ -104,8 +104,9 @@ export default function Problems() {
   return (
     <section id="problems" className="relative scroll-mt-24 py-24 lg:py-32">
       <div className="relative mx-auto grid w-full max-w-[1400px] items-center gap-[60px] px-4 md:px-[80px] lg:grid-cols-2 lg:items-stretch">
-        {/* Text column */}
-        <div className="order-last lg:order-first">
+        {/* Text column — first in reading order on mobile (content before the
+            notification-feed UI); desktop keeps its own left/right split */}
+        <div className="lg:order-first">
           <SplitText className="mt-6 font-heading text-4xl leading-tight tracking-tight text-white md:text-5xl">
             Running a <span className="text-accent-from">business</span>{" "}
             shouldn't feel this{" "}
@@ -134,7 +135,7 @@ export default function Problems() {
         <Reveal
           y={40}
           duration={1.1}
-          className="relative order-first h-[560px] overflow-hidden px-1 pt-2 lg:order-last lg:h-auto [mask-image:linear-gradient(to_bottom,black_65%,transparent_98%)]"
+          className="relative h-[560px] overflow-hidden px-1 pt-2 lg:order-last lg:h-auto [mask-image:linear-gradient(to_bottom,black_65%,transparent_98%)]"
         >
           <AnimatedList
             items={FEED_ITEMS}

@@ -8,6 +8,42 @@ export const SERVICE_CATEGORIES = [
       heading: "Automation",
       body: "Manual, repetitive work is the single biggest drag on a growing team. We replace that busywork with workflow automations, voice agents, and AI agents that just run, so your business operates faster and more consistently without a bigger headcount.",
     },
+    // Mobile-only, consolidated view of this category — desktop keeps the
+    // full per-sub-service tabs (Workflow Automation / Voice AI Agents /
+    // LLM Workflows & AI Agents); mobile shows one shorter summary instead,
+    // naming those same three specialties in the description so nothing
+    // covered by the tabs is lost, just presented without tab navigation.
+    mobileSummary: {
+      description:
+        "We replace the repetitive, judgment-light work slowing your team down with systems that just run: workflow automations that connect your CRM, inbox, and internal tools; voice AI agents that answer calls and book appointments around the clock; and LLM-powered agents that handle research, document review, and other tasks that need real reasoning, not a fixed script. Every system plugs into the tools you already use.",
+      howWeWork: [
+        "We map your current process end-to-end before building anything.",
+        "We identify the repetitive or judgment-based steps costing you the most time.",
+        "We build on top of the tools you already use, not a replacement stack.",
+        "We test against real scenarios and edge cases before it touches live data.",
+        "We monitor every system post-launch and tune it as your process evolves.",
+      ],
+      whatYouGet: [
+        "Automated lead routing, follow-ups, and CRM updates",
+        "24/7 voice agent for calls, bookings, and support",
+        "Custom AI agents for research, review, and reporting",
+        "Document generation and data extraction",
+        "Calendar and appointment-booking automation",
+        "Human-in-the-loop checkpoints where it matters",
+        "Full run logs and audit trails",
+      ],
+      platforms: [
+        "HubSpot",
+        "Salesforce",
+        "Zapier",
+        "Slack",
+        "Twilio",
+        "Calendly",
+        "Claude",
+        "GPT-4",
+        "Google Workspace",
+      ],
+    },
     subServices: [
       {
         id: "workflow-automation",
@@ -132,6 +168,41 @@ export const SERVICE_CATEGORIES = [
     overview: {
       heading: "Web Development",
       body: "A slow or generic website costs you leads before a conversation even starts. We build fast, scalable, conversion-focused sites and web applications tailored to how your business actually operates, production-ready and wired into the tools running behind the scenes.",
+    },
+    // Mobile-only, consolidated view — desktop keeps all six sub-service
+    // tabs (Website Design & Development, Web Applications, E-Commerce,
+    // CMS & Headless Builds, Performance & SEO, API & Integrations); this
+    // summary names each of them so nothing is lost, just untabbed.
+    mobileSummary: {
+      description:
+        "From marketing sites and landing pages to full web applications, e-commerce storefronts, and CMS or headless setups your team can update without touching code, we build fast, production-ready sites wired into the tools running behind the scenes. That also covers the less visible work: performance and SEO optimization, and the API integrations that keep your site talking to your CRM, payment processor, and analytics accurately.",
+      howWeWork: [
+        "We start from your positioning and the action you want visitors to take.",
+        "We architect for real scale — data models, permissions, and integrations from day one.",
+        "We build fully responsive, accessible pages from a single codebase.",
+        "We optimize every asset, script, and API call for speed and reliability.",
+        "We hand off a site your team can actually run and update.",
+      ],
+      whatYouGet: [
+        "Custom-designed marketing sites and landing pages",
+        "Full web applications with logins, permissions, and dashboards",
+        "E-commerce storefronts with integrated payments and inventory",
+        "CMS or headless setups your team can edit without code",
+        "Core Web Vitals and technical SEO optimization",
+        "CRM, payment, and analytics integrations",
+        "Launch support and ongoing maintenance",
+      ],
+      platforms: [
+        "React",
+        "Next.js",
+        "Webflow",
+        "Tailwind",
+        "Vercel",
+        "Shopify",
+        "WordPress",
+        "Stripe",
+        "PostgreSQL",
+      ],
     },
     subServices: [
       {
@@ -369,6 +440,40 @@ export const SERVICE_CATEGORIES = [
     overview: {
       heading: "Graphic Design",
       body: "Good design isn't decoration, it's the visual shorthand that tells people whether to trust you before they've read a word. We build brand identities, marketing assets, and interfaces that make your business look as sharp as it runs.",
+    },
+    // Mobile-only, consolidated view — desktop keeps all five sub-service
+    // tabs (Brand Identity & Logo Design, Marketing & Social Media Design,
+    // UI/UX & Product Design, Print & Packaging Design, Motion &
+    // Presentation Design); this summary names each so nothing is lost.
+    mobileSummary: {
+      description:
+        "From full brand identities and logo systems to the everyday marketing and social assets that keep your channels on-brand, we design work that's meant to be used, not just admired once and shelved. That spans interface design for web and mobile products, print and packaging built for the physical world, and motion graphics and presentations that hold attention instead of losing it.",
+      howWeWork: [
+        "We start with discovery — your positioning, audience, and competitors.",
+        "We explore multiple directions before narrowing in on one.",
+        "We build a full, reusable system: color, type, components, or templates.",
+        "We stress-test the design across real applications, not just a mockup.",
+        "We hand off clear guidelines and source files your team can use going forward.",
+      ],
+      whatYouGet: [
+        "Full brand identity: logo, color, typography, guidelines",
+        "Social media, ad, and campaign creative",
+        "UI/UX design for web and mobile products",
+        "Print and packaging design, production-ready",
+        "Motion graphics and presentation decks",
+        "Reusable templates your team can use going forward",
+        "Source files in every format you need",
+      ],
+      platforms: [
+        "Figma",
+        "Adobe Illustrator",
+        "Photoshop",
+        "InDesign",
+        "Canva",
+        "Procreate",
+        "After Effects",
+        "Framer",
+      ],
     },
     subServices: [
       {

@@ -45,12 +45,14 @@ function NavLink({ label, active, onClick, mobile = false }) {
   );
 }
 
-function BookACallButton({ className = "" }) {
+function BookACallButton({ className = "", compact = false }) {
   return (
     <MagneticButton strength={0.28} className={className}>
       <Link
         to="/contact"
-        className="pressable block rounded-full bg-gradient-to-r from-accent-from to-accent-to px-7 py-3 text-sm font-bold uppercase tracking-wide text-black shadow-[0_0_0_0_rgba(255,122,26,0.5)] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_30px_0_rgba(255,122,26,0.45)] hover:brightness-110"
+        className={`pressable block rounded-full bg-gradient-to-r from-accent-from to-accent-to font-bold uppercase tracking-wide text-black shadow-[0_0_0_0_rgba(255,122,26,0.5)] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_30px_0_rgba(255,122,26,0.45)] hover:brightness-110 ${
+          compact ? "px-4 py-2 text-xs" : "px-7 py-3 text-sm"
+        }`}
       >
         Book a Call
       </Link>
@@ -126,19 +128,21 @@ export default function Navbar() {
     <header ref={headerRef} className="fixed inset-x-0 top-0 z-50 will-change-transform">
       <nav
         ref={navRef}
-        className="flex items-center justify-between bg-black/35 px-4 py-4 backdrop-blur-md md:px-10"
+        className="relative z-10 flex items-center justify-between bg-black/35 px-4 py-4 backdrop-blur-md md:px-10"
       >
-        {/* Full logo (icon + wordmark baked into one image) */}
+        {/* Full logo (icon + wordmark baked into one image) — desktop only.
+            Left-most flex child, exactly as before md: this element is the
+            only one visible there, so desktop position/markup is untouched. */}
         <Link
           to="/"
           onClick={() => setClicked("HOME")}
-          className="group flex items-center"
+          className="hidden items-center md:flex md:group"
           aria-label="Nexoryn home"
         >
           <img
             src={nexorynFullLogo}
             alt="Nexoryn"
-            className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+            className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:group-hover:scale-105"
           />
         </Link>
 
@@ -156,7 +160,8 @@ export default function Navbar() {
 
         <BookACallButton className="hidden md:inline-block" />
 
-        {/* Hamburger */}
+        {/* Hamburger — mobile only, first visible flex child there so it
+            pins to the left edge (justify-between) */}
         <button
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
@@ -166,40 +171,91 @@ export default function Navbar() {
         >
           <motion.span
             animate={menuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="h-0.5 w-6 rounded-full bg-white"
           />
           <motion.span
-            animate={menuOpen ? { opacity: 0 } : { opacity: 1 }}
+            animate={menuOpen ? { opacity: 0, x: -8 } : { opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
             className="h-0.5 w-6 rounded-full bg-white"
           />
           <motion.span
             animate={menuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="h-0.5 w-6 rounded-full bg-white"
           />
         </button>
+
+        {/* Logo — mobile only, last visible flex child there so it pins to
+            the right edge (Book a Call removed from the mobile bar; it's
+            still reachable from inside the menu's link list via Contact) */}
+        <Link
+          to="/"
+          onClick={() => setClicked("HOME")}
+          className="group flex items-center md:hidden"
+          aria-label="Nexoryn home"
+        >
+          <img
+            src={nexorynFullLogo}
+            alt="Nexoryn"
+            className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+          />
+        </Link>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — full-width animated panel with a dimming backdrop and
+          a staggered reveal of each link, so it reads as one deliberate
+          motion rather than the whole block popping in at once. */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="flex flex-col gap-6 border-t border-glass-border bg-black/60 px-6 py-8 backdrop-blur-xl md:hidden"
-          >
-            {LINKS.map((label) => (
-              <NavLink
-                key={label}
-                label={label}
-                mobile
-                active={active === label}
-                onClick={() => handleClick(label)}
-              />
-            ))}
-            <BookACallButton className="w-fit" />
-          </motion.div>
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setMenuOpen(false)}
+              aria-hidden="true"
+              className="fixed inset-0 z-0 bg-black/70 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 overflow-hidden border-t border-glass-border bg-black/80 backdrop-blur-xl md:hidden"
+            >
+              <motion.div
+                variants={{
+                  open: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+                  closed: {},
+                }}
+                initial="closed"
+                animate="open"
+                className="flex flex-col items-center gap-6 px-6 py-10 text-center"
+              >
+                {LINKS.map((label) => (
+                  <motion.div
+                    key={label}
+                    variants={{
+                      closed: { opacity: 0, y: -12 },
+                      open: { opacity: 1, y: 0 },
+                    }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <NavLink
+                      label={label}
+                      mobile
+                      active={active === label}
+                      onClick={() => handleClick(label)}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

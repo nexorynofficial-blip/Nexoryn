@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { CardStack } from "./ui/CardStack";
+import { PortfolioMobileDuo } from "./ui/PortfolioMobileDuo";
 import SplitText from "./ui/SplitText";
 import { getProjectBySlug } from "../data/projects";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 // Fixed home-page teaser: always exactly 3 automation projects + 2 web
 // development projects, regardless of how many more get added to PROJECTS
@@ -18,6 +20,24 @@ const FEATURED_SLUGS = [
 const FEATURED_PROJECTS = FEATURED_SLUGS.map(getProjectBySlug).filter(Boolean);
 
 export default function Portfolio() {
+  // Below md, the desktop 3D fan CardStack (drag-driven, fixed 520x380px
+  // cards, all 5 featured projects) is swapped for two plain static cards
+  // instead — no scroll/stack animation, just one automation project and one
+  // web development project. md+ renders the exact original CardStack,
+  // untouched.
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  const items = FEATURED_PROJECTS.map((project) => ({
+    id: project.slug,
+    title: project.title,
+    description: project.service,
+    imageSrc: project.photo,
+    href: `/portfolio/${project.slug}`,
+  }));
+
+  const automationItem = items.find((item) => item.description === "Automation");
+  const webDevItem = items.find((item) => item.description === "Web Development");
+
   return (
     <section id="portfolio" className="relative scroll-mt-24 pb-16 lg:pb-24">
       <div className="mx-auto max-w-4xl px-4 pt-8 text-center md:px-10 lg:pt-12">
@@ -29,19 +49,12 @@ export default function Portfolio() {
         </SplitText>
       </div>
 
-      <div className="mx-auto mt-8 max-w-[1400px] px-4 md:px-10">
-        <CardStack
-          items={FEATURED_PROJECTS.map((project) => ({
-            id: project.slug,
-            title: project.title,
-            description: project.service,
-            imageSrc: project.photo,
-            href: `/portfolio/${project.slug}`,
-          }))}
-          cardWidth={520}
-          cardHeight={380}
-          showDots
-        />
+      <div className="mx-auto mt-3 max-w-[1400px] overflow-x-hidden px-4 md:mt-8 md:px-10">
+        {isMobile ? (
+          <PortfolioMobileDuo automationItem={automationItem} webDevItem={webDevItem} />
+        ) : (
+          <CardStack items={items} cardWidth={520} cardHeight={380} showDots />
+        )}
       </div>
 
       <div className="relative z-10 mt-[30px] flex justify-center">
@@ -57,9 +70,11 @@ export default function Portfolio() {
         </Link>
       </div>
 
-      {/* Trailing scroll room so the last sticky card can release — kept after
-          the link so it doesn't add gap between cards and the hyperlink */}
-      <div aria-hidden="true" className="h-[8vh]" />
+      {/* Trailing scroll room so the desktop CardStack's sticky drag zone can
+          release — desktop only. Mobile's two static cards need no such
+          buffer, so Reviews follows immediately, same as every other
+          section-to-section transition on the page. */}
+      <div aria-hidden="true" className="hidden h-[8vh] md:block" />
     </section>
   );
 }

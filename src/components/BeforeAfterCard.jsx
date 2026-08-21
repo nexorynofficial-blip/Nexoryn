@@ -43,17 +43,19 @@ function TrendChip({ after, upWhenAfter = true, beforeText, afterText }) {
 
 function StatTile({ label, value, unit, trend }) {
   return (
-    <div className="rounded-2xl glass-panel p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50">
+    <div className="rounded-xl glass-panel p-2.5 md:rounded-2xl md:p-4">
+      <p className="text-[9px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/50 md:text-[10px] md:tracking-[0.15em]">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-bold tabular-nums text-white">
+      <p className="mt-1.5 text-lg font-bold tabular-nums text-white md:mt-2 md:text-3xl">
         {value}
         {unit && (
-          <span className="ml-1 text-sm font-medium text-white/50">{unit}</span>
+          <span className="ml-0.5 text-[10px] font-medium text-white/50 md:ml-1 md:text-sm">
+            {unit}
+          </span>
         )}
       </p>
-      <div className="mt-2">{trend}</div>
+      <div className="mt-1.5 md:mt-2">{trend}</div>
     </div>
   );
 }
@@ -87,7 +89,7 @@ function MiniBarChart({ after }) {
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/50">
         Weekly output
       </p>
-      <div className="mt-3 flex h-24 items-end gap-2">
+      <div className="mt-3 flex h-16 items-end gap-1.5 md:h-24 md:gap-2">
         {CHART_BARS.map((bar, i) => {
           const height = after ? bar.after : bar.before;
           const delay = `${i * 80}ms`;
@@ -120,8 +122,8 @@ function CoverageRing({ after }) {
   const pct = useCountUp(94, 12, 1200, after);
   const target = after ? 94 : 12;
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative h-28 w-28">
+    <div className="flex flex-col items-center gap-2 md:gap-3">
+      <div className="relative h-16 w-16 md:h-28 md:w-28">
         <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
           <circle
             cx="50"
@@ -144,11 +146,11 @@ function CoverageRing({ after }) {
             style={{ transition: "stroke-dashoffset 1s ease-out, stroke 0.6s ease" }}
           />
         </svg>
-        <p className="absolute inset-0 flex items-center justify-center text-xl font-bold tabular-nums text-white">
+        <p className="absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums text-white md:text-xl">
           {Math.round(pct)}%
         </p>
       </div>
-      <p className="text-center text-xs font-semibold uppercase tracking-[0.15em] text-white/50">
+      <p className="text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.1em] text-white/50 md:text-xs md:tracking-[0.15em]">
         Automation
         <br />
         coverage
@@ -191,7 +193,7 @@ export default function BeforeAfterCard({ className = "" }) {
   return (
     <div
       ref={cardRef}
-      className={`group relative w-full max-w-2xl rounded-3xl glass-panel p-7 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] md:p-9 ${
+      className={`group relative w-full max-w-2xl rounded-3xl glass-panel p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] md:p-9 ${
         after
           ? "border-accent-from/40 shadow-[0_0_40px_rgba(255,122,26,0.4)] hover:shadow-[0_0_55px_rgba(255,122,26,0.5)]"
           : "border-red-500/40 shadow-[0_0_40px_rgba(239,68,68,0.35)] hover:shadow-[0_0_55px_rgba(239,68,68,0.45)]"
@@ -207,7 +209,7 @@ export default function BeforeAfterCard({ className = "" }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
             transition={{ duration: 0.3 }}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] md:gap-2 md:px-4 md:py-1.5 md:text-xs md:tracking-[0.2em] ${
               after
                 ? "border-accent-from/40 bg-accent-from/10 text-accent-to"
                 : "border-red-500/40 bg-red-500/10 text-red-400/90"
@@ -229,7 +231,7 @@ export default function BeforeAfterCard({ className = "" }) {
       </div>
 
       {/* Top row: compact stat tiles */}
-      <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-3 gap-2 md:mt-7 md:gap-3">
         <StatTile
           label="Manual work"
           value={Math.round(manualHours)}
@@ -266,7 +268,7 @@ export default function BeforeAfterCard({ className = "" }) {
       </div>
 
       {/* Middle: progress bars */}
-      <div className="mt-7 flex flex-col gap-6 border-t border-white/10 pt-7">
+      <div className="mt-4 flex flex-col gap-4 border-t border-white/10 pt-4 md:mt-7 md:gap-6 md:pt-7">
         <BarRow
           label="Lead response time"
           valueText={formatResponseTime(responseHours)}
@@ -282,7 +284,7 @@ export default function BeforeAfterCard({ className = "" }) {
       </div>
 
       {/* Bottom: mini bar chart + radial coverage ring */}
-      <div className="mt-7 grid grid-cols-[1fr_auto] items-end gap-8 border-t border-white/10 pt-7">
+      <div className="mt-4 grid grid-cols-[1fr_auto] items-end gap-4 border-t border-white/10 pt-4 md:mt-7 md:gap-8 md:pt-7">
         <MiniBarChart after={after} />
         <CoverageRing after={after} />
       </div>

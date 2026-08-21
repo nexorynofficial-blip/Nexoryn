@@ -30,17 +30,21 @@ export default function Solutions() {
   return (
     <section id="solutions" className="relative scroll-mt-24 py-24 lg:py-32">
       <div className="mx-auto grid w-full max-w-[1400px] items-center gap-[60px] px-4 md:px-[80px] lg:grid-cols-2">
-        {/* Before/After card — left on desktop, first on mobile. The gentle
+        {/* Before/After card — left on desktop, after the copy on mobile (the
+            copy reads first, the card illustrates it second). The gentle
             parallax drift is what keeps the two columns from reading as one
             flat slab as they scroll past. */}
-        <Parallax speed={0.1} className="flex justify-center lg:justify-start">
+        <Parallax
+          speed={0.1}
+          className="order-last flex justify-center lg:order-first lg:justify-start"
+        >
           <Reveal scale={0.96} duration={1.1}>
             <BeforeAfterCard />
           </Reveal>
         </Parallax>
 
         {/* Text column */}
-        <div>
+        <div className="order-first lg:order-last">
           <SplitText className="mt-6 font-heading text-4xl leading-tight tracking-tight text-white md:text-5xl">
             We turn chaos into{" "}
             <span className="text-accent-from">clockwork</span>.

@@ -15,7 +15,7 @@ export default function Home() {
       {/* Everything below the hero (through Reviews) shares one continuous
           animated backdrop; CTA breaks out with its own starfield/horizon */}
       <div className="relative">
-        <SectionsBackground />
+        <SectionsBackground hideTopFadeOnMobile />
         <div className="relative z-10">
           <Problems />
           <Solutions />

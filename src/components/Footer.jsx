@@ -61,9 +61,9 @@ const COLUMNS = [
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-black pt-16 pb-8">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-black pb-8 pt-10 sm:pt-16">
       <div className="relative z-10 w-full px-4 md:px-10">
-        <div className="flex flex-col gap-12 lg:flex-row lg:justify-between">
+        <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-12">
           {/* Left: logo + copyright */}
           <div>
             <Link to="/" className="flex items-center" aria-label="Nexoryn home">
@@ -75,7 +75,7 @@ export default function Footer() {
           </div>
 
           {/* Right: 4 link columns */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-4 md:gap-x-12 lg:gap-x-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-x-8 sm:gap-y-10 md:grid-cols-4 md:gap-x-12 lg:gap-x-16">
             {COLUMNS.map((col) => (
               <div key={col.heading}>
                 <h3 className="text-sm font-bold uppercase tracking-wide text-white">
@@ -124,7 +124,7 @@ export default function Footer() {
 
         {/* Same component, same spot, on every page — Call Us / WhatsApp Us
             live in the footer instead of floating over page content. */}
-        <ContactShortcuts className="mt-12" />
+        <ContactShortcuts className="mt-8 sm:mt-12" />
       </div>
 
       {/* Giant faint decorative wordmark, clipped so only the top of the

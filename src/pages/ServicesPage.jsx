@@ -83,6 +83,7 @@ export default function ServicesPage() {
                   overviewIcon={category.overviewIcon}
                   overview={category.overview}
                   subServices={category.subServices}
+                  mobileSummary={category.mobileSummary}
                 />
               </motion.div>
             ))}

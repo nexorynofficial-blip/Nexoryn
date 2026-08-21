@@ -70,11 +70,14 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen overflow-hidden bg-night"
+      className="relative min-h-0 overflow-hidden bg-black/50 md:min-h-screen md:bg-night"
     >
       {/* Background video — same framing/crop the static photo used, now looping.
-          Oversized so the parallax drift never exposes an edge. */}
-      <div className="hero-media absolute inset-0 h-[115%] w-full will-change-transform">
+          Oversized so the parallax drift never exposes an edge. Hidden below
+          md: the shared ColorBends shader (SiteBackground, fixed behind every
+          route) shows through instead, since the section itself is
+          transparent on mobile rather than painted over with bg-night. */}
+      <div className="hero-media absolute inset-0 hidden h-[115%] w-full will-change-transform md:block">
         <video
           autoPlay
           loop
@@ -97,17 +100,22 @@ export default function Hero() {
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/15 to-transparent"
       />
-      {/* Soft blend into the black of the sections below. A plain 2-stop
-          gradient still reads as a hard seam against the bright video — the
-          eye is far more sensitive to gradient curvature than opacity math
-          suggests, and a short 2-stop fade looks "done" well before it's
-          visually flat. Five stops approximate an eased curve, the zone is
-          tall enough to fully resolve even after the video's scroll-driven
-          scale/translate shifts brighter content into it, and a faint grain
-          layer breaks up 8-bit banding across the near-black stops. */}
+      {/* Soft blend into the black of the sections below — only needed to
+          smooth the video's bright bottom edge into solid black. There's no
+          video on mobile (just the shared shader, already dim/section-toned),
+          and with min-h-screen dropped there too the section is short enough
+          that a 380px fade would dominate it, so this is desktop-only now. A
+          plain 2-stop gradient still reads as a hard seam against the bright
+          video — the eye is far more sensitive to gradient curvature than
+          opacity math suggests, and a short 2-stop fade looks "done" well
+          before it's visually flat. Five stops approximate an eased curve,
+          the zone is tall enough to fully resolve even after the video's
+          scroll-driven scale/translate shifts brighter content into it, and
+          a faint grain layer breaks up 8-bit banding across the near-black
+          stops. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[380px] md:h-[520px]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[380px] md:block md:h-[520px]"
         style={{
           background:
             "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 22%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.78) 68%, rgba(0,0,0,0.95) 86%, rgba(0,0,0,1) 100%)",
@@ -115,28 +123,37 @@ export default function Hero() {
       />
       <div
         aria-hidden="true"
-        className="grain-overlay pointer-events-none absolute inset-x-0 bottom-0 h-[380px] opacity-[0.04] md:h-[520px]"
+        className="grain-overlay pointer-events-none absolute inset-x-0 bottom-0 hidden h-[380px] opacity-[0.04] md:block md:h-[520px]"
       />
 
-      {/* Content */}
-      <div className="hero-content relative z-10 flex min-h-screen w-full flex-col px-4 pb-8 pt-24 short:pb-6 short:pt-20 md:px-10 lg:pt-28 short:lg:pt-20">
+      {/* Content — min-h-0 (not min-h-screen) below md: no video/InfoCard/
+          stats there anymore, so forcing full viewport height just left a
+          large dead gap under the copy. pt-32 clears the fixed navbar with
+          real breathing room instead of pt-24's tighter desktop spacing. */}
+      <div className="hero-content relative z-10 flex min-h-0 w-full flex-col px-4 pb-8 pt-32 text-center short:pb-6 short:pt-20 md:min-h-screen md:px-10 md:pt-24 lg:pt-28 lg:text-left short:lg:pt-20">
         <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between">
-          {/* Left: headline block */}
-          <div className="max-w-3xl">
+          {/* Left: headline block. No items-center on the row above: with
+              flex-direction:column, align-items:center switches this child
+              to shrink-to-fit sizing, and "NEXORYN" is one unbreakable word —
+              its min-content width could exceed the viewport and get clipped
+              by the section's overflow-hidden. Letting the row stretch (the
+              flex default) keeps this a full-width block that text-center +
+              mx-auto center properly instead. */}
+          <div className="mx-auto w-full max-w-3xl lg:mx-0 lg:w-auto">
             <SplitText
               as="h1"
               animateOnMount
               delay={0.1}
               stagger={0.08}
               duration={1.3}
-              className="font-heading-hero text-6xl leading-none tracking-tight text-white sm:text-7xl md:text-8xl xl:text-[clamp(6rem,13vh,9rem)]"
+              className="font-heading-hero text-5xl leading-none tracking-tight text-accent-from sm:text-7xl md:text-8xl md:text-white xl:text-[clamp(6rem,13vh,9rem)]"
             >
               NEXORYN
             </SplitText>
             <p className="hero-sub mt-3 text-xl font-light text-body-light sm:text-2xl md:text-3xl">
               Where Automation Meets Ambition.
             </p>
-            <p className="hero-body mt-10 max-w-md text-lg font-light leading-relaxed text-body-dim short:mt-5 lg:mt-[6vh] short:lg:mt-5">
+            <p className="hero-body mx-auto mt-10 max-w-md text-lg font-light leading-relaxed text-body-dim short:mt-5 lg:mx-0 lg:mt-[6vh] short:lg:mt-5">
               At Nexoryn, we build websites that convert and automation
               systems that eliminate the repetitive work slowing businesses
               down. We don't rely on templates or one-size-fits-all
@@ -144,18 +161,20 @@ export default function Hero() {
             </p>
           </div>
 
-          {/* Right: stats */}
-          <StatsColumn className="hero-stats lg:mt-2 lg:shrink-0" />
+          {/* Right: stats — dropped on mobile per the "projects delivered /
+              client retention / countries served" card being cut there */}
+          <StatsColumn className="hero-stats hidden lg:mt-2 lg:block lg:shrink-0" />
         </div>
 
-        {/* Bottom row: corner mark + info card */}
+        {/* Bottom row: corner mark + info card — both desktop-only now, the
+            "System Optimization Active" card is dropped from mobile entirely */}
         <div className="mt-10 flex flex-1 flex-col justify-end gap-10 short:mt-6 lg:flex-row lg:items-end lg:justify-between">
           <img
             src={nexorynLogo}
             alt="Nexoryn"
             className="hero-mark hidden h-16 w-16 opacity-50 lg:block"
           />
-          <div className="hero-card">
+          <div className="hero-card hidden lg:block">
             <InfoCard />
           </div>
         </div>

@@ -164,6 +164,13 @@ function ContactFormPanel() {
     setError(false);
   };
 
+  // Mobile-only dropdown replaces the tab bar — FloatingSelect works off the
+  // option's label text, so map back to the form's id from that.
+  const handleFormTypeSelect = (e) => {
+    const form = FORMS.find((f) => f.label === e.target.value);
+    if (form) handleTabClick(form.id);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -184,115 +191,128 @@ function ContactFormPanel() {
   };
 
   return (
-    <div className="glass-panel rounded-3xl p-6 md:p-8">
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-white/10">
-        {FORMS.map((form) => (
-          <FormTab
-            key={form.id}
-            label={form.label}
-            icon={form.icon}
-            active={activeTab === form.id}
-            onClick={() => handleTabClick(form.id)}
-          />
-        ))}
+    <>
+      {/* Mobile-only: replaces the tab bar with a compact form-type picker */}
+      <div className="glass-panel mb-4 rounded-2xl p-4 md:hidden">
+        <FloatingSelect
+          label="Choose Form Type"
+          name="formType"
+          value={currentForm.label}
+          onChange={handleFormTypeSelect}
+          options={FORMS.map((f) => f.label)}
+        />
       </div>
 
-      <div className="mt-6 min-h-[420px]">
-        <AnimatePresence mode="wait" initial={false}>
-          {submitted ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              className="flex flex-col items-center py-14 text-center"
-            >
+      <div className="glass-panel rounded-3xl p-6 md:p-8">
+        <div className="no-scrollbar hidden gap-1 overflow-x-auto border-b border-white/10 md:flex">
+          {FORMS.map((form) => (
+            <FormTab
+              key={form.id}
+              label={form.label}
+              icon={form.icon}
+              active={activeTab === form.id}
+              onClick={() => handleTabClick(form.id)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 min-h-[420px]">
+          <AnimatePresence mode="wait" initial={false}>
+            {submitted ? (
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full border border-status-green/30 bg-emerald-500/10"
+                key="success"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="flex flex-col items-center py-14 text-center"
               >
-                <CheckCircle2 className="h-8 w-8 text-status-green" />
-              </motion.div>
-              <h3 className="mt-5 font-heading text-xl text-white">Message sent</h3>
-              <p className="mt-2 max-w-xs text-sm font-light leading-relaxed text-body-dim">
-                Thanks, we'll be in touch shortly.
-              </p>
-            </motion.div>
-          ) : (
-            <motion.form
-              key={activeTab}
-              onSubmit={handleSubmit}
-              initial={{ opacity: 0, y: 12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2"
-            >
-              {currentForm.fields.map((field) => (
-                <div key={field.name} className={field.full ? "sm:col-span-2" : ""}>
-                  {field.select ? (
-                    <FloatingSelect
-                      label={field.label}
-                      name={field.name}
-                      value={values[field.name] || ""}
-                      onChange={handleChange}
-                      options={field.options}
-                      required={field.required}
-                    />
-                  ) : (
-                    <FloatingInput
-                      label={field.label}
-                      name={field.name}
-                      type={field.type}
-                      textarea={field.textarea}
-                      value={values[field.name] || ""}
-                      onChange={handleChange}
-                      required={field.required}
-                    />
-                  )}
-                </div>
-              ))}
-
-              {error && (
-                <p className="text-center text-xs font-medium text-red-400 sm:col-span-2">
-                  Something went wrong sending your message — please try
-                  again, or reach us directly using the details below.
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+                  className="flex h-16 w-16 items-center justify-center rounded-full border border-status-green/30 bg-emerald-500/10"
+                >
+                  <CheckCircle2 className="h-8 w-8 text-status-green" />
+                </motion.div>
+                <h3 className="mt-5 font-heading text-xl text-white">Message sent</h3>
+                <p className="mt-2 max-w-xs text-sm font-light leading-relaxed text-body-dim">
+                  Thanks, we'll be in touch shortly.
                 </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-2 w-full rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-base font-bold uppercase tracking-wide text-black transition duration-300 hover:scale-[1.02] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:brightness-100 sm:col-span-2"
+              </motion.div>
+            ) : (
+              <motion.form
+                key={activeTab}
+                onSubmit={handleSubmit}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2"
               >
-                {submitting ? "Sending…" : currentForm.submitLabel}
-              </button>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </div>
+                {currentForm.fields.map((field) => (
+                  <div key={field.name} className={field.full ? "sm:col-span-2" : ""}>
+                    {field.select ? (
+                      <FloatingSelect
+                        label={field.label}
+                        name={field.name}
+                        value={values[field.name] || ""}
+                        onChange={handleChange}
+                        options={field.options}
+                        required={field.required}
+                      />
+                    ) : (
+                      <FloatingInput
+                        label={field.label}
+                        name={field.name}
+                        type={field.type}
+                        textarea={field.textarea}
+                        value={values[field.name] || ""}
+                        onChange={handleChange}
+                        required={field.required}
+                      />
+                    )}
+                  </div>
+                ))}
 
-      <p className="mt-6 text-center text-xs text-white/40">
-        We typically respond within a few hours.
-      </p>
-      <p className="mt-2 text-center text-xs text-white/40">
-        Prefer email?{" "}
-        <a
-          href={GMAIL_COMPOSE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-accent-to transition-colors duration-300 hover:text-accent-from"
-        >
-          {EMAIL}
-        </a>
-      </p>
-      <p className="mt-2 text-center text-xs text-white/40">
-        Prefer call? <PhoneLink />
-      </p>
-    </div>
+                {error && (
+                  <p className="text-center text-xs font-medium text-red-400 sm:col-span-2">
+                    Something went wrong sending your message — please try
+                    again, or reach us directly using the details below.
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-2 w-full rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-base font-bold uppercase tracking-wide text-black transition duration-300 hover:scale-[1.02] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:brightness-100 sm:col-span-2"
+                >
+                  {submitting ? "Sending…" : currentForm.submitLabel}
+                </button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-white/40">
+          We typically respond within a few hours.
+        </p>
+        <p className="mt-2 text-center text-xs text-white/40">
+          Prefer email?{" "}
+          <a
+            href={GMAIL_COMPOSE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent-to transition-colors duration-300 hover:text-accent-from"
+          >
+            {EMAIL}
+          </a>
+        </p>
+        <p className="mt-2 text-center text-xs text-white/40">
+          Prefer call? <PhoneLink />
+        </p>
+      </div>
+    </>
   );
 }
 
@@ -329,7 +349,15 @@ export default function ContactPage() {
           </div>
 
           <div className="mx-auto mt-14 grid max-w-7xl grid-cols-1 items-start gap-10 lg:grid-cols-5 lg:gap-12">
-            <Reveal y={32} delay={0.1} animateOnMount className="lg:col-span-2">
+            {/* Form first on mobile (order-first), FAQ after — desktop keeps
+                its original FAQ-left/Form-right order via the lg: overrides,
+                which match the un-ordered default (FAQ is first in the DOM). */}
+            <Reveal
+              y={32}
+              delay={0.1}
+              animateOnMount
+              className="order-last lg:order-first lg:col-span-2"
+            >
               <h2 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
                 Frequently asked <span className="text-accent-from">questions</span>
               </h2>
@@ -343,7 +371,7 @@ export default function ContactPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-              className="lg:col-span-3"
+              className="order-first lg:order-last lg:col-span-3"
             >
               <ContactFormPanel />
             </motion.div>

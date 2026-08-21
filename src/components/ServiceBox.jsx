@@ -226,7 +226,80 @@ function SubServicePanel({ sub }) {
   );
 }
 
-export function ServiceBox({ gooeyId, serviceName, overviewIcon, overview, subServices }) {
+// Mobile-only replacement for the InfoPanel + TabBar + SubServicePanel trio:
+// one consolidated summary instead of per-sub-service tabs, so there's no
+// tab bar eating vertical space and no switching required to see everything
+// this category covers. `mobileSummary` (data/services.js) names each of
+// the desktop tabs' specialties directly in its description, so nothing
+// covered by the tabs goes missing, it's just presented without tab nav.
+function MobileServicePanel({ icon: OverviewIcon, heading, mobileSummary }) {
+  return (
+    <div className="flex flex-col gap-7 text-left">
+      <div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-400/20 bg-orange-500/10">
+            <OverviewIcon className="h-5 w-5 text-orange-400" />
+          </div>
+          <h2 className="font-heading text-xl tracking-tight text-white">
+            {heading}
+          </h2>
+        </div>
+        <p className="mt-3 text-sm font-light leading-relaxed text-body-dim">
+          {mobileSummary.description}
+        </p>
+      </div>
+
+      <div>
+        <SectionLabel>How We Work</SectionLabel>
+        <div className="mt-3 flex flex-col gap-2.5">
+          {mobileSummary.howWeWork.map((step) => (
+            <div
+              key={step}
+              className="border-l-2 border-orange-400/40 pl-3 text-sm font-light leading-relaxed text-body-dim"
+            >
+              {step}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <SectionLabel>What You Get</SectionLabel>
+        <div className="mt-3 flex flex-col gap-2.5">
+          {mobileSummary.whatYouGet.map((item) => (
+            <div key={item} className="flex items-start gap-2 text-sm text-body-dim">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-to" />
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <SectionLabel>Platforms We Work On</SectionLabel>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {mobileSummary.platforms.map((platform) => (
+            <span
+              key={platform}
+              className="rounded-full border border-orange-400/20 bg-orange-500/5 px-3 py-1 font-mono text-xs text-accent-to"
+            >
+              {platform}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ServiceBox({
+  gooeyId,
+  serviceName,
+  overviewIcon,
+  overview,
+  subServices,
+  mobileSummary,
+}) {
   const tabs = subServices.map((s) => ({ id: s.id, label: s.name, iconComp: ICONS[s.icon] }));
   const [activeIndex, setActiveIndex] = useState(0);
   const activeId = tabs[activeIndex].id;
@@ -235,10 +308,20 @@ export function ServiceBox({ gooeyId, serviceName, overviewIcon, overview, subSe
     <div className="rounded-3xl glass-panel p-6 backdrop-blur-xl md:p-8">
       <GooeyFilter id={gooeyId} strength={9} />
 
+      {/* Mobile: one consolidated panel, no tabs */}
+      <div className="md:hidden">
+        <MobileServicePanel
+          icon={ICONS[overviewIcon]}
+          heading={serviceName}
+          mobileSummary={mobileSummary}
+        />
+      </div>
+
+      {/* Desktop: original InfoPanel + tabbed sub-services, unchanged */}
       <motion.div
         layout
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10"
+        className="hidden md:flex md:flex-col md:gap-8 lg:flex-row lg:items-stretch lg:gap-10"
       >
         <InfoPanel icon={ICONS[overviewIcon]} heading={serviceName} body={overview.body} />
 

@@ -41,7 +41,9 @@ export default function CTASection({ compact = false }) {
       ref={sectionRef}
       id="cta"
       className={`relative flex flex-col items-center justify-center overflow-hidden px-4 text-center md:px-10 ${
-        compact ? "min-h-[45vh] py-16" : "min-h-[80vh] py-24"
+        compact
+          ? "min-h-[32vh] py-10 sm:min-h-[45vh] sm:py-16"
+          : "min-h-[50vh] py-16 sm:min-h-[80vh] sm:py-24"
       }`}
     >
       {/* Real horizon photo replaces the earlier CSS starfield/arc — it
@@ -70,7 +72,7 @@ export default function CTASection({ compact = false }) {
         <SplitText
           stagger={0.05}
           duration={1.1}
-          className="max-w-3xl font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl"
+          className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-white sm:text-4xl md:text-6xl"
         >
           Ready to <span className="text-accent-from">automate</span> your
           growth?

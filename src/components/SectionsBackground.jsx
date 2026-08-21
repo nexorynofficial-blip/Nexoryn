@@ -2,8 +2,15 @@
  * Scrim and seam overlays for content sections. The ColorBends shader itself
  * lives in SiteBackground (fixed, site-wide); this layer only darkens and
  * blends section edges so text stays readable over the bright orange bands.
+ *
+ * `hideTopFadeOnMobile` is off by default so every existing call site is
+ * unaffected — Home passes it on mobile only, where the top fade (originally
+ * there to blend the Hero's video into this backdrop) is no longer wanted
+ * now the mobile Hero has no video: the uniform bg-black/50 scrim below
+ * already gives the same "a little dark, like the rest of the site" tone
+ * without a separate gradient seam right under the Hero.
  */
-export function SectionsBackground() {
+export function SectionsBackground({ hideTopFadeOnMobile = false }) {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
       <div
@@ -13,7 +20,9 @@ export function SectionsBackground() {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[380px] md:h-[520px]"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-[380px] md:h-[520px] ${
+          hideTopFadeOnMobile ? "hidden md:block" : ""
+        }`}
         style={{
           background:
             "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 14%, rgba(0,0,0,0.78) 32%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.22) 78%, rgba(0,0,0,0) 100%)",
