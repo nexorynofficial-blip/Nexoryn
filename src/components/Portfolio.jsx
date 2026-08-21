@@ -49,7 +49,14 @@ export default function Portfolio() {
         </SplitText>
       </div>
 
-      <div className="mx-auto mt-3 max-w-[1400px] overflow-x-hidden px-4 md:mt-8 md:px-10">
+      {/* overflow-x-hidden is mobile-only safety margin — it was leaking
+          into desktop unscoped before, hard-clipping the fan's side cards
+          into a visible "frame" and, worse, silently promoting overflow-y to
+          auto per the CSS spec (declaring only overflow-x forces the other
+          axis out of "visible"), which is what spawned the stray scrollbar.
+          overflow-y-visible pins that down explicitly instead of relying on
+          the default, and md:overflow-visible restores desktop exactly. */}
+      <div className="mx-auto mt-3 max-w-[1400px] overflow-x-hidden overflow-y-visible px-4 md:mt-8 md:overflow-visible md:px-10">
         {isMobile ? (
           <PortfolioMobileDuo automationItem={automationItem} webDevItem={webDevItem} />
         ) : (
