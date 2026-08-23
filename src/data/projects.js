@@ -62,6 +62,8 @@
   Calculator,
   FolderOpen,
   Scale,
+  Map,
+  Heart,
 } from "lucide-react";
 import chatbotThumb from "../assets/project-ai-chatbot-thumb.png";
 import workflowOverview from "../assets/case-study-screenshots/workflow-overview.png";
@@ -94,6 +96,7 @@ import candyPackagingThumb from "../assets/project-candy-packaging-thumb.png";
 import coffeeBrandThumb from "../assets/project-coffee-brand-thumb.png";
 import activismPosterThumb from "../assets/project-activism-poster-thumb.png";
 import luxuryFashionStandeeThumb from "../assets/project-luxury-fashion-standee-thumb.png";
+import citizenlinkThumb from "../assets/project-citizenlink-thumb.jpeg";
 
 /**
  * A single real project. Everything the Portfolio grid card needs (title,
@@ -1586,6 +1589,373 @@ export const PROJECTS = [
           title: "Data Warehouse Integration",
           description:
             "Can connect to Snowflake, BigQuery, or Redshift for custom SQL, letting power users write queries and visualize results directly on dashboards.",
+        },
+      ],
+    },
+  },
+
+  {
+    slug: "citizenlink-real-estate-platform",
+    title: "CitizenLink: Premium Real Estate Platform",
+    industry: "Real Estate",
+    service: "Web Development",
+    description:
+      "A premium real estate discovery platform combining a luxury emerald-and-gold design system with powerful property search, interactive maps, and side-by-side comparison, backed by a full-stack architecture built for agents, listings, and leads.",
+    tags: ["Web Design", "Full-Stack", "Real Estate Platform"],
+    photo: citizenlinkThumb,
+
+    caseStudy: {
+      category: "Full-Stack Real Estate Platform",
+      techIcons: [
+        { name: "Next.js", icon: Code2 },
+        { name: "TypeScript", icon: FileCode },
+        { name: "PostgreSQL", icon: Database },
+        { name: "React Leaflet", icon: Map },
+      ],
+      summary:
+        "A SaaS-grade property listing portal for buyers, renters, investors, sellers, landlords, and real estate professionals. CitizenLink combines a luxurious emerald-and-gold identity with powerful property discovery, advanced filtering, interactive maps, side-by-side comparison, saved listings, mortgage estimation, and contextual lead capture, on a scalable full-stack architecture built to grow from a polished frontend into a full real estate marketplace.",
+
+      overview: {
+        problem: [
+          "Traditional property portals feel crowded and transactional, making it hard to focus on any single listing",
+          "Large inventories make it difficult for buyers and renters to quickly find relevant properties",
+          "Generic listing cards give little information for users making high-value property decisions",
+          "Comparing multiple properties means jumping between pages and remembering specs by hand",
+          "Property enquiries are disconnected from the listing itself, and mobile filters and maps are often clunky",
+        ],
+        solution: [
+          "Premium minimal design system built around deep emerald, teal, and warm gold accents",
+          "Powerful search combining location, property type, purpose, and pricing, with advanced filters for buyers, renters, and investors",
+          "Interactive property cards with save, compare, and contextual quick actions",
+          "Detailed property pages combining galleries, amenities, floor plans, maps, nearby places, and a mortgage calculator",
+          "Side-by-side comparison for up to four properties, plus persistent saved listings via client-side state",
+          "URL-based search state makes searches shareable and bookmarkable, on a data layer built to evolve from mock data into a production API without rewriting the UI",
+        ],
+        workflow: [
+          { icon: Search, label: "Discover" },
+          { icon: Eye, label: "Explore" },
+          { icon: ClipboardCheck, label: "Evaluate" },
+          { icon: Heart, label: "Shortlist" },
+          { icon: ArrowLeftRight, label: "Compare" },
+          { icon: Send, label: "Convert" },
+          { icon: LayoutGrid, label: "Manage" },
+        ],
+        breakdown: [
+          {
+            title: "1. Premium Real Estate Design System & Color Psychology",
+            description:
+              "Built around a refined luxury palette combining deep emerald/teal as the primary brand color with warm gold as an accent, communicating trust, stability, and premium positioning. Light and dark themes are both supported through CSS-variable-based design tokens, so the whole visual system adapts without touching component logic.",
+          },
+          {
+            title: "2. Luxury Minimalism & Restrained Glassmorphism",
+            description:
+              "Generous whitespace, rounded surfaces, subtle shadows, and selective glassmorphism create a premium environment without sacrificing usability. Floating controls, overlays, and cards use translucent surfaces and backdrop blur while keeping strong contrast, and the visual language stays restrained so property photography remains the focus.",
+          },
+          {
+            title: "3. Property-First Visual Presentation",
+            description:
+              "Listing cards use 4:3 imagery with badges, gradient scrims, favorite controls, and contextual actions. Property detail pages expand this into a large gallery with thumbnails, fullscreen viewing, zoom, and carousel interactions, with responsive image loading and lazy loading to reduce layout shift.",
+          },
+          {
+            title: "4. Advanced Property Discovery Engine",
+            description:
+              "Users search by location and refine through property type, purpose, price range, and property-specific criteria. Sorting, pagination, grid/list switching, and map-based exploration let different user personas work the inventory their own way, with search and filter state encoded into URL query parameters so results are shareable and bookmarkable.",
+          },
+          {
+            title: "5. Typography Hierarchy & Premium Brand Voice",
+            description:
+              "Plus Jakarta Sans provides the display and heading layer for major property statements and section headings; Inter handles body copy, forms, navigation, and specifications where clarity matters most, across a fluid hierarchy from large display headlines down to compact metadata.",
+          },
+          {
+            title: "6. Responsive Architecture For All Devices",
+            description:
+              "Desktop provides wide property galleries, persistent filter sidebars, and three-to-four-column layouts; tablet collapses complex controls where needed; mobile uses single-column layouts, filter drawers, and sticky property CTAs, across four primary breakpoints from under 640px through beyond 1280px.",
+          },
+          {
+            title: "7. Saved Property State & Persistence",
+            description:
+              "Saved properties are managed through Zustand and persisted in localStorage, so a shortlist survives a page refresh. Favoriting works directly from property cards and detail pages, and a dedicated Saved Properties page gives a centralized view of everything shortlisted.",
+          },
+          {
+            title: "8. Property Comparison Engine",
+            description:
+              "Up to four properties can be added to a comparison list and reviewed through a horizontally scrollable matrix covering pricing, area, specifications, and amenities, with individual properties removable without leaving the page.",
+          },
+          {
+            title: "9. Contextual Lead Capture System",
+            description:
+              "Lead generation is built into the property experience rather than a disconnected contact page. Reusable React Hook Form + Zod components support Contact Agent, Schedule Visit, Request Callback/Information, Mortgage Inquiry, and newsletter interactions, with local validation and polished success states.",
+          },
+          {
+            title: "10. Future-Ready Data Access Architecture",
+            description:
+              "UI components are separated from data retrieval through a dedicated lib/api layer. Typed mock data currently powers the property inventory, with function signatures designed so the same calls can later hit real REST or GraphQL endpoints without reworking cards, filters, galleries, or page layouts.",
+          },
+        ],
+      },
+
+      results: {
+        keyFeatures: [
+          {
+            title: "Sophisticated property discovery",
+            description:
+              "Advanced search and filtering by location, type, purpose, and price, with sorting, pagination, grid/list views, and URL-shareable search state.",
+          },
+          {
+            title: "Premium property listing experience",
+            description:
+              "Refined cards with high-quality imagery, pricing, specifications, badges, hover zoom, and quick save/compare actions.",
+          },
+          {
+            title: "Immersive property details",
+            description:
+              "A dedicated page per listing with gallery, fullscreen viewer, amenities, floor plans, nearby places, map, agent info, and related properties.",
+          },
+          {
+            title: "Saved properties",
+            description:
+              "Zustand-powered shortlist persisted to localStorage, with a dedicated Saved Properties page for quick access.",
+          },
+          {
+            title: "Side-by-side property comparison",
+            description:
+              "Up to four properties compared at once across price, size, features, and amenities in a consistent matrix.",
+          },
+          {
+            title: "Interactive map experience",
+            description:
+              "Property listings explored geographically through React Leaflet, architected for future geocoding, clustering, and location intelligence.",
+          },
+          {
+            title: "Mortgage calculator",
+            description:
+              "A contextual calculator on property pages lets buyers estimate financing scenarios without leaving the listing.",
+          },
+          {
+            title: "Agent & lead experience",
+            description:
+              "Contact agent, schedule visit, request callback, and mortgage enquiry forms live directly on the property, not a separate contact page.",
+          },
+          {
+            title: "Accessible & performance-focused",
+            description:
+              "Built toward WCAG 2.1 AA with semantic HTML, keyboard navigation, and ARIA labeling, backed by Server Components, lazy loading, and skeleton states.",
+          },
+        ],
+        before:
+          "A typical property portal feels like a crowded database: repetitive cards, overwhelming filters, disconnected enquiry forms, and little emphasis on the property's own visual quality. Users jump between pages to evaluate listings and lose their search context along the way.",
+        after:
+          "CitizenLink turns property discovery into a premium, structured experience: fast discovery, intelligent filtering, geographic exploration, immersive property detail pages, saved favorites, four-way comparison, mortgage estimation, and agent contact, all without breaking the visitor's journey. The goal is a platform that feels closer to a premium digital property advisor than a conventional listing directory.",
+        proof:
+          "CitizenLink demonstrates that a real estate platform doesn't have to choose between beauty and functionality, the same system delivers premium presentation, sophisticated discovery tools, accessibility, and lead generation together. Domain types stay centralized, reusable components are separated from containers, and the data-access layer isolates the UI from its data source, so the platform can grow from a polished property portal into a full real estate SaaS ecosystem without a frontend rewrite.",
+      },
+
+      techStack: {
+        "Frontend Layer": [
+          {
+            name: "Next.js 15",
+            role: "App Router, Server Components, route-based code splitting",
+            icon: Code2,
+          },
+          {
+            name: "React",
+            role: "Server and client components split by interaction needs",
+            icon: Atom,
+          },
+          {
+            name: "TypeScript",
+            role: "Strict end-to-end typing with centralized domain models",
+            icon: FileCode,
+          },
+          {
+            name: "Tailwind CSS v3",
+            role: "Utility-first styling with centralized design tokens",
+            icon: Paintbrush,
+          },
+        ],
+        "Design & Animation Layer": [
+          {
+            name: "Framer Motion",
+            role: "Section reveals, card interactions, gallery transitions",
+            icon: Wand2,
+          },
+          {
+            name: "shadcn/ui + Radix",
+            role: "Accessible primitives for dialogs, drawers, and controls",
+            icon: LayoutGrid,
+          },
+          {
+            name: "Lucide React",
+            role: "Consistent iconography across navigation and forms",
+            icon: Shapes,
+          },
+          {
+            name: "next-themes",
+            role: "Light/dark theme management with persistent preference",
+            icon: CloudSun,
+          },
+        ],
+        "State & Form Layer": [
+          {
+            name: "Zustand",
+            role: "Client state for saved properties and comparison lists",
+            icon: Package,
+          },
+          {
+            name: "URL Search Params",
+            role: "Shareable, bookmarkable search, filter, and sort state",
+            icon: Link2,
+          },
+          {
+            name: "React Hook Form",
+            role: "Performant form state for lead-generation workflows",
+            icon: ListChecks,
+          },
+          {
+            name: "Zod",
+            role: "Schema-based validation for forms and application data",
+            icon: CheckCircle2,
+          },
+        ],
+        "Property Experience Layer": [
+          {
+            name: "React Leaflet",
+            role: "Open-source interactive maps and location visualization",
+            icon: Map,
+          },
+          {
+            name: "Embla Carousel",
+            role: "Property galleries and related-property carousels",
+            icon: ImageIcon,
+          },
+          {
+            name: "next/image",
+            role: "Responsive image optimization and layout-shift prevention",
+            icon: Gauge,
+          },
+        ],
+        "Backend Layer": [
+          {
+            name: "Next.js Route Handlers",
+            role: "REST API layer for the Phase 2 backend architecture",
+            icon: Network,
+          },
+          {
+            name: "Prisma 6",
+            role: "Type-safe database access and schema management",
+            icon: Layers,
+          },
+          {
+            name: "PostgreSQL 16",
+            role: "Relational persistence for properties, agents, and leads",
+            icon: Database,
+          },
+          {
+            name: "Auth.js + JWT",
+            role: "Authentication and session architecture, bcrypt-hashed",
+            icon: KeyRound,
+          },
+        ],
+        "Data & Service Layer": [
+          {
+            name: "Pino",
+            role: "Structured application logging",
+            icon: FileText,
+          },
+          {
+            name: "ioredis",
+            role: "Optional Redis connectivity for caching and rate limiting",
+            icon: Zap,
+          },
+          {
+            name: "Cloudinary",
+            role: "Optional property and media asset management",
+            icon: Cloud,
+          },
+        ],
+        "Communication & Deployment": [
+          {
+            name: "Nodemailer / Resend",
+            role: "Transactional email for leads, appointments, and accounts",
+            icon: Mail,
+          },
+          {
+            name: "Docker + Compose",
+            role: "Containerized deployment with Postgres and optional Redis",
+            icon: Boxes,
+          },
+        ],
+      },
+
+      // Deployed on Vercel — shows the live browser-frame embed instead of
+      // the "coming soon" placeholder. See LivePreviewTab in CaseStudyPage.
+      livePreview: "https://citizenlink.vercel.app/",
+
+      scalability: [
+        {
+          title: "Property Catalog Expansion",
+          description:
+            "Currently around 50 realistic mock properties, with filtering, pagination, sorting, and related-property queries isolated from presentation components so the catalog can grow well beyond that without touching the UI.",
+        },
+        {
+          title: "Backend API Evolution",
+          description:
+            "Phase 1 mock data sits behind typed API functions; Phase 2 swaps those implementations for real REST services, keeping UI components largely independent from transport details.",
+        },
+        {
+          title: "Real Estate Marketplace Expansion",
+          description:
+            "Can evolve from a discovery portal into a full marketplace supporting agents, agencies, landlords, developers, property managers, and commercial listings.",
+        },
+        {
+          title: "Authentication & User Accounts",
+          description:
+            "Backend architecture is ready for real accounts, JWT authentication with rotating refresh tokens, RBAC, and personalized saved/compare experiences.",
+        },
+        {
+          title: "Agent & CRM Expansion",
+          description:
+            "Lead management can grow into a full CRM with agent inboxes, lead assignment, appointment management, and status pipelines.",
+        },
+        {
+          title: "Property Lifecycle Management",
+          description:
+            "Backend property capabilities support full CRUD and lifecycle states, draft, published, and archived, for real listing management.",
+        },
+        {
+          title: "Map & Location Intelligence",
+          description:
+            "The existing map layer can extend to production geocoding, clustering, commute information, and saved geographic searches.",
+        },
+        {
+          title: "AI-Powered Property Discovery",
+          description:
+            "Architecture is prepared for natural-language search and AI-assisted recommendations, letting users describe requirements conversationally.",
+        },
+        {
+          title: "Communication & Live Engagement",
+          description:
+            "Messaging and notifications can expand into real-time agent chat, appointment reminders, and automated lead follow-ups.",
+        },
+        {
+          title: "Payment & Booking Expansion",
+          description:
+            "Future phases can add deposits, property booking, paid listings, premium agent subscriptions, and advertising packages.",
+        },
+        {
+          title: "CMS & Content Expansion",
+          description:
+            "Can grow toward CMS-managed city guides, neighborhood articles, market reports, and SEO-focused real estate content.",
+        },
+        {
+          title: "White-Label Design System",
+          description:
+            "CSS-variable-based tokens for color, spacing, radius, and typography make the visual system adaptable for future white-labeling.",
+        },
+        {
+          title: "Internationalization Ready",
+          description:
+            "Centralized copy, typed structures, and isolated UI components provide a strong foundation for multilingual, multi-market portals.",
         },
       ],
     },
