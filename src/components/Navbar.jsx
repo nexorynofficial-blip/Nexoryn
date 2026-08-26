@@ -158,7 +158,17 @@ export default function Navbar() {
           ))}
         </div>
 
-        <BookACallButton className="hidden md:inline-block" />
+        {/* Wrapping instead of passing "hidden md:inline-block" straight to
+            BookACallButton: MagneticButton hardcodes an unconditional
+            "inline-block" ahead of its className prop, which ties with a
+            plain "hidden" utility on the same display property — depending
+            on Tailwind's generated rule order, "inline-block" can win,
+            leaving this desktop button rendered (and visible left of the
+            hamburger) on mobile too. A wrapper element has no competing
+            class of its own, so "hidden"/"md:inline-block" apply cleanly. */}
+        <div className="hidden md:inline-block">
+          <BookACallButton />
+        </div>
 
         {/* Hamburger — mobile only, first visible flex child there so it
             pins to the left edge (justify-between) */}

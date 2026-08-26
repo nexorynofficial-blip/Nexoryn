@@ -27,6 +27,20 @@ export function SiteBackground() {
     <div
       className="pointer-events-none fixed inset-0 z-0 bg-black"
       aria-hidden="true"
+      // Forces this fixed layer onto its own GPU compositing layer instead of
+      // being repainted in place. Mobile Safari/Chrome periodically decompose
+      // position:fixed layers (especially ones holding a WebGL canvas) during
+      // native scroll and repaint them in software for a frame or two — that
+      // repaint briefly shows the plain bg-black underneath before the canvas
+      // catches up, which is exactly what reads as "blinking black". Desktop
+      // never hits that repaint path, so this is a no-op there visually.
+      style={{
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        willChange: "transform",
+      }}
     >
       <ColorBends {...SITE_COLOR_BENDS} />
     </div>

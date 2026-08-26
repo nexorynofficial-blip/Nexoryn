@@ -73,7 +73,7 @@ export default function Footer() {
               <img
                 src={nexorynFullLogo}
                 alt="Nexoryn"
-                className="h-12 w-auto grayscale brightness-150 md:grayscale-0 md:brightness-100"
+                className="h-12 w-auto grayscale brightness-200 md:grayscale-0 md:brightness-100"
               />
             </Link>
             <p className="mt-4 text-sm text-white/50">

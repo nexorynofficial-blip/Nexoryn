@@ -6,10 +6,12 @@
 
 @font-face {
   font-family: "TachyonW00-Regular";
-  src:
-    url("/fonts/TachyonW00-Regular.woff2") format("woff2"),
-    url("/fonts/TachyonW00-Regular.woff") format("woff"),
-    url("/fonts/TachyonW00-Regular.otf") format("opentype");
+  /* Copied from this machine's installed copy (was only a system font under
+     HKCU\...\Fonts as "Tachyon W00 Regular" — the file never actually shipped
+     in the repo, so every real visitor, mobile included, silently fell back
+     to Archivo Black while it only ever looked right on machines that
+     happened to have this font installed locally). */
+  src: url("/fonts/TachyonW00-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

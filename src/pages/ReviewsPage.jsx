@@ -15,16 +15,16 @@ const SERVICES = ["Automation", "Web Development", "Graphic Design"];
 // the brand gradient, inactive ones sit dim on the shared glass surface.
 function ServiceFilter({ active, onSelect }) {
   return (
-    <div className="mx-auto flex w-fit flex-wrap justify-center gap-1.5 rounded-full glass-panel p-1.5">
+    <div className="mx-auto flex w-fit flex-wrap justify-center gap-3">
       {SERVICES.map((service) => (
         <button
           key={service}
           type="button"
           onClick={() => onSelect(service)}
           aria-pressed={active === service}
-          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors duration-300 sm:px-5 sm:text-sm ${
+          className={`glass-panel rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wide transition-all duration-300 sm:px-6 sm:py-3 sm:text-sm ${
             active === service
-              ? "bg-gradient-to-r from-accent-from to-accent-to text-black"
+              ? "border-transparent bg-gradient-to-r from-accent-from to-accent-to text-black"
               : "text-white/60 hover:text-white"
           }`}
         >

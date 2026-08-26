@@ -180,7 +180,17 @@ export default function ColorBends({
     });
     rendererRef.current = renderer;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Touch/coarse-pointer devices are capped lower than desktop's 2x: a
+    // full-viewport fixed WebGL canvas at full mobile DPR (often 3x on
+    // phones) is heavy enough that weaker mobile GPUs reclaim the context
+    // under memory pressure, which is what shows up as the background
+    // dropping to black mid-scroll. A smaller buffer is both less likely to
+    // get evicted and faster to redraw if it ever is.
+    const isCoarsePointer =
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches;
+    const dprCap = isCoarsePointer ? 1.5 : 2;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     renderer.setClearColor(0x000000, transparent ? 0 : 1);
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
