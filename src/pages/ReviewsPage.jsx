@@ -24,7 +24,11 @@ function ServiceFilter({ active, onSelect }) {
           aria-pressed={active === service}
           className={`glass-panel rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wide transition-all duration-300 sm:px-6 sm:py-3 sm:text-sm ${
             active === service
-              ? "border-transparent bg-gradient-to-r from-accent-from to-accent-to text-black"
+              ? // .glass-panel's `background`/`border` are plain (unlayered) CSS,
+                // which beats Tailwind's own utility layer regardless of class
+                // order — without `!` the gradient/border here were silently
+                // losing and every pill just looked like the inactive one.
+                "border-transparent! bg-gradient-to-r! from-accent-from! to-accent-to! text-black"
               : "text-white/60 hover:text-white"
           }`}
         >
