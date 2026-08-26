@@ -8,6 +8,9 @@ import { AboutGlobe } from "../components/AboutGlobe";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import nexorynLogo from "../assets/nexoryn-logo.png";
+import waseemPhoto from "../assets/team-waseem-farooq.png";
+import abdulPhoto from "../assets/team-abdul-ahad.png";
+import akbarPhoto from "../assets/team-akbar-khan.png";
 
 const INTRO_PARAGRAPH =
   "At Nexoryn, we build websites that convert and automation systems that eliminate the repetitive work slowing businesses down. We don't rely on templates or one-size-fits-all solutions. Instead, we analyze how your business operates, identify inefficiencies, and create custom systems designed specifically for your workflow. Our goal is simple: help businesses save time, improve efficiency, and focus on growth by replacing manual processes with smarter, scalable solutions.";
@@ -25,24 +28,21 @@ const MISSION_VISION = [
   },
 ];
 
-const face = (id) =>
-  `https://images.unsplash.com/${id}?w=400&h=500&fit=crop&crop=faces`;
-
 const TEAM = [
   {
     name: "Waseem Farooq",
     role: "Co Founder",
-    photo: face("photo-1560250097-0b93528c311a"),
+    photo: waseemPhoto,
   },
   {
-    name: "Abdul Ahad Khan",
+    name: "Abdul Ahad",
     role: "Co Founder",
-    photo: face("photo-1519244703995-f4e0f30006d5"),
+    photo: abdulPhoto,
   },
   {
     name: "Akbar Khan",
     role: "Co Founder",
-    photo: face("photo-1573496359142-b8d87734a5a2"),
+    photo: akbarPhoto,
   },
 ];
 
