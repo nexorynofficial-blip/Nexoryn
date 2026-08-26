@@ -91,14 +91,18 @@ export default function Hero() {
         </video>
       </div>
 
-      {/* Near-zero contrast overlay: photo stays vivid, cards carry their own contrast */}
+      {/* Near-zero contrast overlay: photo stays vivid, cards carry their own
+          contrast. Desktop-only — there's no video on mobile to protect
+          contrast for, and stacking these on top of the section's own
+          bg-black/50 made mobile Hero read noticeably darker than every
+          other section's identical bg-black/50 scrim. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/5 to-transparent"
+        className="absolute inset-0 hidden bg-gradient-to-r from-black/20 via-black/5 to-transparent md:block"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/15 to-transparent"
+        className="absolute inset-x-0 top-0 hidden h-1/3 bg-gradient-to-b from-black/15 to-transparent md:block"
       />
       {/* Soft blend into the black of the sections below — only needed to
           smooth the video's bright bottom edge into solid black. There's no

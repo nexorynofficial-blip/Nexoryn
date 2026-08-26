@@ -11,7 +11,9 @@ import Footer from "../Footer";
 export default function LegalPageShell({ title, description, updated, children }) {
   useEffect(() => {
     document.title = `${title} - Nexoryn`;
-    window.scrollTo(0, 0);
+    // No local scroll reset — the global ScrollToTop already resets on every
+    // route change via lenis.scrollTo, which Lenis needs to stay in sync;
+    // a raw window.scrollTo call here fights that (see ScrollToTop.jsx).
   }, [title]);
 
   return (

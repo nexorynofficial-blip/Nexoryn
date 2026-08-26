@@ -186,21 +186,10 @@ export default function Navbar() {
           />
         </button>
 
-        {/* Logo — mobile only, last visible flex child there so it pins to
-            the right edge (Book a Call removed from the mobile bar; it's
-            still reachable from inside the menu's link list via Contact) */}
-        <Link
-          to="/"
-          onClick={() => setClicked("HOME")}
-          className="group flex items-center md:hidden"
-          aria-label="Nexoryn home"
-        >
-          <img
-            src={nexorynFullLogo}
-            alt="Nexoryn"
-            className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-          />
-        </Link>
+        {/* Mobile-only Book a Call — no logo in the mobile bar at all now,
+            so this is the last (and only other) visible flex child, pinning
+            to the right edge opposite the hamburger */}
+        <BookACallButton compact className="md:hidden" />
       </nav>
 
       {/* Mobile menu — full-width animated panel with a dimming backdrop and
@@ -234,7 +223,7 @@ export default function Navbar() {
                 }}
                 initial="closed"
                 animate="open"
-                className="flex flex-col items-center gap-6 px-6 py-10 text-center"
+                className="flex flex-col items-start gap-6 px-6 py-10 text-left"
               >
                 {LINKS.map((label) => (
                   <motion.div

@@ -190,13 +190,40 @@ export default function ColorBends({
     const clock = new THREE.Clock();
 
     const handleResize = () => {
-      const w = container.clientWidth || 1;
-      const h = container.clientHeight || 1;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      // Mobile browsers fire resize/ResizeObserver with a momentarily
+      // degenerate (often 0) height while their dynamic address bar
+      // hides/shows mid-scroll. Sizing the WebGL canvas to that for even one
+      // frame renders solid black until the next real measurement — which
+      // is exactly what read as the background "blinking black" on mobile.
+      // Skipping zero-size frames means the canvas just keeps its last good
+      // size instead of collapsing.
+      if (!w || !h) return;
       renderer.setSize(w, h, false);
       material.uniforms.uCanvas.value.set(w, h);
     };
 
     handleResize();
+
+    // Mobile GPUs reclaim WebGL contexts under memory pressure far more
+    // aggressively than desktop. Without handling this, a lost context stops
+    // rendering (the container's solid black fallback shows through) and
+    // never recovers, since three.js won't auto-restore unless the loss
+    // event's default is prevented and the render loop keeps running for
+    // the browser to fire `webglcontextrestored` back.
+    const canvasEl = renderer.domElement;
+    const handleContextLost = (event) => {
+      event.preventDefault();
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+    const handleContextRestored = () => {
+      handleResize();
+      if (rafRef.current === null) rafRef.current = requestAnimationFrame(loop);
+    };
+    canvasEl.addEventListener("webglcontextlost", handleContextLost, false);
+    canvasEl.addEventListener("webglcontextrestored", handleContextRestored, false);
 
     if ("ResizeObserver" in window) {
       const ro = new ResizeObserver(handleResize);
@@ -231,6 +258,8 @@ export default function ColorBends({
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (resizeObserverRef.current) resizeObserverRef.current.disconnect();
       else window.removeEventListener("resize", handleResize);
+      canvasEl.removeEventListener("webglcontextlost", handleContextLost, false);
+      canvasEl.removeEventListener("webglcontextrestored", handleContextRestored, false);
       geometry.dispose();
       material.dispose();
       renderer.dispose();

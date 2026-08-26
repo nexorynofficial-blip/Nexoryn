@@ -319,7 +319,9 @@ function ContactFormPanel() {
 export default function ContactPage() {
   useEffect(() => {
     document.title = "Contact - Nexoryn";
-    window.scrollTo(0, 0);
+    // No local scroll reset — the global ScrollToTop already resets on every
+    // route change via lenis.scrollTo, which Lenis needs to stay in sync;
+    // a raw window.scrollTo call here fights that (see ScrollToTop.jsx).
   }, []);
 
   return (

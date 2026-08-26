@@ -15,6 +15,7 @@ import { staggerContainer, blurFadeIn } from "../lib/motion";
 import { gsap, useGSAP } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
 import { useOutsideClick } from "../hooks/useOutsideClick";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { SectionsBackground } from "../components/SectionsBackground";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
@@ -375,7 +376,13 @@ function OverviewTab({ overview }) {
   return (
     <div className="flex flex-col gap-6">
       <ProblemSolution problem={overview.problem} solution={overview.solution} />
-      <SolutionWorkflow steps={overview.workflow} />
+      {/* Workflow diagram is desktop-only — its animated node/connector
+          layout is a wide horizontal strip that doesn't compress well into
+          mobile's narrower column, so it's dropped there rather than shown
+          cramped. Everything else in the tab is unchanged. */}
+      <div className="hidden md:block">
+        <SolutionWorkflow steps={overview.workflow} />
+      </div>
       <TechnicalBreakdown sections={overview.breakdown} />
     </div>
   );
@@ -933,8 +940,61 @@ function LivePreviewEmbed({ url, siteName = "Live Site" }) {
   );
 }
 
+// Mobile-only stand-in for the embed: most live sites aren't built to sit
+// inside a small iframe (their own responsive breakpoints, nav, and touch
+// interactions weren't designed to be viewed doubly-embedded like that), so
+// rather than force a cramped, likely-broken iframe into a phone-width tab,
+// mobile gets a clear notice pointing to the desktop view or the site itself.
+function LivePreviewMobileNotice({ url, siteName = "Live Site" }) {
+  const displayUrl = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+  return (
+    <div
+      className={`${inner()} flex flex-col items-center gap-4 rounded-2xl p-8 text-center`}
+    >
+      <div className="flex h-14 w-14 items-center justify-center rounded-full border border-orange-400/25 bg-orange-500/10 text-orange-400">
+        <Monitor className="h-6 w-6" />
+      </div>
+      <div>
+        <h3 className="font-heading text-lg text-white">Best Viewed on Desktop</h3>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-body-dim">
+          The live preview of {siteName} is shown here on desktop. On mobile,{" "}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-accent-to underline underline-offset-2 hover:text-white"
+          >
+            click here
+          </a>{" "}
+          to open it in a new tab.
+        </p>
+      </div>
+      <div className="mt-1 flex w-full flex-col items-center gap-2 rounded-xl border border-accent-from/20 bg-black/30 px-4 py-2.5">
+        <span className="truncate font-mono-tech text-xs text-body-dim">
+          {displayUrl}
+        </span>
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-accent-from to-accent-to px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition duration-300 hover:scale-105 hover:brightness-110"
+      >
+        Visit Live Site
+        <ExternalLink className="h-3 w-3" />
+      </a>
+    </div>
+  );
+}
+
 function LivePreviewTab({ livePreview, siteName }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
   if (typeof livePreview === "string") {
+    if (isMobile) {
+      return <LivePreviewMobileNotice url={livePreview} siteName={siteName} />;
+    }
     return <LivePreviewEmbed url={livePreview} siteName={siteName} />;
   }
   return <LivePreviewComingSoon />;

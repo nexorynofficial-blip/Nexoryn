@@ -67,7 +67,14 @@ export default function Footer() {
           {/* Left: logo + copyright */}
           <div>
             <Link to="/" className="flex items-center" aria-label="Nexoryn home">
-              <img src={nexorynFullLogo} alt="Nexoryn" className="h-12 w-auto" />
+              {/* Grayscale + brightened on mobile only — the full-color mark
+                  reads too dark/low-contrast against the black footer on
+                  small screens; md+ keeps the original logo untouched. */}
+              <img
+                src={nexorynFullLogo}
+                alt="Nexoryn"
+                className="h-12 w-auto grayscale brightness-150 md:grayscale-0 md:brightness-100"
+              />
             </Link>
             <p className="mt-4 text-sm text-white/50">
               © Nexoryn 2026. All rights reserved.

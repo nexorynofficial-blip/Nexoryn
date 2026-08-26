@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
@@ -6,8 +6,43 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import { ReviewCardStack } from "../components/ReviewCardStack";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
+import { REVIEWS } from "../data/reviews";
+
+const SERVICES = ["Automation", "Web Development", "Graphic Design"];
+
+// Segmented pill control, same visual language as the site's other tab/pill
+// selectors (Services page's TabBar, Contact's form tabs) — active pill gets
+// the brand gradient, inactive ones sit dim on the shared glass surface.
+function ServiceFilter({ active, onSelect }) {
+  return (
+    <div className="mx-auto flex w-fit flex-wrap justify-center gap-1.5 rounded-full glass-panel p-1.5">
+      {SERVICES.map((service) => (
+        <button
+          key={service}
+          type="button"
+          onClick={() => onSelect(service)}
+          aria-pressed={active === service}
+          className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-colors duration-300 sm:px-5 sm:text-sm ${
+            active === service
+              ? "bg-gradient-to-r from-accent-from to-accent-to text-black"
+              : "text-white/60 hover:text-white"
+          }`}
+        >
+          {service}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function ReviewsPage() {
+  const [activeService, setActiveService] = useState(SERVICES[0]);
+
+  const filteredReviews = useMemo(
+    () => REVIEWS.filter((review) => review.service === activeService),
+    [activeService],
+  );
+
   useEffect(() => {
     document.title = "Reviews - Nexoryn";
   }, []);
@@ -42,14 +77,21 @@ export default function ReviewsPage() {
             </Reveal>
           </div>
 
+          {/* Service filter — which discipline's reviews to read, defaults
+              to Automation */}
+          <Reveal y={20} delay={0.26} animateOnMount className="mt-10">
+            <ServiceFilter active={activeService} onSelect={setActiveService} />
+          </Reveal>
+
           {/* Expandable review card stack */}
           <motion.div
+            key={activeService}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            className="mt-14"
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="mt-10"
           >
-            <ReviewCardStack />
+            <ReviewCardStack reviews={filteredReviews} />
           </motion.div>
         </div>
 

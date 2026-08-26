@@ -6,23 +6,30 @@ import { GlowCard } from "./ui/GlowCard";
 import { DefaultAvatar } from "./ui/DefaultAvatar";
 import { ShowMoreButton } from "./ui/ShowMoreButton";
 import { useOutsideClick } from "../hooks/useOutsideClick";
-import { REVIEWS } from "../data/reviews";
+import { REVIEWS as ALL_REVIEWS } from "../data/reviews";
 import { truncate } from "../lib/truncate";
 
 const INITIAL_COUNT = 9;
 const BATCH = 9;
 
-export function ReviewCardStack() {
+export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [active, setActive] = useState(null);
   const [anchorRect, setAnchorRect] = useState(null);
   const modalRef = useRef(null);
   const cardRefs = useRef({});
 
-  const visible = REVIEWS.slice(0, visibleCount);
-  const allShown = visibleCount >= REVIEWS.length;
+  // A service-filter change swaps the whole `reviews` array — start its
+  // pagination fresh rather than carrying over whatever count the previous
+  // filter had reached.
+  useEffect(() => {
+    setVisibleCount(INITIAL_COUNT);
+  }, [reviews]);
+
+  const visible = reviews.slice(0, visibleCount);
+  const allShown = visibleCount >= reviews.length;
   const revealMore = () =>
-    setVisibleCount((c) => Math.min(c + BATCH, REVIEWS.length));
+    setVisibleCount((c) => Math.min(c + BATCH, reviews.length));
 
   useOutsideClick(modalRef, () => {
     setActive(null);
