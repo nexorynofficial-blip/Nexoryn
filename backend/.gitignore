@@ -11,3 +11,11 @@ coverage/
 # regenerate any time with `bun run extract:frontend-data` rather than
 # committing a stale copy)
 prisma/fixtures/*.json
+
+# Local throwaway PostgreSQL instance used for development (created by
+# initdb into .pgdata and run on port 5433). This is a live database
+# directory — it holds real rows and password hashes and must never be
+# committed. Nothing here is needed to run the project: see README.md for
+# how to stand up a fresh local database.
+.pgdata/
+pg.log
