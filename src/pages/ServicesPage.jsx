@@ -7,11 +7,14 @@ import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
 import { ServiceBox } from "../components/ServiceBox";
 import { SERVICE_CATEGORIES } from "../data/services";
+import { getServices } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
+  const categories = useContent(getServices, SERVICE_CATEGORIES);
   const lenis = useLenis();
   // Set by the Hero card's service tags and the home Services section's
   // "Explore This Service in Detail" buttons — links straight into a single
@@ -65,7 +68,7 @@ export default function ServicesPage() {
 
           {/* Three independent service boxes, each with its own tab state */}
           <div className="mt-16 flex flex-col gap-10 md:mt-20 md:gap-14">
-            {SERVICE_CATEGORIES.map((category, i) => (
+            {categories.map((category, i) => (
               <motion.div
                 key={category.id}
                 id={`service-${category.id}`}

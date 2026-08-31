@@ -7,6 +7,8 @@ import { ReviewCardStack } from "../components/ReviewCardStack";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import { REVIEWS } from "../data/reviews";
+import { getReviews } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 
 const SERVICES = ["Automation", "Web Development", "Graphic Design"];
 
@@ -41,10 +43,11 @@ function ServiceFilter({ active, onSelect }) {
 
 export default function ReviewsPage() {
   const [activeService, setActiveService] = useState(SERVICES[0]);
+  const reviews = useContent(getReviews, REVIEWS);
 
   const filteredReviews = useMemo(
-    () => REVIEWS.filter((review) => review.service === activeService),
-    [activeService],
+    () => reviews.filter((review) => review.service === activeService),
+    [reviews, activeService],
   );
 
   useEffect(() => {

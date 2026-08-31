@@ -11,6 +11,8 @@ import nexorynLogo from "../assets/nexoryn-logo.png";
 import waseemPhoto from "../assets/team-waseem-farooq.png";
 import abdulPhoto from "../assets/team-abdul-ahad.png";
 import akbarPhoto from "../assets/team-akbar-khan.png";
+import { getTeam } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 
 const INTRO_PARAGRAPH =
   "At Nexoryn, we build websites that convert and automation systems that eliminate the repetitive work slowing businesses down. We don't rely on templates or one-size-fits-all solutions. Instead, we analyze how your business operates, identify inefficiencies, and create custom systems designed specifically for your workflow. Our goal is simple: help businesses save time, improve efficiency, and focus on growth by replacing manual processes with smarter, scalable solutions.";
@@ -83,6 +85,9 @@ function MissionVisionBox({ icon: Icon, heading, body }) {
 }
 
 export default function AboutPage() {
+  // Falls back to the bundled TEAM list whenever the API has nothing to say.
+  const team = useContent(getTeam, TEAM) ?? TEAM;
+
   useEffect(() => {
     document.title = "About - Nexoryn";
     // No local scroll reset — the global ScrollToTop already resets on every
@@ -160,7 +165,7 @@ export default function AboutPage() {
             </div>
 
             <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-              {TEAM.map((member) => (
+              {team.map((member) => (
                 <TeamCard key={member.name} {...member} />
               ))}
             </div>

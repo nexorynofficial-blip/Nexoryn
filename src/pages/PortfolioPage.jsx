@@ -16,6 +16,8 @@ import { ShowMoreButton } from "../components/ui/ShowMoreButton";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import { PROJECTS } from "../data/projects";
+import { getProjects } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 
 // "Show more" pagination: start with 6 cards and reveal the next batch of 6
 // on each click until the whole filtered list is shown.
@@ -214,8 +216,10 @@ export default function PortfolioPage() {
     if (match) setIndustry(match);
   }, [searchParams]);
 
+  const projects = useContent(getProjects, PROJECTS);
+
   const visible = useMemo(() => {
-    let list = PROJECTS.filter(
+    let list = projects.filter(
       (p) => industry === "All Projects" || p.industry === industry
     );
     const q = query.trim().toLowerCase();
@@ -228,7 +232,7 @@ export default function PortfolioPage() {
       );
     }
     return list;
-  }, [industry, query]);
+  }, [projects, industry, query]);
 
   // Reset pagination whenever the filtered/searched list changes
   useEffect(() => {

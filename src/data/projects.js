@@ -89,6 +89,8 @@ import execIntelligenceAiAnalysis from "../assets/case-study-screenshots/exec-in
 import candidateScreeningThumb from "../assets/project-candidate-screening-thumb.jpeg";
 import candidateScreeningShortlistEmail from "../assets/case-study-screenshots/candidate-screening-shortlist-email.jpeg";
 import candidateScreeningDeclineEmail from "../assets/case-study-screenshots/candidate-screening-decline-email.jpeg";
+import invoiceProcessingThumb from "../assets/project-invoice-processing-thumb.jpeg";
+import invoiceProcessingSlackAlerts from "../assets/case-study-screenshots/invoice-processing-slack-alerts.jpeg";
 import restaurantStandeeThumb from "../assets/project-restaurant-standee-thumb.png";
 import wellnessFlyerThumb from "../assets/project-wellness-flyer-thumb.png";
 import sportsBillboardThumb from "../assets/project-sports-billboard-thumb.png";
@@ -2430,6 +2432,236 @@ export const PROJECTS = [
           title: "Hiring Analytics",
           description:
             "Pipeline logs can feed Looker Studio or Power BI for pass-through rates, skill-gap trends, and time-to-screen reporting over time.",
+        },
+      ],
+    },
+  },
+
+  {
+    slug: "ai-invoice-processing-pipeline",
+    title: "AI Invoice Processing Pipeline",
+    industry: "Fintech",
+    service: "Automation",
+    description:
+      "An AI-powered automation that watches Gmail for incoming invoices and receipts, extracts structured financial data with GPT-OSS 120B via Groq, validates totals and duplicates against business rules, logs clean records to Google Sheets, and alerts the team on Slack when something needs review.",
+    tags: ["Automation", "n8n", "Groq / GPT-OSS"],
+    photo: invoiceProcessingThumb,
+
+    caseStudy: {
+      category: "AI Automation",
+      techIcons: [
+        { name: "Groq / GPT-OSS", icon: Brain },
+        { name: "n8n", icon: Workflow },
+        { name: "Google Sheets", icon: Sheet },
+        { name: "Slack", icon: Hash },
+      ],
+      summary:
+        "An AI-powered accounts-payable pipeline. It watches Gmail for invoices and receipts, extracts structured financial data with GPT-OSS 120B via Groq, validates totals and duplicates against deterministic business rules, logs clean records to a Google Sheets ledger, and alerts the team on Slack the moment something needs review.",
+
+      overview: {
+        problem: [
+          "Finance teams waste hours opening invoice PDFs, copying fields into spreadsheets, and double-checking math by hand",
+          "Incoming invoices arrive in email with no consistent format, vendors, dates, and line items vary across every document",
+          "Duplicate invoices slip through when the same bill is re-sent, forwarded, or logged twice under a different filename",
+          "Errors in subtotals, tax, and totals often go unnoticed until reconciliation, or until someone catches them manually",
+        ],
+        solution: [
+          "Gmail is monitored automatically for messages with invoice, receipt, or bill attachments, no manual forwarding required",
+          "PDF attachments are parsed to text and passed to GPT-OSS 120B (Groq), which returns strict JSON: vendor, dates, currency, totals, and line items",
+          "A validation engine checks required fields, math accuracy, line-item sums, and duplicate invoice numbers against the ledger",
+          "Valid invoices are appended to Google Sheets; invalid or suspicious ones trigger a structured Slack alert with vendor, invoice #, total, and issue list",
+        ],
+        workflow: [
+          { icon: Mail, label: "Watch" },
+          { icon: FileText, label: "Extract" },
+          { icon: Brain, label: "Parse" },
+          { icon: Search, label: "Check" },
+          { icon: ShieldCheck, label: "Validate" },
+          { icon: Route, label: "Route" },
+        ],
+        breakdown: [
+          {
+            title: "1. Gmail Intake & Attachment Filtering",
+            description:
+              "A Gmail Trigger polls the inbox every minute for Message Received events matching has:attachment (invoice OR receipt OR bill). An IF node confirms the message contains attachments before processing, so only relevant financial documents enter the pipeline, not every email in the inbox.",
+          },
+          {
+            title: "2. PDF Text Extraction",
+            description:
+              "The Extract from PDF node converts the attachment into raw text for downstream AI parsing. This turns vendor-specific PDF layouts, tables, headers, footers, into a consistent text payload regardless of invoice design.",
+          },
+          {
+            title: "3. AI Structured Field Extraction (GPT-OSS 120B)",
+            description:
+              "A Basic LLM Chain running openai/gpt-oss-120b via Groq extracts invoice fields into a fixed JSON schema: vendor, invoice number, invoice date, due date, currency, subtotal, tax, total, and line items (description, quantity, unit price, amount). A Structured Output Parser enforces the schema. The prompt requires only valid JSON, no markdown, no commentary, and explicitly forbids inventing missing data (null/0 when absent).",
+          },
+          {
+            title: "4. Duplicate Detection",
+            description:
+              "Before validation completes, a Google Sheets lookup checks whether the extracted invoice number already exists in the ledger. This prevents double-logging when the same invoice is re-sent, forwarded, or processed twice from different email threads.",
+          },
+          {
+            title: "5. Business Rule Validation Engine",
+            description:
+              "A Code node merges extracted fields with duplicate-check results and runs four deterministic rules: required fields (vendor, invoice number, and total must be present), total math (subtotal + tax must equal total within $0.01 tolerance), duplicate guard (invoice number must not already exist in the sheet), and line-item integrity (sum of line-item amounts must match subtotal within $0.01 tolerance). Each run outputs is_valid, a detailed issues array, and a processed_at timestamp for auditability.",
+          },
+          {
+            title: "6. Routing, Ledger Logging & Slack Alerting",
+            description:
+              "A Valid? IF node splits the flow: valid invoices are appended to a clean Google Sheets ledger; invalid invoices trigger a Slack alert with structured context, vendor, invoice number, total, and a bulleted issue list, so finance can review duplicates, math mismatches, or missing fields without opening the workflow.",
+          },
+        ],
+      },
+
+      results: {
+        keyFeatures: [
+          {
+            title: "Intelligent Gmail monitoring",
+            description:
+              "Polls Gmail on a recurring schedule with a targeted search filter, only messages with invoice, receipt, or bill attachments enter the pipeline, reducing noise and wasted runs.",
+          },
+          {
+            title: "PDF-to-structured-data extraction",
+            description:
+              "Converts unstructured PDF invoices into a normalized JSON object with vendor details, dates, currency, totals, and itemized line items, ready for spreadsheet logging or downstream accounting.",
+          },
+          {
+            title: "Schema-constrained AI parsing",
+            description:
+              "Uses a structured output parser with strict JSON rules and anti-hallucination guardrails, the model returns exactly the fields defined in the schema, nothing invented.",
+          },
+          {
+            title: "Deterministic validation layer",
+            description:
+              "AI extraction is followed by code-based business rules, required fields, subtotal + tax = total, line-item sum checks, and duplicate detection, so bad data never silently enters the ledger.",
+          },
+          {
+            title: "Duplicate invoice prevention",
+            description:
+              "Cross-references every invoice number against the existing Google Sheets ledger before append, protecting against double-payment risk and duplicate bookkeeping entries.",
+          },
+          {
+            title: "Actionable Slack alerts",
+            description:
+              "Invalid invoices surface in Slack with vendor, invoice #, total, and precise issue details, finance sees exactly what failed and why, without digging through email or n8n execution logs.",
+          },
+        ],
+        before:
+          "Manually opening PDF attachments, copying fields into spreadsheets, checking math by hand, missing duplicates until reconciliation, and no structured log of why an invoice was rejected or flagged.",
+        after:
+          "Invoices are detected automatically from Gmail, parsed into structured JSON by GPT-OSS 120B, validated against business rules, logged cleanly to Sheets when valid, and flagged on Slack with precise issue details when not, consistent, auditable, hands-free intake.",
+        proof:
+          "This system demonstrates that finance operations can combine document extraction, constrained LLM parsing, and deterministic validation into one reliable pipeline, automating invoice intake while keeping humans in the loop only when data integrity actually requires it.",
+      },
+
+      techStack: {
+        "AI Layer": [
+          {
+            name: "Groq (GPT-OSS 120B)",
+            role: "Structured invoice field extraction from PDF text",
+            icon: Brain,
+          },
+          {
+            name: "Structured Output Parser",
+            role: "Schema-enforced JSON response",
+            icon: FileCheck,
+          },
+          { name: "n8n", role: "Workflow orchestration engine", icon: Workflow },
+        ],
+        "Data Layer": [
+          {
+            name: "Gmail API",
+            role: "Inbox monitoring and attachment intake",
+            icon: Mail,
+          },
+          {
+            name: "PDF / File Extraction",
+            role: "Invoice text extraction from attachments",
+            icon: FileText,
+          },
+          {
+            name: "Google Sheets",
+            role: "Duplicate lookup and clean invoice ledger",
+            icon: Sheet,
+          },
+          {
+            name: "Custom JS Validation Engine",
+            role: "Required-field checks, math validation, duplicate guard",
+            icon: Calculator,
+          },
+        ],
+        "Communication Layer": [
+          {
+            name: "Slack API",
+            role: "Invalid-invoice alerts with vendor, invoice #, total, and issue list",
+            icon: Hash,
+          },
+          {
+            name: "Google Sheets API",
+            role: "Automated ledger append for valid records",
+            icon: Sheet,
+          },
+        ],
+      },
+
+      // Original pixel dimensions kept alongside each image so the
+      // Screenshots tab's bento grid can size each tile to its real aspect
+      // ratio instead of cropping everything to a uniform box.
+      screenshots: [
+        {
+          src: invoiceProcessingThumb,
+          alt: "Full n8n invoice processing workflow",
+          width: 1535,
+          height: 506,
+        },
+        {
+          src: invoiceProcessingSlackAlerts,
+          alt: "Slack finance-alerts channel showing flagged invoices with issue details",
+          width: 934,
+          height: 672,
+        },
+      ],
+
+      scalability: [
+        {
+          title: "LLM Provider Flexibility",
+          description:
+            "Currently runs on Groq GPT-OSS 120B; can swap to Llama 3.3 70B, GPT-4o, Claude, or Gemini for higher-accuracy extraction on complex multi-page or non-English invoices.",
+        },
+        {
+          title: "Intake Channel Expansion",
+          description:
+            "Gmail trigger can extend to Outlook, Google Drive folder watch, or a shared AP inbox webhook without redesigning extraction or validation logic.",
+        },
+        {
+          title: "Multi-Attachment Handling",
+          description:
+            "Built to process PDF attachments per message; can loop over multiple files per email (invoice + receipt) with per-file validation and logging.",
+        },
+        {
+          title: "Approval Workflow Optional",
+          description:
+            "Valid invoices can route through a Slack approve/reject step before final ledger append for high-value or new-vendor bills.",
+        },
+        {
+          title: "Accounting System Sync",
+          description:
+            "Structured JSON output can push directly into QuickBooks, Xero, or NetSuite via API using the same validated payload.",
+        },
+        {
+          title: "Vendor-Specific Rules",
+          description:
+            "Validation engine can add per-vendor tolerance rules, expected currency checks, or PO-number matching without changing the core extraction flow.",
+        },
+        {
+          title: "Audit Trail & Historical Logging",
+          description:
+            "processed_at, issues, and raw extraction can be logged to a separate audit sheet or database for compliance and reconciliation reporting.",
+        },
+        {
+          title: "Threshold Alerting",
+          description:
+            "Can add logic to flag invoices above a dollar threshold, overdue due dates, or unknown vendors for priority review before payment.",
         },
       ],
     },

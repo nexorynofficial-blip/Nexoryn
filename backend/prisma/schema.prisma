@@ -1,0 +1,297 @@
+// Nexoryn backend — Prisma schema.
+// Adapted from the team's planning docs (01-BACKEND-SETUP-GUIDE.md), with two
+// fixes applied to what was drafted there:
+//   1. `Investment.creditor` is a second, differently-named relation to
+//      AdminUser (the first being `admin`) — Prisma requires an explicit
+//      inverse field for every named relation; the draft only declared the
+//      unnamed side (`investmentTransactions`). Added `owedToMe` below.
+//   2. `Project.photoId` is a required field but the draft paired it with
+//      `onDelete: SetNull`, which is invalid on a non-nullable column
+//      (Prisma rejects this at schema-validation time). Switched to
+//      `onDelete: Restrict` — matches the app-level "can't delete an asset
+//      still in use" check already in the assets route anyway.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ADMIN & AUTH
+// ============================================================================
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("admin") // reserved for future roles; v1 treats every admin as full-access
+  profilePhoto String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+
+  uploadedAssets      Asset[]
+  financeRecords      FinanceRecord[]
+  createdProjects     Project[]
+  internalProjects    InternalProject[]
+  investments         Investment[]
+
+  @@index([email])
+}
+
+// ============================================================================
+// PUBLIC CONTENT MODELS
+// ============================================================================
+
+model Project {
+  id    String @id @default(cuid())
+  slug  String @unique
+  title String
+
+  // NOTE: `service` here historically used "Brand & Graphic Design" while
+  // Review.service / ServiceCategory.serviceName use bare "Graphic Design" —
+  // this inconsistency already exists in the live frontend data
+  // (src/data/projects.js vs. src/data/reviews.js / services.js). Pick ONE
+  // canonical string during the seed/migration step (see
+  // scripts/extract-frontend-data.mjs) rather than perpetuating both.
+  industry    String
+  service     String
+  description String
+  tags        String[]
+
+  photoId String
+  photo   Asset  @relation("ProjectPhoto", fields: [photoId], references: [id], onDelete: Restrict)
+
+  // Case study — kept as JSONB rather than fully normalized: its shape
+  // genuinely varies (standard automation/web-dev shape vs. the design-project
+  // shape with designProcess/keyFeatures/useCases/gallery instead of
+  // overview.workflow/results/techStack), and nothing in the current admin
+  // requirements needs to query *inside* it. See docs/DATA-MODEL.md §2.
+  caseStudy Json
+
+  isFeatured    Boolean @default(false)
+  featuredOrder Int?
+
+  createdBy String?
+  creator   AdminUser? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([industry])
+  @@index([service])
+  @@index([isFeatured])
+}
+
+model ServiceCategory {
+  id            String @id @default(cuid())
+  slug          String @unique // "automation" | "web-development" | "graphic-design"
+  serviceName   String
+  overviewIcon  String // lucide-react icon name
+  gooeyId       String
+  overview      Json // { heading: string, body: string }
+  mobileSummary Json // { description, howWeWork[], whatYouGet[], platforms[] }
+
+  subServices SubService[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SubService {
+  id         String          @id @default(cuid())
+  categoryId String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  slug        String // unique within its category, e.g. "workflow-automation"
+  icon        String // lucide-react icon name
+  name        String
+  description String
+  howWeWork   String[]
+  whatYouGet  String[]
+  platforms   String[]
+  order       Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+}
+
+model Review {
+  id         String   @id @default(cuid()) // internal id; `displayId` keeps the original handle (e.g. "abu786110")
+  displayId  String   @unique
+  name       String
+  location   String
+  service    String // "Automation" | "Web Development" | "Graphic Design"
+  text       String   @db.Text
+  order      Int
+  isFeatured Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([service])
+  @@index([isFeatured])
+}
+
+model TeamMember {
+  id      String  @id @default(cuid())
+  name    String
+  role    String
+  photoId String?
+  photo   Asset?  @relation("TeamMemberPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  order   Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id       String  @id @default(cuid())
+  question String
+  answer   String  @db.Text
+  category String  @default("general")
+  order    Int
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ============================================================================
+// CONTACT FORMS
+// ============================================================================
+
+model ContactSubmission {
+  id     String @id @default(cuid())
+  formId String // "question" | "consultation" | "start"
+  status String @default("new") // "new" | "read" | "handled"
+  fields Json // shape depends on formId — see docs/DATA-MODEL.md §4
+
+  emailedAt  DateTime?
+  emailError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([formId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// ASSETS / FILE UPLOADS
+// ============================================================================
+
+model Asset {
+  id       String @id @default(cuid())
+  url      String
+  altText  String
+  width    Int?
+  height   Int?
+  mimeType String
+  fileSize Int
+
+  uploadedBy String
+  uploader   AdminUser @relation(fields: [uploadedBy], references: [id])
+  uploadedAt DateTime  @default(now())
+
+  projectPhotos Project[]    @relation("ProjectPhoto")
+  teamPhotos    TeamMember[] @relation("TeamMemberPhoto")
+
+  @@index([uploadedAt])
+  @@index([uploadedBy])
+}
+
+// ============================================================================
+// FINANCE & ADMIN TRACKING
+// ============================================================================
+
+model Investment {
+  id          String    @id @default(cuid())
+  adminId     String // which logged-in admin recorded this row (audit trail only)
+  admin       AdminUser @relation(fields: [adminId], references: [id])
+  amount      Decimal   @db.Decimal(12, 2)
+  date        DateTime
+  description String
+  type        String // "invested" | "earned" | "personal_withdraw" | "debt_paid"
+
+  // All three drawn from the fixed actor list (Waseem Farooq / Akbar Khan /
+  // Abdul Ahad / Nexoryn) — see LEDGER_ACTORS in src/services/validation.ts.
+  //   enteredBy — the logged-in admin who recorded the row. Set server-side
+  //               from the session, never trusted from the request body.
+  //   actionBy  — whose money actually moved.
+  //   paidTo    — required for (and only used by) type "debt_paid": who is
+  //               being repaid. A partner means a peer settlement of the
+  //               investment imbalance; "Nexoryn" means repaying a personal
+  //               withdrawal back to the company.
+  enteredBy String
+  actionBy  String
+  paidTo    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([adminId])
+  @@index([actionBy])
+  @@index([paidTo])
+  @@index([date])
+}
+
+model FinanceRecord {
+  id      String    @id @default(cuid())
+  adminId String
+  admin   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  year  Int
+  month Int // 1-12
+
+  totalInvested Decimal @default(0) @db.Decimal(12, 2)
+  totalEarned   Decimal @default(0) @db.Decimal(12, 2)
+  totalExpense  Decimal @default(0) @db.Decimal(12, 2)
+
+  profitPercentage Decimal @default(33.33) @db.Decimal(5, 2)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([adminId, year, month])
+  @@index([year, month])
+}
+
+// ============================================================================
+// INTERNAL PROJECT REPOSITORY
+// ============================================================================
+
+model InternalProject {
+  id          String @id @default(cuid())
+  name        String
+  note        String? // optional free-text note (was "description")
+  serviceType String // "Automation" | "Web Development" | "Brand & Graphic Design"
+
+  googleDriveLink String
+
+  uploadedBy String
+  uploader   AdminUser @relation(fields: [uploadedBy], references: [id])
+
+  status     String @default("active") // "active" | "archived" | "completed"
+  visibility String @default("team") // "team" (all admins) — no per-admin privacy in v1
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceType])
+  @@index([uploadedBy])
+  @@index([status])
+}

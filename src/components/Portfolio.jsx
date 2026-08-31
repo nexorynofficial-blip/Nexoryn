@@ -3,7 +3,9 @@ import { ArrowRight } from "lucide-react";
 import { CardStack } from "./ui/CardStack";
 import { PortfolioMobileDuo } from "./ui/PortfolioMobileDuo";
 import SplitText from "./ui/SplitText";
-import { getProjectBySlug } from "../data/projects";
+import { PROJECTS } from "../data/projects";
+import { getProjects } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 
 // Fixed home-page teaser: always exactly 3 automation projects + 2 web
@@ -17,7 +19,11 @@ const FEATURED_SLUGS = [
   "analytics-hub-saas-dashboard-platform",
 ];
 
-const FEATURED_PROJECTS = FEATURED_SLUGS.map(getProjectBySlug).filter(Boolean);
+// Ordered by FEATURED_SLUGS rather than by the source list, so the teaser
+// keeps its deliberate automation/web-dev mix whatever order the data
+// arrives in.
+const pickFeatured = (projects) =>
+  FEATURED_SLUGS.map((slug) => projects.find((p) => p.slug === slug)).filter(Boolean);
 
 export default function Portfolio() {
   // Below md, the desktop 3D fan CardStack (drag-driven, fixed 520x380px
@@ -26,8 +32,9 @@ export default function Portfolio() {
   // web development project. md+ renders the exact original CardStack,
   // untouched.
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const projects = useContent(getProjects, PROJECTS);
 
-  const items = FEATURED_PROJECTS.map((project) => ({
+  const items = pickFeatured(projects).map((project) => ({
     id: project.slug,
     title: project.title,
     description: project.service,

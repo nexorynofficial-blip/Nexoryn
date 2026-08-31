@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexoryn_postgres_dev
+    environment:
+      POSTGRES_USER: nexoryn_user
+      POSTGRES_PASSWORD: nexoryn_password_dev
+      POSTGRES_DB: nexoryn_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

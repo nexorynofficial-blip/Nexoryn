@@ -20,7 +20,9 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Reveal from "../components/ui/Reveal";
-import { getProjectBySlug } from "../data/projects";
+import { getProjectBySlug as staticProjectBySlug } from "../data/projects";
+import { getProjectBySlug } from "../lib/content";
+import { resolveIcon } from "../lib/iconMap";
 
 const BASE_TABS = ["Overview", "Results", "Tech Stack", "Scalability & Flexibility"];
 
@@ -103,7 +105,9 @@ function Sidebar({ project }) {
           the tools — the name has to be on the tile itself, not just in a
           hover title that a touch device can never trigger. */}
       <div className="mt-5 grid grid-cols-2 gap-2.5">
-        {caseStudy.techIcons.map(({ name, icon: Icon }) => (
+        {caseStudy.techIcons.map(({ name, icon }) => {
+          const Icon = resolveIcon(icon);
+          return (
           <div
             key={name}
             className={`${inner()} flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors duration-300 hover:border-orange-400/60`}
@@ -115,7 +119,8 @@ function Sidebar({ project }) {
               {name}
             </span>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <p className="mt-6 border-t border-white/10 pt-5 text-sm leading-relaxed text-body-dim">
@@ -276,7 +281,8 @@ function SolutionWorkflow({ steps }) {
           className="grid items-center justify-items-center gap-y-3 px-4"
           style={{ gridTemplateColumns: columns }}
         >
-          {steps.map(({ icon: Icon }, i) => {
+          {steps.map(({ icon }, i) => {
+            const Icon = resolveIcon(icon);
             const nodeCol = i * 2 + 1;
             return (
               <div
@@ -636,7 +642,9 @@ function TechStackTab({ techStack }) {
             y={20}
             className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
           >
-            {tools.map(({ name, role, icon: Icon }) => (
+            {tools.map(({ name, role, icon }) => {
+              const Icon = resolveIcon(icon);
+              return (
               <div
                 key={name}
                 className={`${inner()} hover-lift rounded-2xl flex items-center gap-4 p-5`}
@@ -651,7 +659,8 @@ function TechStackTab({ techStack }) {
                   <p className="mt-0.5 text-sm text-body-dim">{role}</p>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </Reveal>
         </div>
       ))}
@@ -1004,17 +1013,38 @@ function LivePreviewTab({ livePreview, siteName }) {
 
 export default function CaseStudyPage() {
   const { slug } = useParams();
-  const project = getProjectBySlug(slug);
   const [activeTab, setActiveTab] = useState(BASE_TABS[0]);
+
+  // Paint the bundled copy of this project immediately, then upgrade to the
+  // API's version if one comes back. Starting from the static value means no
+  // spinner and, more importantly, no flash of "Project not found" while the
+  // request is in flight.
+  const [project, setProject] = useState(() => staticProjectBySlug(slug));
+
+  useEffect(() => {
+    setProject(staticProjectBySlug(slug));
+    let alive = true;
+    getProjectBySlug(slug).then((fresh) => {
+      if (alive && fresh) setProject(fresh);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+
+  // Different projects can offer different trailing tabs (Screenshots vs
+  // Live Preview) — reset to Overview on navigation so switching projects
+  // never leaves activeTab pointing at a tab the new project doesn't have.
+  // Keyed on slug, not the project object, so the tab doesn't jump back when
+  // the API response replaces the static copy mid-read.
+  useEffect(() => {
+    setActiveTab(BASE_TABS[0]);
+  }, [slug]);
 
   useEffect(() => {
     document.title = project
       ? `${project.title} Case Study - Nexoryn`
       : "Case Study - Nexoryn";
-    // Different projects can offer different trailing tabs (Screenshots vs
-    // Live Preview) — reset to Overview on navigation so switching projects
-    // never leaves activeTab pointing at a tab the new project doesn't have.
-    setActiveTab(BASE_TABS[0]);
   }, [project]);
 
   if (!project) {

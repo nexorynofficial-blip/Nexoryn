@@ -1,0 +1,76 @@
+# Render blueprint for the Nexoryn backend + its Postgres database.
+#
+# Deploy: push this repo, then in Render pick "New → Blueprint" and point it
+# at backend/render.yaml. Everything marked `sync: false` has to be filled in
+# by hand in the dashboard — those are secrets and are deliberately not
+# committed.
+#
+# Any host that runs a Dockerfile works the same way (Railway, Fly.io,
+# DigitalOcean App Platform); this file just saves the clicking on Render.
+
+databases:
+  - name: nexoryn-db
+    databaseName: nexoryn
+    user: nexoryn
+    plan: free # 90-day expiry on free; move to `starter` before going live
+
+services:
+  - type: web
+    name: nexoryn-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexoryn-db
+          property: connectionString
+
+      # Sign the admin session cookie. Generate with:
+      #   openssl rand -base64 48
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      # Origins allowed to call the API with credentials. These must match the
+      # deployed frontend exactly (scheme + host, no trailing slash) or the
+      # admin login cookie will be refused by the browser.
+      - key: FRONTEND_URL
+        sync: false # e.g. https://nexoryn.ai
+      - key: FRONTEND_PROD_URL
+        sync: false
+      # The admin panel is served from the frontend origin (<site>/admin), so
+      # it needs no separate entry in production — these two only matter for
+      # a standalone admin deployment or local development.
+      - key: ADMIN_URL
+        sync: false
+      - key: ADMIN_PROD_URL
+        sync: false
+
+      # Transactional email for contact-form notifications and finance
+      # reports. Without these the API still stores every submission — it
+      # just records the send failure on the row. See docs/PRD.md FR-8/FR-9.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_ADDRESS
+        sync: false # e.g. "Nexoryn <noreply@nexoryn.ai>"
+      - key: ADMIN_NOTIFICATION_EMAIL
+        sync: false
+
+      # Image uploads from the admin panel. Optional until someone uploads a
+      # new image — the seeded content resolves against the frontend bundle.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

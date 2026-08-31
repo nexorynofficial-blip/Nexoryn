@@ -2,13 +2,19 @@ import { TestimonialsSection } from "./TestimonialsSection";
 import SplitText from "./ui/SplitText";
 import Reveal from "./ui/Reveal";
 import { REVIEWS } from "../data/reviews";
+import { getReviews } from "../lib/content";
+import { useContent } from "../hooks/useContent";
 
-const TESTIMONIALS = REVIEWS.map((review) => ({
-  author: { name: review.name, location: review.location },
-  text: review.text,
-}));
+const toTestimonials = (reviews) =>
+  reviews.map((review) => ({
+    author: { name: review.name, location: review.location },
+    text: review.text,
+  }));
 
 export default function Reviews() {
+  const reviews = useContent(getReviews, REVIEWS);
+  const testimonials = toTestimonials(reviews);
+
   return (
     <section
       id="reviews"
@@ -30,7 +36,7 @@ export default function Reviews() {
       </div>
 
       <Reveal y={40} duration={1.1} className="relative z-20">
-        <TestimonialsSection testimonials={TESTIMONIALS} className="mt-12" />
+        <TestimonialsSection testimonials={testimonials} className="mt-12" />
       </Reveal>
 
       {/* Soft blend into the CTA section below, mirroring the Hero's own

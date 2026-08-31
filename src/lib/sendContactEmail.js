@@ -58,7 +58,41 @@ function buildBody(formId, values) {
   return body;
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
+
+/**
+ * Submits the form to the backend, which stores it and sends the
+ * notification server-side. Falls back to the original client-side EmailJS
+ * path when no backend is configured or it cannot be reached, so a lead is
+ * never dropped just because the API is down.
+ */
 export async function sendContactEmail(formId, values) {
+  if (API_BASE) {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formId, values }),
+      });
+      if (res.ok) return await res.json();
+
+      // 4xx means the payload itself was rejected — retrying via EmailJS
+      // would deliver something the server already judged invalid, so
+      // surface it instead.
+      if (res.status >= 400 && res.status < 500) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Please check the form and try again.");
+      }
+    } catch (err) {
+      if (err instanceof Error && !/fetch|network|Failed to fetch/i.test(err.message)) throw err;
+      // Network-level failure: fall through to EmailJS below.
+    }
+  }
+
+  return sendViaEmailJs(formId, values);
+}
+
+function sendViaEmailJs(formId, values) {
   const name = values.name || "Someone";
 
   return emailjs.send(
