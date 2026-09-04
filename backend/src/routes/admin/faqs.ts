@@ -19,7 +19,9 @@ const faqSchema = z.object({
 router.get(
   "/",
   asyncHandler(async (_req, res) => {
-    const items = await prisma.fAQ.findMany({ orderBy: { order: "asc" } });
+    // createdAt breaks ties so rows sharing an order (anything created before
+    // inserts started renumbering) still list in a stable, predictable order.
+    const items = await prisma.fAQ.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
     res.json({ items });
   }),
 );
@@ -28,7 +30,19 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const input = faqSchema.parse(req.body);
-    const faq = await prisma.fAQ.create({ data: input });
+
+    // Inserting at a position has to push everything from that position down,
+    // or the new row just ties with whatever already sits there and the list
+    // order becomes arbitrary. Done in one transaction so a failure can't
+    // leave the list renumbered but missing its new entry.
+    const faq = await prisma.$transaction(async (tx) => {
+      await tx.fAQ.updateMany({
+        where: { order: { gte: input.order } },
+        data: { order: { increment: 1 } },
+      });
+      return tx.fAQ.create({ data: input });
+    });
+
     res.status(201).json(faq);
   }),
 );

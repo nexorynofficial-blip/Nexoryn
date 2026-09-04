@@ -36,7 +36,17 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const input = reviewSchema.parse(req.body);
-    const review = await prisma.review.create({ data: input });
+
+    // Push everything at or below this position down by one, so inserting at
+    // 0 puts the new review first instead of tying with the current first.
+    const review = await prisma.$transaction(async (tx) => {
+      await tx.review.updateMany({
+        where: { order: { gte: input.order } },
+        data: { order: { increment: 1 } },
+      });
+      return tx.review.create({ data: input });
+    });
+
     res.status(201).json(review);
   }),
 );

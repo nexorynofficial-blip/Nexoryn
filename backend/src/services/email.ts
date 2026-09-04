@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { env } from "../config/env";
+import { ApiError } from "../utils/errors";
 import type { ContactFormId } from "./validation";
 
 // Ported near-verbatim from the frontend's src/lib/sendContactEmail.js — the
@@ -118,6 +119,15 @@ export async function sendFinanceReportEmail(
   });
 
   if (result.error) {
-    throw new Error(`Resend send failed: ${result.error.message}`);
+    // A provider rejection is not a bug in this server, and surfacing it as a
+    // bare 500 ("internal server error") hides the one thing that would let
+    // someone fix it — most often "you haven't verified a sending domain, so
+    // you can only email your own address". Pass the real reason through with
+    // a status that says whose problem it is.
+    const status = Number((result.error as { statusCode?: number }).statusCode);
+    throw new ApiError(
+      status >= 400 && status < 500 ? 400 : 502,
+      `Email provider rejected this: ${result.error.message}`,
+    );
   }
 }

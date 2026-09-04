@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { getFaqs } from "../../lib/content";
+import { useContent } from "../../hooks/useContent";
 
-const FAQ_ITEMS = [
+// Fallback copy, used until the API responds and if it never does. FAQs
+// managed through the admin panel replace this list entirely once loaded.
+export const FAQ_ITEMS = [
   {
     id: "services",
     question: "What services does Nexoryn offer?",
@@ -35,14 +39,18 @@ const FAQ_ITEMS = [
   },
 ];
 
-export default function FaqAccordion({ items = FAQ_ITEMS, className = "" }) {
+export default function FaqAccordion({ items, className = "" }) {
+  // An explicit `items` prop wins; otherwise read the admin-managed list,
+  // painting the bundled copy first so there is never an empty accordion.
+  const fetched = useContent(getFaqs, FAQ_ITEMS);
+  const resolved = items ?? fetched;
   const [openId, setOpenId] = useState(null);
 
   const toggle = (id) => setOpenId((current) => (current === id ? null : id));
 
   return (
     <div className={`glass-panel overflow-hidden rounded-3xl ${className}`}>
-      {items.map((item) => {
+      {resolved.map((item) => {
         const isOpen = openId === item.id;
 
         return (

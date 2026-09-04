@@ -100,3 +100,11 @@ export async function getTeam() {
   if (!data?.items?.length) return null; // caller keeps its own static list
   return data.items.map((m) => ({ ...m, photo: assetUrl(m.photo) }));
 }
+
+// ── FAQs ────────────────────────────────────────────────────────────────
+
+export async function getFaqs() {
+  const data = await apiGet("/api/v1/faqs");
+  if (!data?.items?.length) return null; // caller keeps its own static list
+  return data.items;
+}

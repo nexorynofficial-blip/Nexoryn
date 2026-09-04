@@ -10,6 +10,7 @@ import publicProjects from "./routes/public/projects";
 import publicServices from "./routes/public/services";
 import publicReviews from "./routes/public/reviews";
 import publicTeam from "./routes/public/team";
+import publicFaqs from "./routes/public/faqs";
 import publicContact from "./routes/public/contact";
 
 import adminAuth from "./routes/admin/auth";
@@ -50,6 +51,7 @@ export function createApp(): Express {
   app.use("/api/v1/services", publicServices);
   app.use("/api/v1/reviews", publicReviews);
   app.use("/api/v1/team", publicTeam);
+  app.use("/api/v1/faqs", publicFaqs);
   app.use("/api/v1/contact", publicContact);
 
   // ── Admin (auth required — enforced inside each router) ────────────
