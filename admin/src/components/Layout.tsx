@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Briefcase,
@@ -7,11 +8,15 @@ import {
   HelpCircle,
   Inbox,
   Wallet,
+  GitPullRequestArrow,
   FolderGit2,
+  UserCog,
   LogOut,
 } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import type { DebtRequests } from "../types";
 import { AmbientBackground } from "./AmbientBackground";
 
 const NAV = [
@@ -23,11 +28,35 @@ const NAV = [
   { to: "/faqs", label: "FAQs", icon: HelpCircle },
   { to: "/contact-submissions", label: "Contact Inbox", icon: Inbox },
   { to: "/finance", label: "Finance", icon: Wallet },
+  { to: "/requests", label: "Requests", icon: GitPullRequestArrow, badge: "pending" as const },
   { to: "/internal-projects", label: "Internal Projects", icon: FolderGit2 },
 ];
 
+/** Count of debt approvals waiting on this admin. Re-read on every navigation
+ *  so approving something on the Requests page clears the badge immediately. */
+function usePendingCount() {
+  const [count, setCount] = useState(0);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .get<DebtRequests>("/api/v1/admin/finance/requests")
+      .then((r) => alive && setCount(r.incoming.length))
+      .catch(() => {
+        // A badge is not worth surfacing an error for.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
+
+  return count;
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
+  const pending = usePendingCount();
 
   return (
     <div className="relative flex min-h-screen bg-night">
@@ -42,7 +71,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
+          {NAV.map(({ to, label, icon: Icon, end, badge }) => (
             <NavLink
               key={to}
               to={to}
@@ -54,13 +83,29 @@ export default function Layout() {
               }
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge === "pending" && pending > 0 && (
+                <span className="rounded-full bg-accent-from px-1.5 py-0.5 text-[10px] font-semibold text-night">
+                  {pending}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
 
         <div className="border-t border-border-subtle pt-4">
-          <p className="truncate px-2 text-xs text-white/40">{user?.email}</p>
+          <NavLink
+            to="/account"
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                isActive ? "bg-accent-from/15 text-accent-to" : "text-white/60 hover:bg-white/5 hover:text-white"
+              }`
+            }
+          >
+            <UserCog className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{user?.name ?? "My Account"}</span>
+          </NavLink>
+          <p className="truncate px-3 pt-1 text-[11px] text-white/30">{user?.email}</p>
           <button
             onClick={logout}
             className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition hover:bg-white/5 hover:text-white"

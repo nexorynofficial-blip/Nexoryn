@@ -34,6 +34,13 @@ model AdminUser {
   email        String    @unique
   passwordHash String
   name         String
+  // Stable ledger identity, set once when the account is created and never
+  // edited through the UI. `name` is a free-text display name the admin can
+  // change; this is what the finance system matches on (one of PARTNERS in
+  // src/services/validation.ts). Keeping them separate is what lets someone
+  // rename themselves without silently detaching their Finance position.
+  // Null for any non-partner admin account.
+  partnerName  String?
   role         String    @default("admin") // reserved for future roles; v1 treats every admin as full-access
   profilePhoto String?
   createdAt    DateTime  @default(now())
@@ -243,6 +250,22 @@ model Investment {
   actionBy  String
   paidTo    String?
 
+  // Approval workflow. Only "approved" rows are counted by
+  // services/financeCalculations.ts — "pending" and "rejected" are inert and
+  // change no number anywhere.
+  //
+  // Every row except a `debt_paid` is created already "approved": logging your
+  // own investment, revenue, or withdrawal needs no counterparty's consent.
+  // A `debt_paid` claims someone ELSE's money moved, so it waits:
+  //   paidTo = a partner  -> that partner decides.
+  //   paidTo = "Nexoryn"  -> either other partner decides (never the partner
+  //                          whose debt it clears, never whoever logged it).
+  // See eligibleApprovers() in routes/admin/finance.ts.
+  approvalStatus String    @default("approved") // "pending" | "approved" | "rejected"
+  decidedBy      String? // actor who approved/rejected
+  decidedAt      DateTime?
+  decisionNote   String? // optional reason, mainly for a rejection
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -250,6 +273,7 @@ model Investment {
   @@index([actionBy])
   @@index([paidTo])
   @@index([date])
+  @@index([approvalStatus])
 }
 
 model FinanceRecord {

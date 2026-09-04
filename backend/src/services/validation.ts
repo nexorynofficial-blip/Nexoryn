@@ -120,6 +120,36 @@ export const investmentInputSchema = z
     path: ["paidTo"],
   });
 
+// A ledger row is only counted once it is "approved" — see the Investment
+// model's comment in prisma/schema.prisma for which rows have to wait.
+export const APPROVAL_STATUSES = ["pending", "approved", "rejected"] as const;
+export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
+
+export const decisionInputSchema = z.object({
+  note: z.string().trim().max(500).optional(),
+});
+
+// ── Admin account self-service ──────────────────────────────────────────
+
+export const accountProfileSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(120),
+});
+
+export const accountPasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: z
+      .string()
+      .min(8, "Use at least 8 characters")
+      .max(200)
+      .regex(/[a-zA-Z]/, "Include at least one letter")
+      .regex(/[0-9]/, "Include at least one number"),
+  })
+  .refine((v) => v.currentPassword !== v.newPassword, {
+    message: "New password must be different from the current one",
+    path: ["newPassword"],
+  });
+
 const bulletList = z.array(z.string().min(1)).default([]);
 const workflowStep = z.object({ icon: z.string().min(1), label: z.string().min(1) });
 const titledDescription = z.object({ title: z.string().min(1), description: z.string().min(1) });

@@ -22,6 +22,7 @@ import adminFaqs from "./routes/admin/faqs";
 import adminContact from "./routes/admin/contact";
 import adminAssets from "./routes/admin/assets";
 import adminFinance from "./routes/admin/finance";
+import adminAccount from "./routes/admin/account";
 import adminInternalProjects from "./routes/admin/internal-projects";
 import adminReports from "./routes/admin/reports";
 
@@ -63,6 +64,7 @@ export function createApp(): Express {
   app.use("/api/v1/admin/contact-submissions", adminContact);
   app.use("/api/v1/admin/assets", adminAssets);
   app.use("/api/v1/admin/finance", adminFinance);
+  app.use("/api/v1/admin/account", adminAccount);
   app.use("/api/v1/admin/internal-projects", adminInternalProjects);
   app.use("/api/v1/admin/reports", adminReports);
 

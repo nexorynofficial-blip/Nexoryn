@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Briefcase, Inbox, MessageSquareQuote, Users, Wallet } from "lucide-react";
+import { Briefcase, GitPullRequestArrow, Inbox, MessageSquareQuote, Users, Wallet } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import { Badge, Card, Spinner } from "../components/ui";
-import type { ContactSubmission, FinanceDashboardData, PartnerFinance, Project, Review, TeamMember } from "../types";
+import type {
+  ContactSubmission,
+  DebtRequest,
+  DebtRequests,
+  FinanceDashboardData,
+  PartnerFinance,
+  Project,
+  Review,
+  TeamMember,
+} from "../types";
 
 function money(n: number) {
   return `$${n.toFixed(2)}`;
@@ -37,6 +46,7 @@ export default function Dashboard() {
   );
   const [recent, setRecent] = useState<ContactSubmission[]>([]);
   const [finance, setFinance] = useState<FinanceDashboardData | null>(null);
+  const [pendingRequests, setPendingRequests] = useState<DebtRequest[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -46,8 +56,9 @@ export default function Dashboard() {
       api.get<{ items: ContactSubmission[]; total: number }>("/api/v1/admin/contact-submissions?status=new"),
       api.get<{ items: ContactSubmission[] }>("/api/v1/admin/contact-submissions?pageSize=6"),
       api.get<FinanceDashboardData>("/api/v1/admin/finance/dashboard"),
+      api.get<DebtRequests>("/api/v1/admin/finance/requests"),
     ])
-      .then(([projects, reviews, team, newSubs, recentSubs, financeData]) => {
+      .then(([projects, reviews, team, newSubs, recentSubs, financeData, requests]) => {
         setStats({
           projects: projects.items.length,
           reviews: reviews.items.length,
@@ -56,6 +67,7 @@ export default function Dashboard() {
         });
         setRecent(recentSubs.items);
         setFinance(financeData);
+        setPendingRequests(requests.incoming);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -76,6 +88,33 @@ export default function Dashboard() {
         </h1>
         <p className="mt-1 text-sm text-white/50">Here's what's happening with Nexoryn right now.</p>
       </div>
+
+      {/* Debt approvals waiting on this admin — surfaced above everything
+          else, since the numbers below stay wrong until they're decided. */}
+      {pendingRequests.length > 0 && (
+        <Link to="/requests" className="mb-8 block">
+          <Card className="border-amber-400/30 bg-amber-400/[0.06] p-5 transition hover:bg-amber-400/[0.1]">
+            <div className="flex items-start gap-3">
+              <GitPullRequestArrow className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {pendingRequests.length} debt payment{pendingRequests.length === 1 ? "" : "s"} waiting on you
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                  {pendingRequests
+                    .slice(0, 3)
+                    .map((r) => `${r.actionBy} → ${r.paidTo} (${money(r.amount)})`)
+                    .join(" · ")}
+                  {pendingRequests.length > 3 ? ` · +${pendingRequests.length - 3} more` : ""}
+                </p>
+                <p className="mt-2 text-xs text-amber-200/70">
+                  These change no figure until you approve them. Review →
+                </p>
+              </div>
+            </div>
+          </Card>
+        </Link>
+      )}
 
       {/* Finance — the main focus of this page */}
       <div className="mb-8">

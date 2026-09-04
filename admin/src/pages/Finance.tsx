@@ -107,6 +107,7 @@ export default function Finance() {
   const [actionBy, setActionBy] = useState<LedgerActor>(PARTNERS[0]);
   const [paidTo, setPaidTo] = useState<LedgerActor | "">("");
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const [reportYear, setReportYear] = useState(new Date().getFullYear());
   const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
@@ -114,10 +115,12 @@ export default function Finance() {
   const [reportMessage, setReportMessage] = useState("");
 
   // Default "Action by" to whoever is logged in, when they are a partner.
+  // Keyed on partnerName, not the editable display name — see AdminUser.
   useEffect(() => {
-    const match = PARTNERS.find((p) => p.toLowerCase() === (user?.name ?? "").trim().toLowerCase());
+    const identity = (user?.partnerName ?? user?.name ?? "").trim().toLowerCase();
+    const match = PARTNERS.find((p) => p.toLowerCase() === identity);
     if (match) setActionBy(match);
-  }, [user?.name]);
+  }, [user?.partnerName, user?.name]);
 
   const load = () => {
     setLoading(true);
@@ -140,15 +143,24 @@ export default function Finance() {
     if (type === "debt_paid" && !paidTo) return setError("Choose who is being repaid.");
     setSaving(true);
     setError("");
+    setNotice("");
     try {
-      await api.post("/api/v1/admin/finance/investments", {
-        amount: Number(amount),
-        date,
-        description,
-        type,
-        actionBy,
-        paidTo: type === "debt_paid" ? paidTo : undefined,
-      });
+      const created = await api.post<Investment & { eligibleApprovers?: string[] }>(
+        "/api/v1/admin/finance/investments",
+        {
+          amount: Number(amount),
+          date,
+          description,
+          type,
+          actionBy,
+          paidTo: type === "debt_paid" ? paidTo : undefined,
+        },
+      );
+      setNotice(
+        created.approvalStatus === "pending"
+          ? `Sent to ${(created.eligibleApprovers ?? []).join(" or ") || "the other partner"} for approval. It changes nothing until approved.`
+          : "Entry added.",
+      );
       setAmount("");
       setDescription("");
       setPaidTo("");
@@ -306,6 +318,13 @@ export default function Finance() {
                   ))}
                 </Select>
               </Field>
+              <p className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/5 p-2.5 text-[11px] text-amber-200/70">
+                {paidTo === COMPANY_ACTOR
+                  ? "Needs approval from one of the other two partners before it counts."
+                  : paidTo
+                    ? `Needs ${paidTo}'s approval before it counts.`
+                    : "A debt payment doesn't change any number until the other side approves it."}
+              </p>
             </div>
           )}
 
@@ -317,10 +336,21 @@ export default function Finance() {
 
           <div className="mt-3">
             <Field label="Entered by">
-              <Input value={user?.name ?? ""} readOnly disabled className="cursor-not-allowed opacity-60" />
+              <Input
+                value={user?.partnerName ?? user?.name ?? ""}
+                readOnly
+                disabled
+                className="cursor-not-allowed opacity-60"
+              />
             </Field>
             <p className="mt-1 text-[11px] text-white/30">Recorded automatically from your login.</p>
           </div>
+
+          {notice && (
+            <p className="mt-3 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-2.5 text-[11px] text-emerald-200/80">
+              {notice}
+            </p>
+          )}
 
           <Button className="mt-4 w-full" onClick={handleAddEntry} loading={saving}>
             <Plus className="h-4 w-4" /> Add Entry
@@ -361,6 +391,7 @@ export default function Finance() {
                 <th className="p-4">Action by</th>
                 <th className="p-4">Paid to</th>
                 <th className="p-4">Entered by</th>
+                <th className="p-4">Status</th>
                 <th className="p-4 text-right">Amount</th>
                 <th className="p-4" />
               </tr>
@@ -368,27 +399,52 @@ export default function Finance() {
             <tbody>
               {investments.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-white/40">
+                  <td colSpan={9} className="p-6 text-center text-white/40">
                     No entries yet.
                   </td>
                 </tr>
               ) : (
-                investments.map((inv) => (
-                  <tr key={inv.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
-                    <td className="whitespace-nowrap p-4 text-white/60">{new Date(inv.date).toLocaleDateString()}</td>
-                    <td className="whitespace-nowrap p-4 text-white/70">{LEDGER_TYPE_LABELS[inv.type]}</td>
-                    <td className="p-4 text-white/80">{inv.description}</td>
-                    <td className="whitespace-nowrap p-4 text-white/60">{inv.actionBy}</td>
-                    <td className="whitespace-nowrap p-4 text-white/60">{inv.paidTo ?? "—"}</td>
-                    <td className="whitespace-nowrap p-4 text-white/40">{inv.enteredBy}</td>
-                    <td className="whitespace-nowrap p-4 text-right text-white">{money(Number(inv.amount))}</td>
-                    <td className="p-4 text-right">
-                      <button onClick={() => handleDeleteEntry(inv.id)} className="text-white/30 hover:text-red-400">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                investments.map((inv) => {
+                  // Anything not approved is counted nowhere above, so it is
+                  // dimmed and struck through rather than reading as real money.
+                  const counted = inv.approvalStatus === "approved";
+                  return (
+                    <tr
+                      key={inv.id}
+                      className={`border-b border-white/5 last:border-0 hover:bg-white/[0.02] ${
+                        counted ? "" : "opacity-50"
+                      }`}
+                    >
+                      <td className="whitespace-nowrap p-4 text-white/60">{new Date(inv.date).toLocaleDateString()}</td>
+                      <td className="whitespace-nowrap p-4 text-white/70">{LEDGER_TYPE_LABELS[inv.type]}</td>
+                      <td className="p-4 text-white/80">{inv.description}</td>
+                      <td className="whitespace-nowrap p-4 text-white/60">{inv.actionBy}</td>
+                      <td className="whitespace-nowrap p-4 text-white/60">{inv.paidTo ?? "—"}</td>
+                      <td className="whitespace-nowrap p-4 text-white/40">{inv.enteredBy}</td>
+                      <td className="whitespace-nowrap p-4">
+                        {inv.approvalStatus === "approved" ? (
+                          <span className="text-xs text-white/30">counted</span>
+                        ) : (
+                          <Badge tone={inv.approvalStatus === "pending" ? "warning" : "danger"}>
+                            {inv.approvalStatus}
+                          </Badge>
+                        )}
+                      </td>
+                      <td
+                        className={`whitespace-nowrap p-4 text-right ${
+                          counted ? "text-white" : "text-white/50 line-through"
+                        }`}
+                      >
+                        {money(Number(inv.amount))}
+                      </td>
+                      <td className="p-4 text-right">
+                        <button onClick={() => handleDeleteEntry(inv.id)} className="text-white/30 hover:text-red-400">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

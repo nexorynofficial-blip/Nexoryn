@@ -12,6 +12,8 @@ import Team from "./pages/Team";
 import Faqs from "./pages/Faqs";
 import ContactInbox from "./pages/ContactInbox";
 import Finance from "./pages/Finance";
+import Requests from "./pages/Requests";
+import Account from "./pages/Account";
 import InternalProjects from "./pages/InternalProjects";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -49,7 +51,9 @@ export default function App() {
             <Route path="/faqs" element={<Faqs />} />
             <Route path="/contact-submissions" element={<ContactInbox />} />
             <Route path="/finance" element={<Finance />} />
+            <Route path="/requests" element={<Requests />} />
             <Route path="/internal-projects" element={<InternalProjects />} />
+            <Route path="/account" element={<Account />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

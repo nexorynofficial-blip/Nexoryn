@@ -132,7 +132,14 @@ function computeSettlements(
 export async function calculateFinanceDashboard(adminId: string): Promise<FinanceDashboard> {
   const [admin, rows] = await Promise.all([
     prisma.adminUser.findUnique({ where: { id: adminId } }),
-    prisma.investment.findMany({ select: { amount: true, type: true, actionBy: true, paidTo: true } }),
+    // Only approved rows move a number. A `debt_paid` awaiting the other
+    // partner's decision — or one they rejected — must read as if it had
+    // never been logged, so it is filtered out here rather than at any of
+    // the twenty-odd places below that sum over the ledger.
+    prisma.investment.findMany({
+      where: { approvalStatus: "approved" },
+      select: { amount: true, type: true, actionBy: true, paidTo: true },
+    }),
   ]);
 
   const sum = (predicate: (r: LedgerRow) => boolean) =>
@@ -215,8 +222,12 @@ export async function calculateFinanceDashboard(adminId: string): Promise<Financ
     };
   });
 
-  const you =
-    partners.find((p) => admin && p.actor.toLowerCase() === admin.name.trim().toLowerCase()) ?? null;
+  // Match on the stable ledger identity, not the editable display name —
+  // otherwise renaming yourself in Account settings would quietly detach
+  // your Finance position. Falls back to `name` for any account created
+  // before partnerName existed.
+  const identity = (admin?.partnerName ?? admin?.name ?? "").trim().toLowerCase();
+  const you = partners.find((p) => identity && p.actor.toLowerCase() === identity) ?? null;
 
   return {
     company: {

@@ -19,6 +19,7 @@ import { PrismaClient } from "@prisma/client";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { hashPassword } from "../src/utils/password";
+import { PARTNERS } from "../src/services/validation";
 
 const prisma = new PrismaClient();
 const FIXTURES_DIR = path.resolve(__dirname, "fixtures");
@@ -66,13 +67,18 @@ async function main() {
   // src/services/validation.ts's LEDGER_ACTORS) means the Finance page's
   // "your position" card resolves for this account out of the box.
   const seedAdminName = process.env.SEED_ADMIN_NAME ?? "Nexoryn Admin";
+  // partnerName is the stable ledger identity behind the editable display
+  // name — see AdminUser in schema.prisma.
+  const seedPartnerName =
+    PARTNERS.find((p) => p.toLowerCase() === seedAdminName.trim().toLowerCase()) ?? null;
   const admin = await prisma.adminUser.upsert({
     where: { email: seedAdminEmail },
-    update: { name: seedAdminName },
+    update: { name: seedAdminName, ...(seedPartnerName ? { partnerName: seedPartnerName } : {}) },
     create: {
       email: seedAdminEmail,
       passwordHash: await hashPassword(seedAdminPassword),
       name: seedAdminName,
+      partnerName: seedPartnerName,
     },
   });
   if (seedAdminPassword === "change-me-immediately") {

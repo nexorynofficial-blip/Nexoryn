@@ -110,6 +110,10 @@ export type Partner = "Waseem Farooq" | "Akbar Khan" | "Abdul Ahad";
 export type LedgerActor = Partner | "Nexoryn";
 export type LedgerType = "invested" | "earned" | "personal_withdraw" | "debt_paid";
 
+/** Only "approved" rows count toward any figure on the Finance page. A
+ *  debt payment starts "pending" until the other side decides on it. */
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+
 export interface Investment {
   id: string;
   amount: string;
@@ -119,7 +123,40 @@ export interface Investment {
   enteredBy: string;
   actionBy: LedgerActor;
   paidTo: LedgerActor | null;
+  approvalStatus: ApprovalStatus;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  decisionNote: string | null;
   createdAt: string;
+}
+
+/** An Investment as returned by the /finance/requests endpoint, which adds
+ *  who may decide it and whether that includes the caller. */
+export interface DebtRequest extends Omit<Investment, "amount"> {
+  amount: number;
+  eligibleApprovers: string[];
+  canDecide: boolean;
+}
+
+export interface DebtRequests {
+  /** The caller's own ledger identity. */
+  you: string;
+  /** Pending, waiting on the caller to decide. */
+  incoming: DebtRequest[];
+  /** Pending, raised by the caller and waiting on someone else. */
+  outgoing: DebtRequest[];
+  /** Already approved or rejected, either direction. */
+  history: DebtRequest[];
+}
+
+export interface AdminAccount {
+  id: string;
+  email: string;
+  name: string;
+  partnerName: string | null;
+  role: string;
+  createdAt: string;
+  lastLoginAt: string | null;
 }
 
 export interface Transfer {
@@ -163,6 +200,10 @@ export interface FinanceDashboardData {
 export interface AdminUser {
   id: string;
   email: string;
+  /** Editable display name — safe to change, cosmetic only. */
   name: string;
+  /** Stable ledger identity (one of PARTNERS, or null for a non-partner
+   *  account). This, not `name`, is what Finance and debt approvals key on. */
+  partnerName: string | null;
   role: string;
 }

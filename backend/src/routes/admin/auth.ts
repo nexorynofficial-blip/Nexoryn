@@ -41,7 +41,7 @@ router.post(
 
     await prisma.adminUser.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } });
 
-    res.json({ email: admin.email, name: admin.name, token });
+    res.json({ email: admin.email, name: admin.name, partnerName: admin.partnerName, token });
   }),
 );
 
@@ -58,7 +58,15 @@ router.get(
   asyncHandler(async (req, res) => {
     const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.id } });
     if (!admin) throw ApiError.unauthorized("Admin not found");
-    res.json({ id: admin.id, email: admin.email, name: admin.name, role: admin.role });
+    res.json({
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      // Ledger identity — the admin UI needs it to know which partner card is
+      // theirs and which approval requests are theirs to decide.
+      partnerName: admin.partnerName,
+      role: admin.role,
+    });
   }),
 );
 

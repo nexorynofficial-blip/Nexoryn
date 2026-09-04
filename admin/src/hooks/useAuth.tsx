@@ -7,6 +7,9 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Re-read the session after the admin edits their own profile, so the
+   *  sidebar and greeting pick up a new display name without a reload. */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -37,7 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  const refresh = useCallback(async () => {
+    const me = await api.get<AdminUser>("/api/v1/admin/auth/me").catch(() => null);
+    if (me) setUser(me);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
