@@ -222,8 +222,6 @@ retried, since the server already judged that payload invalid.
 
 ## Known gaps
 
-- **No DELETE route for contact submissions.** The inbox can filter and mark
-  read/handled, but spam can't be removed through the UI yet.
 - **Serverless cold starts.** The first request after a period of no traffic
   takes a bit longer while a new function instance spins up — normally well
   under a second for this app, nothing like the 30-60s sleep a free
@@ -236,6 +234,11 @@ retried, since the server already judged that payload invalid.
   so both the Vercel build and the alternative Dockerfile fall back from
   `npm ci` to `npm install`. Commit a lockfile if you want fully
   reproducible builds.
+
+Schema changes: `backend/vercel.json`'s `installCommand` runs
+`prisma migrate deploy` on every backend deploy, so a new migration file
+committed to `backend/prisma/migrations/` reaches Neon automatically the
+next time the backend deploys — no manual step to remember.
 
 ---
 
