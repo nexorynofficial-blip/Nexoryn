@@ -121,4 +121,15 @@ router.post(
   }),
 );
 
+// DELETE /api/v1/admin/contact-submissions/:id — permanently remove spam/junk
+router.delete(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    await prisma.contactSubmission.delete({ where: { id: req.params.id } }).catch(() => {
+      throw ApiError.notFound("Submission not found");
+    });
+    res.status(204).end();
+  }),
+);
+
 export default router;

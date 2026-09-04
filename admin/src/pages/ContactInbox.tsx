@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, RefreshCw, X } from "lucide-react";
+import { Download, RefreshCw, Trash2, X } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import type { ContactSubmission } from "../types";
 import { Badge, Button, Card, ErrorBanner, PageHeader, Select, Spinner } from "../components/ui";
@@ -10,9 +10,10 @@ const STATUS_TONE: Record<ContactSubmission["status"], "warning" | "neutral" | "
   handled: "success",
 };
 
-function SubmissionDetail({ submission, onClose, onUpdated }: { submission: ContactSubmission; onClose: () => void; onUpdated: () => void }) {
+function SubmissionDetail({ submission, onClose, onUpdated, onDeleted }: { submission: ContactSubmission; onClose: () => void; onUpdated: () => void; onDeleted: () => void }) {
   const [status, setStatus] = useState(submission.status);
   const [resending, setResending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const handleStatusChange = async (next: ContactSubmission["status"]) => {
@@ -38,6 +39,19 @@ function SubmissionDetail({ submission, onClose, onUpdated }: { submission: Cont
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm("Permanently delete this submission? This can't be undone.")) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await api.delete(`/api/v1/admin/contact-submissions/${submission.id}`);
+      onDeleted();
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Delete failed");
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <Card className="w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
@@ -46,7 +60,12 @@ function SubmissionDetail({ submission, onClose, onUpdated }: { submission: Cont
             <h3 className="text-base font-semibold text-white">{submission.fields.name ?? "Unknown"}</h3>
             <p className="text-xs text-white/40">{submission.formId} · {new Date(submission.createdAt).toLocaleString()}</p>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white"><X className="h-5 w-5" /></button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleDelete} disabled={deleting} title="Delete submission" className="text-white/40 hover:text-red-400 disabled:opacity-50">
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <button onClick={onClose} className="text-white/40 hover:text-white"><X className="h-5 w-5" /></button>
+          </div>
         </div>
 
         <ErrorBanner message={error} />
@@ -162,7 +181,14 @@ export default function ContactInbox() {
         </Card>
       )}
 
-      {active && <SubmissionDetail submission={active} onClose={() => setActive(null)} onUpdated={() => { load(); setActive(null); }} />}
+      {active && (
+        <SubmissionDetail
+          submission={active}
+          onClose={() => setActive(null)}
+          onUpdated={() => { load(); setActive(null); }}
+          onDeleted={() => { load(); setActive(null); }}
+        />
+      )}
     </div>
   );
 }

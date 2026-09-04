@@ -32,6 +32,6 @@ export const SESSION_COOKIE_NAME = "nexoryn_admin_session";
 export const sessionCookieOptions = {
   httpOnly: true,
   secure: env.isProduction,
-  sameSite: (env.isProduction ? "none" : "lax") as const,
+  sameSite: env.isProduction ? ("none" as const) : ("lax" as const),
   path: "/api/v1/admin",
 };
