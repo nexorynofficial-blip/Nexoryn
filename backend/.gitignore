@@ -19,3 +19,6 @@ prisma/fixtures/*.json
 # how to stand up a fresh local database.
 .pgdata/
 pg.log
+
+.vercel
+.env*
