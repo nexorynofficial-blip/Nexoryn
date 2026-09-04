@@ -372,9 +372,12 @@ export default function Finance() {
               <Download className="h-4 w-4" /> Download PDF
             </Button>
             <Button variant="secondary" onClick={handleEmail} loading={emailing}>
-              <Mail className="h-4 w-4" /> Email to me
+              <Mail className="h-4 w-4" /> Email report
             </Button>
           </div>
+          <p className="mt-2 text-[11px] text-white/30">
+            Sends to the shared Nexoryn inbox, not your own address.
+          </p>
           {reportMessage && <p className="mt-3 text-xs text-white/50">{reportMessage}</p>}
         </Card>
       </div>

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { env } from "../../config/env";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
 import { calculateFinanceDashboard } from "../../services/financeCalculations";
@@ -47,9 +48,22 @@ router.post(
     const html = generateFinancialReportHtml({ year, month, data, adminName: admin.name });
     const period = `${year}-${String(month).padStart(2, "0")}`;
 
-    await sendFinanceReportEmail(admin.email, html, period);
+    // Goes to the shared company inbox rather than whichever admin clicked.
+    // On Resend's free tier that is the only address that can receive mail at
+    // all (every other recipient is refused until a sending domain is
+    // verified), and a finance report is company-wide anyway. The report still
+    // names who generated it. To send to each admin individually instead,
+    // verify a domain and switch this back to `admin.email`.
+    const recipient = env.adminNotificationEmail;
+    if (!recipient) {
+      throw ApiError.badRequest(
+        "No destination configured. Set ADMIN_NOTIFICATION_EMAIL on the backend.",
+      );
+    }
 
-    res.json({ status: "sent", to: admin.email, period });
+    await sendFinanceReportEmail(recipient, html, period);
+
+    res.json({ status: "sent", to: recipient, period });
   }),
 );
 
