@@ -12,7 +12,12 @@
 //      still in use" check already in the assets route anyway.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local dev (Windows/Mac/Linux, whatever generated it).
+  // "rhel-openssl-3.0.x" is required for Vercel's Node.js Serverless
+  // Functions, which run on Amazon Linux (OpenSSL 3.0) — without it Prisma
+  // ships a query engine binary the deployed function can't execute.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {

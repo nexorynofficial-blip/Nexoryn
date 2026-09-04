@@ -1,18 +1,23 @@
-# Render blueprint for the Nexoryn backend + its Postgres database.
+# ALTERNATIVE deployment path — not the one currently in use.
+#
+# The live backend runs as Vercel Serverless Functions (see backend/api/,
+# backend/vercel.json, and docs/DEPLOYMENT.md). This file is kept for later,
+# in case the project ever needs a persistent server instead of serverless —
+# e.g. a background job, a long-running connection, or hitting a serverless
+# limit that a persistent process doesn't have.
 #
 # Deploy: push this repo, then in Render pick "New → Blueprint" and point it
 # at backend/render.yaml. Everything marked `sync: false` has to be filled in
 # by hand in the dashboard — those are secrets and are deliberately not
-# committed.
+# committed. The database still lives on Neon either way; only the API
+# server would move.
 #
 # Any host that runs a Dockerfile works the same way (Railway, Fly.io,
-# DigitalOcean App Platform); this file just saves the clicking on Render.
-
-databases:
-  - name: nexoryn-db
-    databaseName: nexoryn
-    user: nexoryn
-    plan: free # 90-day expiry on free; move to `starter` before going live
+# DigitalOcean App Platform) — this file just saves the clicking on Render.
+# Whichever you pick, its PAID tier is what's configured below (`starter`):
+# the free tier on most of these hosts sleeps after ~15 minutes idle, a
+# 30-60s hang on the next request. Switch `plan` to `free` if that's an
+# acceptable trade-off for $0.
 
 services:
   - type: web
@@ -21,7 +26,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     rootDir: backend
-    plan: free
+    plan: starter # paid — does not sleep. Use `free` only while testing.
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -29,10 +34,13 @@ services:
       - key: PORT
         value: 3001
 
+      # Paste your Neon connection string here (Neon dashboard → Connection
+      # Details → the "pooled connection" string, which ends in
+      # ?sslmode=require). Using the pooled endpoint matters — Neon's direct
+      # connection has a low connection-limit that a web service can exhaust
+      # under normal traffic.
       - key: DATABASE_URL
-        fromDatabase:
-          name: nexoryn-db
-          property: connectionString
+        sync: false
 
       # Sign the admin session cookie. Generate with:
       #   openssl rand -base64 48
@@ -45,9 +53,9 @@ services:
       # deployed frontend exactly (scheme + host, no trailing slash) or the
       # admin login cookie will be refused by the browser.
       - key: FRONTEND_URL
-        sync: false # e.g. https://nexoryn.ai
+        sync: false # e.g. https://nexoryn-delta.vercel.app
       - key: FRONTEND_PROD_URL
-        sync: false
+        sync: false # your final custom domain once you have one, e.g. https://nexoryn.ai
       # The admin panel is served from the frontend origin (<site>/admin), so
       # it needs no separate entry in production — these two only matter for
       # a standalone admin deployment or local development.
