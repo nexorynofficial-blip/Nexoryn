@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { env } from "../../config/env";
 import { prisma } from "../../config/database";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requireRole } from "../../middleware/auth";
 import { calculateFinanceDashboard } from "../../services/financeCalculations";
 import { sendFinanceReportEmail } from "../../services/email";
 import { generateFinancialReportHtml, generateFinancialReportPdf } from "../../services/pdfReports";
@@ -11,6 +11,9 @@ import { ApiError } from "../../utils/errors";
 
 const router = Router();
 router.use(authMiddleware);
+// These render the finance ledger into a PDF and an email — same data, same
+// restriction as /finance itself.
+router.use(requireRole("owner"));
 
 const periodSchema = z.object({
   year: z.coerce.number().int().min(2020).max(2100),

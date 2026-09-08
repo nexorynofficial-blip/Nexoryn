@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../config/database";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requireRole } from "../../middleware/auth";
+import { recordAudit } from "../../services/audit";
 import { sendContactNotification } from "../../services/email";
 import { isContactFormId } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -9,6 +10,11 @@ import { ApiError } from "../../utils/errors";
 
 const router = Router();
 router.use(authMiddleware);
+// Contact submissions are customer personal data — names, email addresses,
+// phone numbers, locations — and this router can export the lot as a CSV.
+// That is the highest-value thing in the database to anyone who gets in, so
+// it sits behind the same bar as the finance ledger.
+router.use(requireRole("owner"));
 
 const listQuerySchema = z.object({
   status: z.enum(["new", "read", "handled"]).optional(),
@@ -66,6 +72,16 @@ router.get(
         .join(","),
     );
     const csv = [columns.join(","), ...rows].join("\n");
+
+    // Bulk extraction of customer personal data is exactly the action worth
+    // being able to reconstruct afterwards — who pulled it, when, and how much.
+    await recordAudit({
+      action: "contact.exported",
+      actor: req.admin!.name,
+      adminId: req.admin!.id,
+      metadata: { rowCount: submissions.length, filters: { status, formId } },
+      req,
+    });
 
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", 'attachment; filename="contact-submissions.csv"');

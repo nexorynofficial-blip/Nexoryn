@@ -112,12 +112,20 @@ or that account's Finance "your position" card won't resolve.
    |---|---|
    | `DATABASE_URL` | the pooled Neon string from Step 1 |
    | `JWT_SECRET` | output of `openssl rand -base64 48` |
-   | `JWT_EXPIRES_IN` | `7d` |
+   | `JWT_EXPIRES_IN` | `12h` |
    | `FRONTEND_URL` | `https://nexoryn-delta.vercel.app` — no trailing slash |
    | `FRONTEND_PROD_URL` | your final custom domain once you have one, else leave blank |
    | `NODE_ENV` | `production` |
 
-   Leave `RESEND_*`, `CLOUDINARY_*`, `ADMIN_URL`/`ADMIN_PROD_URL` blank for now.
+   Leave `CLOUDINARY_*` and `ADMIN_URL`/`ADMIN_PROD_URL` blank for now.
+   `RESEND_*` can also wait — submissions are stored either way — but until it
+   is set, no notification email goes out (see "Email" below).
+
+   ⚠️ `FRONTEND_URL`/`FRONTEND_PROD_URL` now do double duty: they are the CORS
+   allowlist *and* the CSRF origin allowlist (`requireTrustedOrigin`). In
+   production, `localhost` entries are dropped automatically. An origin missing
+   here means state-changing admin requests are refused with a 403, not just
+   blocked by CORS.
 
 5. **Deploy**. First deploy takes a minute or two.
 6. Copy the URL Vercel gives this project, e.g. `https://nexoryn-backend.vercel.app`
@@ -169,10 +177,17 @@ Neon → admin — is working.
 
 ---
 
-## Optional, do later — real email
+## Email — now required for notifications
 
-Contact-form emails currently still go through the original client-side
-EmailJS path (nothing is broken without this). To move it server-side:
+The client-side EmailJS path has been **removed** (see `docs/SECURITY.md`): it
+required publishable credentials in the browser bundle, which let anyone send
+mail through the account directly, bypassing the rate limit, honeypot and
+validation. Resend is now the only sending path.
+
+Without `RESEND_API_KEY` set, contact submissions are still **captured** — the
+backend persists every one before attempting to send, so nothing is lost — but
+no notification email goes out, and you'd only see them in the admin Contact
+Inbox. To turn notifications on:
 
 1. Sign up at **resend.com**, verify your domain
 2. In the backend's Vercel project → **Settings → Environment Variables**, add:
@@ -180,6 +195,8 @@ EmailJS path (nothing is broken without this). To move it server-side:
    - `RESEND_FROM_ADDRESS` (e.g. `Nexoryn <noreply@nexoryn.ai>`)
    - `ADMIN_NOTIFICATION_EMAIL`
 3. Redeploy the backend project for the new env vars to take effect
+
+If the EmailJS keys were ever deployed, rotate them — they are already public.
 
 ---
 
@@ -226,10 +243,13 @@ retried, since the server already judged that payload invalid.
   takes a bit longer while a new function instance spins up — normally well
   under a second for this app, nothing like the 30-60s sleep a free
   always-on host would impose, but not literally zero either.
-- **`express-rate-limit`'s default store is in-memory**, which means rate
-  limits are enforced per function instance, not globally — acceptable for
-  this app's actual traffic level, but worth knowing if abuse ever becomes a
-  real concern (the fix is a shared store like Upstash Redis).
+- **The global rate limiter still uses the in-memory store**, so its coarse
+  120-requests-per-minute ceiling is enforced per function instance rather than
+  globally. That is deliberate: it runs on every request, and a database
+  round-trip per request would cost more than that backstop is worth. The
+  limiters that actually protect something — login and the contact form — use
+  the Postgres-backed store in `src/middleware/rateLimitStore.ts`, so their
+  counts survive cold starts and hold across concurrent instances.
 - **No `package-lock.json` in `backend/`.** The repo is developed with bun,
   so both the Vercel build and the alternative Dockerfile fall back from
   `npm ci` to `npm install`. Commit a lockfile if you want fully

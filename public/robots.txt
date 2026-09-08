@@ -1,0 +1,10 @@
+# Nexoryn — https://nexoryn-delta.vercel.app
+User-agent: *
+Allow: /
+
+# The admin panel is not for search engines. This is a courtesy to well-behaved
+# crawlers only, not a security control — the panel is protected by requiring a
+# login, and every /admin URL also returns an X-Robots-Tag: noindex header
+# (see vercel.json), which is what actually keeps it out of an index.
+Disallow: /admin
+Disallow: /admin/

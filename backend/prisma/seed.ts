@@ -16,6 +16,7 @@
 // through the admin panel and repoint the affected Project/TeamMember rows.
 
 import { PrismaClient } from "@prisma/client";
+import { randomBytes } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { hashPassword } from "../src/utils/password";
@@ -62,7 +63,13 @@ async function main() {
 
   // ── Default admin user ────────────────────────────────────────────
   const seedAdminEmail = process.env.SEED_ADMIN_EMAIL ?? "nexorynofficial@gmail.com";
-  const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD ?? "change-me-immediately";
+  // No fixed fallback password. A constant default is a credential that ships
+  // in the repository, and "change it immediately" is advice that gets skipped
+  // — an unset variable now produces a random password printed once instead,
+  // which cannot be guessed by anyone reading this file.
+  const generatedPassword = randomBytes(18).toString("base64url");
+  const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD ?? generatedPassword;
+  const usingGeneratedPassword = !process.env.SEED_ADMIN_PASSWORD;
   // Naming it after one of the fixed Finance ledger actors (see
   // src/services/validation.ts's LEDGER_ACTORS) means the Finance page's
   // "your position" card resolves for this account out of the box.
@@ -79,12 +86,18 @@ async function main() {
       passwordHash: await hashPassword(seedAdminPassword),
       name: seedAdminName,
       partnerName: seedPartnerName,
+      // The bootstrap account has to be able to reach everything, including
+      // Finance — roles are enforced now (requireRole in middleware/auth.ts)
+      // and the "admin" default is content-only.
+      role: "owner",
     },
   });
-  if (seedAdminPassword === "change-me-immediately") {
+  if (usingGeneratedPassword) {
     console.warn(
-      `\n⚠️  Seeded admin "${seedAdminEmail}" with the default password "change-me-immediately".\n` +
-        "   Log in and change it immediately, or set SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD before seeding.\n",
+      `\n⚠️  Seeded admin "${seedAdminEmail}" with a generated password:\n\n` +
+        `      ${seedAdminPassword}\n\n` +
+        "   This is shown once and is not stored anywhere in plain text. Save it now,\n" +
+        "   or set SEED_ADMIN_PASSWORD before seeding to choose your own.\n",
     );
   }
 

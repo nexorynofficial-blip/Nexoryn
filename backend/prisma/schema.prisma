@@ -41,19 +41,86 @@ model AdminUser {
   // rename themselves without silently detaching their Finance position.
   // Null for any non-partner admin account.
   partnerName  String?
-  role         String    @default("admin") // reserved for future roles; v1 treats every admin as full-access
+  // "owner" — full access, including the finance ledger, the admin directory
+  //           and the contact-submission export (customer PII).
+  // "admin"  — content only: projects, services, reviews, team, FAQs, assets.
+  // Enforced by requireRole() in src/middleware/auth.ts. New accounts start as
+  // "admin" and must be promoted deliberately; the migration that introduced
+  // this promoted every account that already existed to "owner", so nobody
+  // lost access they had before it landed.
+  role         String    @default("admin")
   profilePhoto String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   lastLoginAt  DateTime?
+
+  // Session revocation cut-off. Any token issued (`iat`) before this instant is
+  // rejected by authMiddleware even though its signature and expiry are still
+  // valid. Logging out, changing your password, or disabling MFA all push this
+  // forward, which is what makes those actions kill sessions on other devices —
+  // a stateless JWT otherwise stays usable until it expires.
+  sessionsValidFrom DateTime @default(now())
+
+  // ── Two-factor authentication (TOTP, opt-in per account) ────────────────
+  // mfaSecret is the base32 shared secret; it is set during enrolment but
+  // mfaEnabledAt stays null until the admin proves they can generate a code,
+  // so a half-finished enrolment can never lock anyone out.
+  mfaSecret         String?
+  mfaEnabledAt      DateTime?
+  // bcrypt hashes of single-use recovery codes — never the codes themselves.
+  mfaRecoveryCodes  String[]  @default([])
 
   uploadedAssets      Asset[]
   financeRecords      FinanceRecord[]
   createdProjects     Project[]
   internalProjects    InternalProject[]
   investments         Investment[]
+  auditLogs           AuditLog[]
 
   @@index([email])
+}
+
+/// Append-only record of security- and money-relevant actions. Nothing in the
+/// app ever updates or deletes a row here — that is the point: a ledger entry
+/// can be removed, but the fact that someone removed it cannot be.
+model AuditLog {
+  id       String   @id @default(cuid())
+  // Null when the actor could not be identified (a failed login names the
+  // email that was tried in `metadata` instead).
+  adminId  String?
+  admin    AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  // Free-text actor label kept alongside adminId so the trail survives the
+  // account being deleted.
+  actor    String
+  // e.g. "auth.login", "auth.login_failed", "auth.logout", "account.password_changed",
+  // "finance.created", "finance.approved", "finance.rejected", "finance.deleted".
+  action   String
+  // What the action was performed on: "investment:<id>", "admin:<id>", …
+  target   String?
+  ip       String?
+  metadata Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+/// Backing store for the login and contact-form rate limiters.
+///
+/// express-rate-limit's default store lives in the memory of one process. On
+/// Vercel that means one *function instance*, so limits reset on every cold
+/// start and an attacker spread across warm instances gets a multiple of the
+/// intended allowance. Persisting the counters makes the limit hold across
+/// every instance — which is the whole point of rate-limiting a login form.
+model RateLimitHit {
+  /// "<limiter>:<client key>" — e.g. "login:203.0.113.9".
+  key       String   @id
+  count     Int      @default(0)
+  /// When the current window ends; a hit after this resets `count` to 1.
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 // ============================================================================

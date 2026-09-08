@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type Express, type Request, type Response } from "express";
 import helmet from "helmet";
 import { allowedOrigins } from "./config/env";
+import { requireTrustedOrigin } from "./middleware/csrf";
 import { errorHandler } from "./middleware/errorHandler";
 import { globalRateLimiter } from "./middleware/rateLimiter";
 
@@ -30,6 +31,14 @@ import adminReports from "./routes/admin/reports";
 export function createApp(): Express {
   const app = express();
 
+  // Vercel terminates TLS and proxies to this function, so the socket address
+  // is always Vercel's, never the caller's. Without this the rate limiters key
+  // every visitor on earth to the same bucket — which both lets an attacker
+  // share one allowance with everyone and lets one noisy client lock everyone
+  // else out. `1` = trust exactly the one proxy hop in front of us; trusting
+  // more would let a caller spoof their own IP through X-Forwarded-For.
+  app.set("trust proxy", 1);
+
   app.use(helmet());
   app.use(
     cors({
@@ -40,7 +49,16 @@ export function createApp(): Express {
   app.use(globalRateLimiter);
   app.use(cookieParser());
   app.use(express.json({ limit: "2mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+  // Deliberately no express.urlencoded(). Nothing in this API is submitted as
+  // a URL-encoded form — the admin panel and the site both send JSON, and the
+  // one multipart route parses its own body with multer. Accepting the format
+  // would only widen the CSRF surface: an HTML form POST is a "simple request"
+  // that no CORS preflight ever holds back.
+
+  // Must sit after cookieParser (it inspects the session cookie) and before
+  // any route that changes state.
+  app.use(requireTrustedOrigin);
 
   app.get("/health", (_req: Request, res: Response) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

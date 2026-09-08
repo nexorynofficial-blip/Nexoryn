@@ -19,6 +19,10 @@ import { useAuth } from "../hooks/useAuth";
 import type { DebtRequests } from "../types";
 import { AmbientBackground } from "./AmbientBackground";
 
+// `ownerOnly` mirrors requireRole("owner") on the API (backend
+// src/middleware/auth.ts). The server is what actually enforces this — hiding
+// the link only spares a content-only account from clicking through to a
+// guaranteed "no access" page.
 const NAV = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projects", icon: Briefcase },
@@ -26,9 +30,15 @@ const NAV = [
   { to: "/reviews", label: "Reviews", icon: MessageSquareQuote },
   { to: "/team", label: "Team", icon: Users },
   { to: "/faqs", label: "FAQs", icon: HelpCircle },
-  { to: "/contact-submissions", label: "Contact Inbox", icon: Inbox },
-  { to: "/finance", label: "Finance", icon: Wallet },
-  { to: "/requests", label: "Requests", icon: GitPullRequestArrow, badge: "pending" as const },
+  { to: "/contact-submissions", label: "Contact Inbox", icon: Inbox, ownerOnly: true },
+  { to: "/finance", label: "Finance", icon: Wallet, ownerOnly: true },
+  {
+    to: "/requests",
+    label: "Requests",
+    icon: GitPullRequestArrow,
+    badge: "pending" as const,
+    ownerOnly: true,
+  },
   { to: "/internal-projects", label: "Internal Projects", icon: FolderGit2 },
 ];
 
@@ -71,7 +81,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map(({ to, label, icon: Icon, end, badge }) => (
+          {NAV.filter((item) => !item.ownerOnly || user?.role === "owner").map(({ to, label, icon: Icon, end, badge }) => (
             <NavLink
               key={to}
               to={to}

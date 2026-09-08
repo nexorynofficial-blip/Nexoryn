@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, UserCog } from "lucide-react";
+import { KeyRound, ShieldCheck, Smartphone, UserCog } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import type { AdminAccount } from "../types";
+import type { AdminAccount, MfaEnableResult, MfaSetup } from "../types";
 import { Button, Card, ErrorBanner, Field, Input, PageHeader, Spinner } from "../components/ui";
 
 /** Zod field errors come back keyed by field name; surface them inline. */
@@ -108,7 +108,8 @@ function PasswordCard() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Password</h2>
       </div>
       <p className="mb-5 text-xs text-white/40">
-        At least 8 characters, with a letter and a number. You stay signed in on this device.
+        At least 12 characters, with a letter and a number. It's also checked against known breached
+        passwords. You stay signed in on this device — everywhere else is signed out.
       </p>
 
       <ErrorBanner message={error} />
@@ -155,6 +156,236 @@ function PasswordCard() {
   );
 }
 
+/**
+ * Two-factor enrolment and removal.
+ *
+ * Enrolment is deliberately two steps — /mfa/setup hands back a secret but
+ * leaves the account unprotected until /mfa/enable proves a working code. That
+ * way closing this page halfway through cannot lock anyone out of their own
+ * account.
+ */
+function TwoFactorCard({ account, onChanged }: { account: AdminAccount; onChanged: () => void }) {
+  const [setup, setSetup] = useState<MfaSetup | null>(null);
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [disabling, setDisabling] = useState(false);
+
+  const reset = () => {
+    setCode("");
+    setPassword("");
+    setError("");
+    setErrors({});
+  };
+
+  const beginSetup = async () => {
+    setBusy(true);
+    reset();
+    try {
+      setSetup(await api.post<MfaSetup>("/api/v1/admin/account/mfa/setup"));
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Could not start setup");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setErrors({});
+    try {
+      const result = await api.post<MfaEnableResult>("/api/v1/admin/account/mfa/enable", { code });
+      // Shown once and never retrievable again — the server stores only hashes.
+      setRecoveryCodes(result.recoveryCodes);
+      setSetup(null);
+      setCode("");
+      onChanged();
+    } catch (err) {
+      setErrors(fieldErrors(err));
+      setError(err instanceof ApiRequestError ? err.message : "Could not turn on two-step");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const disable = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setErrors({});
+    try {
+      await api.post("/api/v1/admin/account/mfa/disable", { password, code });
+      setDisabling(false);
+      reset();
+      onChanged();
+    } catch (err) {
+      setErrors(fieldErrors(err));
+      setError(err instanceof ApiRequestError ? err.message : "Could not turn off two-step");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="p-6 lg:col-span-2">
+      <div className="mb-1 flex items-center gap-2">
+        <Smartphone className="h-4 w-4 text-accent-from" />
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">
+          Two-step verification
+        </h2>
+        {account.mfaEnabled && (
+          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-emerald-400">
+            On
+          </span>
+        )}
+      </div>
+      <p className="mb-5 text-xs leading-relaxed text-white/40">
+        Asks for a 6-digit code from your phone after your password. It means a stolen or guessed
+        password isn't enough on its own to reach the ledger or customer details.
+      </p>
+
+      <ErrorBanner message={error} />
+
+      {/* Recovery codes — displayed once, immediately after enrolling. */}
+      {recoveryCodes && (
+        <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <p className="mb-2 text-xs font-semibold text-amber-300">
+            Save these recovery codes somewhere safe now.
+          </p>
+          <p className="mb-3 text-xs leading-relaxed text-white/50">
+            Each one works once, in place of your phone. This is the only time they'll be shown —
+            we store them scrambled and cannot show them again.
+          </p>
+          <div className="grid grid-cols-2 gap-2 font-mono text-xs text-white sm:grid-cols-5">
+            {recoveryCodes.map((c) => (
+              <span key={c} className="rounded bg-white/5 px-2 py-1 text-center">
+                {c}
+              </span>
+            ))}
+          </div>
+          <Button className="mt-4" onClick={() => setRecoveryCodes(null)}>
+            I've saved them
+          </Button>
+        </div>
+      )}
+
+      {/* Enrolment in progress */}
+      {setup && (
+        <form onSubmit={confirmSetup} className="flex flex-col gap-4">
+          <p className="text-xs leading-relaxed text-white/50">
+            In your authenticator app (Google Authenticator, 1Password, Authy…), add an account and
+            enter this key, then type the code it shows to confirm.
+          </p>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-[11px] uppercase tracking-wide text-white/40">Setup key</div>
+            <div className="mt-1 break-all font-mono text-sm text-white">{setup.secret}</div>
+          </div>
+          <Field label="Code from your app" error={errors.code}>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              required
+            />
+          </Field>
+          <div className="flex items-center gap-3">
+            <Button type="submit" loading={busy} disabled={!code}>
+              Turn on two-step
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setSetup(null);
+                reset();
+              }}
+              className="text-xs text-white/40 transition hover:text-white/70"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Turning it off */}
+      {disabling && (
+        <form onSubmit={disable} className="flex flex-col gap-4">
+          <p className="text-xs leading-relaxed text-white/50">
+            Confirm with your password and a current code. Both are required so that someone who has
+            only got hold of your signed-in browser can't quietly remove this.
+          </p>
+          <Field label="Password" error={errors.password}>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+          <Field label="Code from your app" error={errors.code}>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              required
+            />
+          </Field>
+          <div className="flex items-center gap-3">
+            <Button type="submit" loading={busy} disabled={!password || !code}>
+              Turn off two-step
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setDisabling(false);
+                reset();
+              }}
+              className="text-xs text-white/40 transition hover:text-white/70"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Resting state */}
+      {!setup && !disabling && (
+        <div className="flex flex-wrap items-center gap-4">
+          {account.mfaEnabled ? (
+            <>
+              <Button onClick={() => setDisabling(true)}>Turn off</Button>
+              <span className="text-xs text-white/40">
+                {account.recoveryCodesRemaining} recovery{" "}
+                {account.recoveryCodesRemaining === 1 ? "code" : "codes"} left
+                {account.mfaEnabledAt &&
+                  ` · on since ${new Date(account.mfaEnabledAt).toLocaleDateString()}`}
+              </span>
+            </>
+          ) : (
+            <>
+              <Button onClick={beginSetup} loading={busy}>
+                Set up two-step
+              </Button>
+              <span className="text-xs text-white/40">Recommended — takes about a minute.</span>
+            </>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function Account() {
   const { refresh } = useAuth();
   const [account, setAccount] = useState<AdminAccount | null>(null);
@@ -189,6 +420,8 @@ export default function Account() {
             }}
           />
           <PasswordCard />
+
+          <TwoFactorCard account={account} onChanged={load} />
 
           <Card className="p-6 lg:col-span-2">
             <div className="mb-1 flex items-center gap-2">

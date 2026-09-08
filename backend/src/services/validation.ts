@@ -135,20 +135,81 @@ export const accountProfileSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
 });
 
+/** Passwords that pass any rule-based check but are among the first things
+ *  guessed. A full breached-password check runs separately against Have I Been
+ *  Pwned (services/passwordBreach.ts); this catches the worst offenders without
+ *  needing the network. */
+const COMMON_PASSWORDS = new Set([
+  "password",
+  "password1",
+  "password123",
+  "passw0rd",
+  "12345678",
+  "123456789",
+  "1234567890",
+  "qwertyuiop",
+  "qwerty123",
+  "letmein123",
+  "welcome123",
+  "admin123",
+  "administrator",
+  "iloveyou",
+  "sunshine",
+  "princess",
+  "football",
+  "baseball",
+  "monkey123",
+  "dragon123",
+  "nexoryn",
+  "nexoryn123",
+  "nexoryn2025",
+  "nexoryn2026",
+]);
+
+export const passwordFieldSchema = z
+  .string()
+  // 12, not 8. Length is what actually resists offline cracking; character-class
+  // rules mostly push people toward predictable substitutions like "Passw0rd!".
+  .min(12, "Use at least 12 characters")
+  .max(200)
+  .regex(/[a-zA-Z]/, "Include at least one letter")
+  .regex(/[0-9]/, "Include at least one number")
+  .refine((v) => !COMMON_PASSWORDS.has(v.toLowerCase()), {
+    message: "That password is too common — pick something less guessable",
+  })
+  .refine((v) => !/^(.)\1+$/.test(v), {
+    message: "That password is too simple — pick something less guessable",
+  });
+
 export const accountPasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Enter your current password"),
-    newPassword: z
-      .string()
-      .min(8, "Use at least 8 characters")
-      .max(200)
-      .regex(/[a-zA-Z]/, "Include at least one letter")
-      .regex(/[0-9]/, "Include at least one number"),
+    newPassword: passwordFieldSchema,
   })
   .refine((v) => v.currentPassword !== v.newPassword, {
     message: "New password must be different from the current one",
     path: ["newPassword"],
   });
+
+// ── Two-factor authentication ───────────────────────────────────────────────
+
+/** A TOTP code as typed — spaces stripped, since apps display "123 456". */
+export const mfaCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\s/g, ""))
+    .pipe(z.string().regex(/^[0-9]{6}$/, "Enter the 6-digit code from your app")),
+});
+
+export const mfaDisableSchema = z.object({
+  password: z.string().min(1, "Enter your password"),
+  code: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\s/g, ""))
+    .pipe(z.string().regex(/^[0-9]{6}$/, "Enter the 6-digit code from your app")),
+});
 
 const bulletList = z.array(z.string().min(1)).default([]);
 const workflowStep = z.object({ icon: z.string().min(1), label: z.string().min(1) });

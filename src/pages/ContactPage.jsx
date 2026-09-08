@@ -176,12 +176,19 @@ function ContactFormPanel() {
     setValues((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Spam decoy. The backend has always checked for this field (checkHoneypot in
+  // backend/src/middleware/honeypot.ts) but the form never rendered one, so the
+  // check could never fire. A real visitor can't see or tab into this; a bot
+  // filling every input it finds will, and the server then quietly discards the
+  // submission while still answering as though it worked.
+  const [honeypot, setHoneypot] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError(false);
     try {
-      await sendContactEmail(activeTab, values);
+      await sendContactEmail(activeTab, values, honeypot);
       setSubmitted(true);
     } catch {
       setError(true);
@@ -250,6 +257,29 @@ function ContactFormPanel() {
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2"
               >
+                {/* Honeypot — positioned off-screen rather than display:none or
+                    type="hidden", both of which the better bots know to skip.
+                    aria-hidden and tabIndex={-1} keep it away from screen
+                    readers and keyboard navigation, so it costs real visitors
+                    nothing. */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-[-9999px] h-0 w-0 overflow-hidden"
+                >
+                  <label htmlFor="company-website">
+                    Do not fill this in
+                    <input
+                      id="company-website"
+                      type="text"
+                      name="company-website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </label>
+                </div>
+
                 {currentForm.fields.map((field) => (
                   <div key={field.name} className={field.full ? "sm:col-span-2" : ""}>
                     {field.select ? (

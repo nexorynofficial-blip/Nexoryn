@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../../config/database";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requireRole } from "../../middleware/auth";
+import { recordAudit } from "../../services/audit";
 import { calculateFinanceDashboard } from "../../services/financeCalculations";
 import {
   COMPANY_ACTOR,
@@ -13,6 +14,9 @@ import { ApiError } from "../../utils/errors";
 
 const router = Router();
 router.use(authMiddleware);
+// The ledger is the partners' own money. A content-only admin has no business
+// reading it, let alone recording entries against someone's position.
+router.use(requireRole("owner"));
 
 /** The caller's stable ledger identity (see AdminUser.partnerName). */
 async function callerIdentity(adminId: string): Promise<{ id: string; name: string; actor: string }> {
@@ -29,11 +33,28 @@ async function callerIdentity(adminId: string): Promise<{ id: string; name: stri
  * so it falls to the other partners — excluding both the partner whose debt it
  * clears (they'd be approving their own benefit) and whoever logged it (so a
  * single person can never create and clear a row on their own).
+ *
+ * The same principle extends to every other row type: `actionBy` says whose
+ * money moved, and it arrives from the request body. Logging your *own*
+ * investment, revenue or withdrawal needs nobody's consent — but a row that
+ * names a different partner is a claim about that person's position, and until
+ * they agree to it, it stays pending and counts toward nothing. Without this,
+ * any admin could record "<other partner> personally withdrew $10,000" and
+ * have it land as approved fact.
  */
 function eligibleApprovers(row: { type: string; paidTo: string | null; actionBy: string; enteredBy: string }): string[] {
-  if (row.type !== "debt_paid") return [];
-  if (row.paidTo && row.paidTo !== COMPANY_ACTOR) return [row.paidTo];
-  return PARTNERS.filter((p) => p !== row.actionBy && p !== row.enteredBy);
+  if (row.type === "debt_paid") {
+    if (row.paidTo && row.paidTo !== COMPANY_ACTOR) return [row.paidTo];
+    return PARTNERS.filter((p) => p !== row.actionBy && p !== row.enteredBy);
+  }
+
+  // Attributed to a partner who isn't the person recording it → they decide.
+  // Rows attributed to the company itself have no counterparty to ask.
+  if (row.actionBy !== row.enteredBy && (PARTNERS as readonly string[]).includes(row.actionBy)) {
+    return [row.actionBy];
+  }
+
+  return [];
 }
 
 /** How much of `actor`'s personal withdrawals is still owed back to Nexoryn. */
@@ -96,12 +117,16 @@ router.get(
   asyncHandler(async (req, res) => {
     const me = await callerIdentity(req.admin!.id);
 
-    const rows = await prisma.investment.findMany({
-      where: { type: "debt_paid" },
-      orderBy: [{ createdAt: "desc" }],
-    });
+    // Any row type can need a decision now that attribution to another partner
+    // requires their consent, so this can't filter on `type` up front — which
+    // approvers a row has is a function of four of its fields, not one. The
+    // ledger is a partnership's own books, so reading it whole and filtering
+    // here costs nothing meaningful.
+    const allRows = await prisma.investment.findMany({ orderBy: [{ createdAt: "desc" }] });
 
-    const withApprovers = rows.map((r) => ({ row: r, approvers: eligibleApprovers(r) }));
+    const withApprovers = allRows
+      .map((r) => ({ row: r, approvers: eligibleApprovers(r) }))
+      .filter(({ approvers }) => approvers.length > 0);
     const mine = withApprovers.filter(
       ({ row, approvers }) =>
         approvers.includes(me.actor) || row.actionBy === me.actor || row.enteredBy === me.actor,
@@ -161,20 +186,18 @@ router.post(
       }
     }
 
-    const needsApproval = input.type === "debt_paid";
-    const approvers = needsApproval
-      ? eligibleApprovers({
-          type: input.type,
-          paidTo: input.paidTo ?? null,
-          actionBy: input.actionBy,
-          enteredBy: me.actor,
-        })
-      : [];
+    const approvers = eligibleApprovers({
+      type: input.type,
+      paidTo: input.paidTo ?? null,
+      actionBy: input.actionBy,
+      enteredBy: me.actor,
+    });
+    const needsApproval = approvers.length > 0;
 
     // A company repayment logged by one partner on behalf of another leaves
     // exactly one eligible approver; if some future actor list made that zero,
     // failing loudly beats silently creating a row nobody can ever decide.
-    if (needsApproval && approvers.length === 0) {
+    if (input.type === "debt_paid" && approvers.length === 0) {
       throw ApiError.badRequest("No one is available to approve this payment.");
     }
 
@@ -187,6 +210,22 @@ router.post(
         approvalStatus: needsApproval ? "pending" : "approved",
       },
     });
+
+    await recordAudit({
+      action: "finance.created",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${investment.id}`,
+      metadata: {
+        type: input.type,
+        amount: input.amount,
+        actionBy: input.actionBy,
+        paidTo: input.paidTo ?? null,
+        approvalStatus: investment.approvalStatus,
+      },
+      req,
+    });
+
     res.status(201).json({ ...investment, amount: Number(investment.amount), eligibleApprovers: approvers });
   }),
 );
@@ -233,6 +272,16 @@ router.post(
         decisionNote: note ?? null,
       },
     });
+
+    await recordAudit({
+      action: "finance.approved",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { type: row.type, amount: Number(row.amount), actionBy: row.actionBy },
+      req,
+    });
+
     res.json({ ...updated, amount: Number(updated.amount) });
   }),
 );
@@ -254,6 +303,16 @@ router.post(
         decisionNote: note ?? null,
       },
     });
+
+    await recordAudit({
+      action: "finance.rejected",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { type: row.type, amount: Number(row.amount), actionBy: row.actionBy },
+      req,
+    });
+
     res.json({ ...updated, amount: Number(updated.amount) });
   }),
 );
@@ -265,17 +324,46 @@ router.delete(
     const row = await prisma.investment.findUnique({ where: { id: req.params.id } });
     if (!row) throw ApiError.notFound("Ledger entry not found");
 
+    const me = await callerIdentity(req.admin!.id);
+
     // A pending request belongs to the person who raised it — withdrawing it is
     // fine, but it must not be deletable by the approver as a silent
     // alternative to rejecting (which leaves a record).
-    if (row.approvalStatus === "pending") {
-      const me = await callerIdentity(req.admin!.id);
-      if (row.enteredBy !== me.actor) {
-        throw ApiError.forbidden("Only whoever raised this request can withdraw it. Reject it instead.");
-      }
+    if (row.approvalStatus === "pending" && row.enteredBy !== me.actor) {
+      throw ApiError.forbidden("Only whoever raised this request can withdraw it. Reject it instead.");
+    }
+
+    // An approved row is settled history that other people's balances are
+    // computed from — and until now anyone could erase one outright. Deleting
+    // your own mistake is reasonable; quietly removing a row that records
+    // someone else's money is not. Anything beyond that needs a reversing
+    // entry, which leaves both sides of the correction visible.
+    if (row.approvalStatus !== "pending" && row.enteredBy !== me.actor) {
+      throw ApiError.forbidden(
+        `Only ${row.enteredBy}, who recorded this entry, can delete it. Log a correcting entry instead.`,
+      );
     }
 
     await prisma.investment.delete({ where: { id: row.id } });
+
+    // Written after the delete succeeds, and never rolled back with it: the
+    // entry can go, the fact that someone removed it cannot.
+    await recordAudit({
+      action: "finance.deleted",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: {
+        type: row.type,
+        amount: Number(row.amount),
+        actionBy: row.actionBy,
+        paidTo: row.paidTo,
+        approvalStatus: row.approvalStatus,
+        description: row.description,
+      },
+      req,
+    });
+
     res.status(204).send();
   }),
 );

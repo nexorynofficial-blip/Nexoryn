@@ -1,0 +1,15 @@
+# How to report a security problem with Nexoryn.
+# Format: RFC 9116 (https://securitytxt.org)
+
+Contact: mailto:nexorynofficial@gmail.com
+Preferred-Languages: en
+Canonical: https://nexoryn-delta.vercel.app/.well-known/security.txt
+
+# Please give us a reasonable window to fix anything you find before making it
+# public, and avoid running automated scans that would degrade the service for
+# other users.
+Policy: https://nexoryn-delta.vercel.app/privacy-policy
+
+# Update this date before it lapses — an expired security.txt is treated as
+# invalid by tooling that reads it.
+Expires: 2027-09-08T00:00:00.000Z

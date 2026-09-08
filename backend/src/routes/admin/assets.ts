@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { recordAudit } from "../../services/audit";
 import {
   deleteFromCloudinary,
   isValidImageMime,
@@ -93,6 +94,16 @@ router.delete(
     if (publicId) await deleteFromCloudinary(publicId).catch(() => undefined);
 
     await prisma.asset.delete({ where: { id } });
+
+    await recordAudit({
+      action: "asset.deleted",
+      actor: req.admin!.name,
+      adminId: req.admin!.id,
+      target: `asset:${id}`,
+      metadata: { url: asset.url, altText: asset.altText },
+      req,
+    });
+
     res.status(204).send();
   }),
 );

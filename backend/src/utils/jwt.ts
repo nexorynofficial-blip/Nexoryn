@@ -4,14 +4,63 @@ import { env } from "../config/env";
 export interface AdminTokenPayload {
   id: string;
   email: string;
+  /** Issued-at, in seconds. Compared against AdminUser.sessionsValidFrom to
+   *  reject tokens minted before the account's last revocation event. */
+  iat: number;
 }
 
-export function signAdminToken(payload: AdminTokenPayload): string {
-  return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"] });
+/** Pinned so a token can only ever be verified with the algorithm we sign
+ *  with. Without this, verification accepts anything in the same family that
+ *  jsonwebtoken deems compatible with the key — narrowing it to one algorithm
+ *  removes that class of confusion entirely. */
+const ALGORITHM = "HS256" as const;
+const ISSUER = "nexoryn-api";
+const AUDIENCE = "nexoryn-admin";
+
+export function signAdminToken(payload: { id: string; email: string }): string {
+  return jwt.sign({ id: payload.id, email: payload.email }, env.jwtSecret, {
+    algorithm: ALGORITHM,
+    issuer: ISSUER,
+    audience: AUDIENCE,
+    expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
+  });
 }
 
 export function verifyAdminToken(token: string): AdminTokenPayload {
-  return jwt.verify(token, env.jwtSecret) as AdminTokenPayload;
+  return jwt.verify(token, env.jwtSecret, {
+    algorithms: [ALGORITHM],
+    issuer: ISSUER,
+    audience: AUDIENCE,
+  }) as AdminTokenPayload;
+}
+
+// ── Second-factor challenge ────────────────────────────────────────────────
+// Issued once a password checks out but before MFA is satisfied. Deliberately
+// a *different* audience from a session token, so this can never be presented
+// to authMiddleware as a logged-in session — password-only access is exactly
+// what the second factor exists to prevent. Short-lived by design: it only has
+// to survive typing a six-digit code.
+const MFA_AUDIENCE = "nexoryn-mfa-challenge";
+
+export interface MfaChallengePayload {
+  id: string;
+}
+
+export function signMfaChallengeToken(adminId: string): string {
+  return jwt.sign({ id: adminId }, env.jwtSecret, {
+    algorithm: ALGORITHM,
+    issuer: ISSUER,
+    audience: MFA_AUDIENCE,
+    expiresIn: "5m",
+  });
+}
+
+export function verifyMfaChallengeToken(token: string): MfaChallengePayload {
+  return jwt.verify(token, env.jwtSecret, {
+    algorithms: [ALGORITHM],
+    issuer: ISSUER,
+    audience: MFA_AUDIENCE,
+  }) as MfaChallengePayload;
 }
 
 export const SESSION_COOKIE_NAME = "nexoryn_admin_session";
@@ -28,7 +77,12 @@ export const SESSION_COOKIE_NAME = "nexoryn_admin_session";
  * production (both sides are HTTPS). Locally, frontend and backend share
  * the "localhost" registrable domain regardless of port, so "lax" is both
  * sufficient and safer than "none" (which requires HTTPS to work at all,
- * and localhost dev is plain HTTP). */
+ * and localhost dev is plain HTTP).
+ *
+ * Because "none" means the browser attaches this cookie to cross-site
+ * requests, it is `requireTrustedOrigin` (src/middleware/csrf.ts) — not the
+ * cookie's own SameSite setting — that stops another site from driving the
+ * API with it. The two go together; don't remove one without the other. */
 export const sessionCookieOptions = {
   httpOnly: true,
   secure: env.isProduction,

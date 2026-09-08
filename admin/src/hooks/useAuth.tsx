@@ -1,11 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, ApiRequestError } from "../lib/api";
-import type { AdminUser } from "../types";
+import type { AdminUser, MfaChallenge } from "../types";
+
+/** What `login` resolves to. A password alone is no longer necessarily a
+ *  session: an account with two-factor enrolled gets a short-lived challenge
+ *  token back instead, which `completeMfa` then exchanges for the real thing. */
+type LoginResult = { status: "signed-in" } | { status: "mfa-required"; mfaToken: string };
 
 interface AuthContextValue {
   user: AdminUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  completeMfa: (mfaToken: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   /** Re-read the session after the admin edits their own profile, so the
    *  sidebar and greeting pick up a new display name without a reload. */
@@ -13,6 +19,10 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function isMfaChallenge(value: AdminUser | MfaChallenge): value is MfaChallenge {
+  return "mfaRequired" in value && value.mfaRequired === true;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -26,13 +36,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await api.post<AdminUser>("/api/v1/admin/auth/login", { email, password });
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
+    const result = await api.post<AdminUser | MfaChallenge>("/api/v1/admin/auth/login", {
+      email,
+      password,
+    });
+
+    if (isMfaChallenge(result)) {
+      return { status: "mfa-required", mfaToken: result.mfaToken };
+    }
+
+    setUser(result);
+    return { status: "signed-in" };
+  }, []);
+
+  const completeMfa = useCallback(async (mfaToken: string, code: string) => {
+    const result = await api.post<AdminUser>("/api/v1/admin/auth/login/mfa", { mfaToken, code });
     setUser(result);
   }, []);
 
   const logout = useCallback(async () => {
     try {
+      // This does more than clear a cookie server-side — it invalidates the
+      // token itself, so a copy taken off this machine stops working too.
       await api.post("/api/v1/admin/auth/logout");
     } catch {
       // Even if the network call fails, drop the local session state.
@@ -46,7 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, completeMfa, logout, refresh }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
