@@ -56,19 +56,20 @@ model AdminUser {
 
   // Session revocation cut-off. Any token issued (`iat`) before this instant is
   // rejected by authMiddleware even though its signature and expiry are still
-  // valid. Logging out, changing your password, or disabling MFA all push this
-  // forward, which is what makes those actions kill sessions on other devices —
-  // a stateless JWT otherwise stays usable until it expires.
+  // valid. Logging out and changing your password both push this forward,
+  // which is what makes those actions kill sessions on other devices — a
+  // stateless JWT otherwise stays usable until it expires.
   sessionsValidFrom DateTime @default(now())
 
-  // ── Two-factor authentication (TOTP, opt-in per account) ────────────────
-  // mfaSecret is the base32 shared secret; it is set during enrolment but
-  // mfaEnabledAt stays null until the admin proves they can generate a code,
-  // so a half-finished enrolment can never lock anyone out.
-  mfaSecret         String?
-  mfaEnabledAt      DateTime?
-  // bcrypt hashes of single-use recovery codes — never the codes themselves.
-  mfaRecoveryCodes  String[]  @default([])
+  // ── Action passkey ───────────────────────────────────────────────────────
+  // A second secret, separate from the login password, required to approve or
+  // reject a finance request and to change the account password (see
+  // verifyActionPasskey in src/services/passkey.ts). Generated once from
+  // Account Settings and shown exactly one time — only its bcrypt hash is
+  // stored, so it can never be displayed again, only regenerated (which
+  // requires the account password, for when it has been forgotten).
+  actionPasskeyHash  String?
+  actionPasskeySetAt DateTime?
 
   uploadedAssets      Asset[]
   financeRecords      FinanceRecord[]

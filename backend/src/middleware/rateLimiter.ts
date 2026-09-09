@@ -37,3 +37,18 @@ export const loginRateLimiter = rateLimit({
   store: new PrismaRateLimitStore("login"),
   message: { error: "Too many login attempts — please try again later." },
 });
+
+/** Brute-force defence on the action passkey (finance approve/reject, account
+ *  password change). Keyed by admin id rather than IP: this only ever sits on
+ *  routes behind authMiddleware, so req.admin is always populated by the time
+ *  it runs, and the passkey is a per-account secret — the thing worth capping
+ *  is attempts against one account, not one network address. */
+export const passkeyRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new PrismaRateLimitStore("passkey"),
+  keyGenerator: (req) => req.admin?.id ?? req.ip ?? "unknown",
+  message: { error: "Too many passkey attempts — please wait and try again." },
+});

@@ -157,24 +157,17 @@ export interface AdminAccount {
   role: string;
   createdAt: string;
   lastLoginAt: string | null;
-  /** Whether two-factor authentication is switched on for this account. */
-  mfaEnabled: boolean;
-  mfaEnabledAt: string | null;
-  /** How many unused single-use recovery codes are left. */
-  recoveryCodesRemaining: number;
+  /** Whether an action passkey has been generated for this account. Required
+   *  to approve/reject a finance request and to change the password. */
+  hasPasskey: boolean;
+  passkeySetAt: string | null;
 }
 
-/** Returned once, by POST /account/mfa/setup. */
-export interface MfaSetup {
-  secret: string;
-  otpauthUri: string;
-}
-
-/** Returned once, by POST /account/mfa/enable. The plaintext recovery codes
- *  exist only in this response — the server keeps hashes. */
-export interface MfaEnableResult {
-  enabled: boolean;
-  recoveryCodes: string[];
+/** Returned once, by POST /account/passkey/setup or /passkey/regenerate. The
+ *  plaintext passkey exists only in this one response — the server keeps only
+ *  its hash and can never show it again. */
+export interface PasskeyResult {
+  passkey: string;
 }
 
 export interface Transfer {
@@ -224,13 +217,4 @@ export interface AdminUser {
    *  account). This, not `name`, is what Finance and debt approvals key on. */
   partnerName: string | null;
   role: string;
-  /** Present on the login and /auth/me responses. */
-  mfaEnabled?: boolean;
-}
-
-/** POST /auth/login returns this instead of a session when the account has a
- *  second factor enrolled — no cookie is set until the code is confirmed. */
-export interface MfaChallenge {
-  mfaRequired: true;
-  mfaToken: string;
 }

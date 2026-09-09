@@ -21,20 +21,25 @@ payload or a browser extension something to steal.
 **Lifetime and revocation.** Tokens last 12 hours. Because a JWT is otherwise
 valid until it expires no matter what happens to the account, every admin row
 carries `sessionsValidFrom`; `authMiddleware` rejects any token issued before
-it. Signing out, changing a password, and disabling two-factor all push it
-forward, which is what makes those actions end sessions on other devices.
+it. Signing out and changing a password both push it forward, which is what
+makes those actions end sessions on other devices.
 
 **Verification is stateful on purpose.** `authMiddleware` re-reads the account
 on every request rather than trusting the token's claims, so a role change or a
 revoked session takes effect on the next request instead of whenever the
 holder's token happens to lapse.
 
-**Two-factor (TOTP).** Opt-in per account, managed from *My Account*. Enrolment
-is two steps — `/mfa/setup` stores a secret but leaves MFA off until
-`/mfa/enable` proves a working code — so abandoning it halfway cannot lock
-anyone out. Ten single-use recovery codes are shown exactly once; only bcrypt
-hashes are stored. Turning MFA off needs the password *and* a current code, so
-a stolen session alone can't strip it.
+**Action passkey.** A second, static secret — separate from the login
+password and not time-based, so no authenticator app is needed. Generated once
+from *My Account* (`POST /account/passkey/setup`) and shown exactly one time;
+only its bcrypt hash is stored, so it can never be displayed again, only
+regenerated. It gates two things: approving or rejecting a finance request,
+and changing the account password — a valid session cookie alone is not
+enough for either. Regenerating a forgotten passkey needs the account
+*password* rather than the passkey itself (see `verifyActionPasskey` and
+`generatePasskey` in `src/services/passkey.ts`), since requiring the passkey
+to replace a forgotten passkey would be a dead end. Attempts are rate-limited
+per account (8 per 15 minutes) and wrong attempts are audited.
 
 **Passwords.** bcrypt cost 12. At least 12 characters with a letter and a
 number, screened against a small common-password list and against Have I Been
@@ -97,7 +102,7 @@ single noisy client lock everyone out.
 ## Audit trail
 
 `AuditLog` is append-only — nothing in the app updates or deletes a row. It
-records logins (including failures), logouts, password changes, MFA changes,
+records logins (including failures), logouts, password changes, passkey changes,
 every finance mutation, contact CSV exports, and asset deletions. Writes never
 throw: a failed audit write must not turn a successful action into an error, so
 it falls back to the platform log.

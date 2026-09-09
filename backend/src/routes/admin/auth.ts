@@ -4,16 +4,9 @@ import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
 import { loginRateLimiter } from "../../middleware/rateLimiter";
 import { recordAudit } from "../../services/audit";
-import { consumeRecoveryCode, verifyTotp } from "../../services/mfa";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
-import {
-  SESSION_COOKIE_NAME,
-  sessionCookieOptions,
-  signAdminToken,
-  signMfaChallengeToken,
-  verifyMfaChallengeToken,
-} from "../../utils/jwt";
+import { SESSION_COOKIE_NAME, sessionCookieOptions, signAdminToken } from "../../utils/jwt";
 import { dummyPasswordCompare, verifyPassword } from "../../utils/password";
 
 const router = Router();
@@ -21,11 +14,6 @@ const router = Router();
 const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
-});
-
-const mfaSchema = z.object({
-  mfaToken: z.string().min(1),
-  code: z.string().trim().min(6).max(20),
 });
 
 /** Everything the admin panel needs about the signed-in account. Never
@@ -39,14 +27,12 @@ const sessionView = (admin: {
   name: string;
   partnerName: string | null;
   role: string;
-  mfaEnabledAt: Date | null;
 }) => ({
   id: admin.id,
   email: admin.email,
   name: admin.name,
   partnerName: admin.partnerName,
   role: admin.role,
-  mfaEnabled: admin.mfaEnabledAt !== null,
 });
 
 // POST /api/v1/admin/auth/login
@@ -77,13 +63,6 @@ router.post(
       throw ApiError.unauthorized("Invalid credentials");
     }
 
-    // Password is correct but a second factor is enrolled: hand back a
-    // short-lived challenge token instead of a session. No cookie is set here.
-    if (admin.mfaEnabledAt) {
-      res.json({ mfaRequired: true, mfaToken: signMfaChallengeToken(admin.id) });
-      return;
-    }
-
     res.cookie(
       SESSION_COOKIE_NAME,
       signAdminToken({ id: admin.id, email: admin.email }),
@@ -96,75 +75,6 @@ router.post(
 
     await recordAudit({ action: "auth.login", actor: admin.name, adminId: admin.id, req });
     res.json(sessionView(admin));
-  }),
-);
-
-// POST /api/v1/admin/auth/login/mfa — completes a login that needs a second
-// factor. Rate-limited on the same bucket as the password step, so the code
-// can't be brute-forced once a password is known.
-router.post(
-  "/login/mfa",
-  loginRateLimiter,
-  asyncHandler(async (req, res) => {
-    const { mfaToken, code } = mfaSchema.parse(req.body);
-
-    let challenge;
-    try {
-      challenge = verifyMfaChallengeToken(mfaToken);
-    } catch {
-      throw ApiError.unauthorized("That took too long — please sign in again.");
-    }
-
-    const admin = await prisma.adminUser.findUnique({ where: { id: challenge.id } });
-    if (!admin || !admin.mfaEnabledAt || !admin.mfaSecret) {
-      throw ApiError.unauthorized("Invalid credentials");
-    }
-
-    let usedRecoveryCode = false;
-
-    if (!verifyTotp(code, admin.mfaSecret)) {
-      // Not a valid app code — it may still be one of the one-time recovery
-      // codes, which is the way back in when the phone is gone.
-      const remaining = await consumeRecoveryCode(code, admin.mfaRecoveryCodes);
-      if (!remaining) {
-        await recordAudit({
-          action: "auth.login_failed",
-          actor: admin.name,
-          adminId: admin.id,
-          metadata: { reason: "bad_mfa_code" },
-          req,
-        });
-        throw ApiError.unauthorized("That code isn't right. Try the next one your app shows.");
-      }
-      await prisma.adminUser.update({
-        where: { id: admin.id },
-        data: { mfaRecoveryCodes: remaining },
-      });
-      usedRecoveryCode = true;
-    }
-
-    res.cookie(
-      SESSION_COOKIE_NAME,
-      signAdminToken({ id: admin.id, email: admin.email }),
-      sessionCookieOptions,
-    );
-    await prisma.adminUser.update({
-      where: { id: admin.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    await recordAudit({
-      action: "auth.login",
-      actor: admin.name,
-      adminId: admin.id,
-      metadata: { secondFactor: usedRecoveryCode ? "recovery_code" : "totp" },
-      req,
-    });
-
-    res.json({
-      ...sessionView(admin),
-      ...(usedRecoveryCode ? { recoveryCodesRemaining: admin.mfaRecoveryCodes.length - 1 } : {}),
-    });
   }),
 );
 

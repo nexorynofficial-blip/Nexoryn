@@ -24,19 +24,26 @@ function RequestCard({
   onDecided: () => void;
 }) {
   const [note, setNote] = useState("");
+  const [passkey, setPasskey] = useState("");
   const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState("");
 
   const decide = async (decision: "approve" | "reject") => {
+    if (!passkey) {
+      setError("Enter your passkey to confirm.");
+      return;
+    }
     setBusy(decision);
     setError("");
     try {
       await api.post(`/api/v1/admin/finance/investments/${request.id}/${decision}`, {
         note: note.trim() || undefined,
+        passkey,
       });
       onDecided();
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : `Could not ${decision} this request`);
+      setPasskey("");
       setBusy(null);
     }
   };
@@ -86,15 +93,22 @@ function RequestCard({
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional note (recommended when rejecting)"
           />
+          <Input
+            type="password"
+            value={passkey}
+            onChange={(e) => setPasskey(e.target.value)}
+            placeholder="Passkey — required to confirm"
+            autoComplete="off"
+          />
           <div className="flex gap-2">
-            <Button onClick={() => decide("approve")} loading={busy === "approve"} disabled={busy !== null}>
+            <Button onClick={() => decide("approve")} loading={busy === "approve"} disabled={busy !== null || !passkey}>
               <Check className="h-4 w-4" /> Approve
             </Button>
             <Button
               variant="secondary"
               onClick={() => decide("reject")}
               loading={busy === "reject"}
-              disabled={busy !== null}
+              disabled={busy !== null || !passkey}
             >
               <X className="h-4 w-4" /> Reject
             </Button>

@@ -2,20 +2,14 @@ import type { Response } from "express";
 import { Router } from "express";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { passkeyRateLimiter } from "../../middleware/rateLimiter";
 import { recordAudit } from "../../services/audit";
-import {
-  buildOtpAuthUri,
-  generateMfaSecret,
-  generateRecoveryCodes,
-  hashRecoveryCodes,
-  verifyTotp,
-} from "../../services/mfa";
+import { generatePasskey, hashPasskey, verifyActionPasskey } from "../../services/passkey";
 import { isBreachedPassword } from "../../services/passwordBreach";
 import {
   accountPasswordSchema,
   accountProfileSchema,
-  mfaCodeSchema,
-  mfaDisableSchema,
+  passkeyRegenerateSchema,
 } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
@@ -25,8 +19,8 @@ import { hashPassword, verifyPassword } from "../../utils/password";
 const router = Router();
 router.use(authMiddleware);
 
-/** The shape every route here returns — never includes passwordHash, the MFA
- *  secret, or the recovery codes. */
+/** The shape every route here returns — never includes passwordHash or the
+ *  passkey hash. */
 const publicView = (a: {
   id: string;
   email: string;
@@ -35,8 +29,8 @@ const publicView = (a: {
   role: string;
   createdAt: Date;
   lastLoginAt: Date | null;
-  mfaEnabledAt: Date | null;
-  mfaRecoveryCodes: string[];
+  actionPasskeyHash: string | null;
+  actionPasskeySetAt: Date | null;
 }) => ({
   id: a.id,
   email: a.email,
@@ -45,9 +39,8 @@ const publicView = (a: {
   role: a.role,
   createdAt: a.createdAt,
   lastLoginAt: a.lastLoginAt,
-  mfaEnabled: a.mfaEnabledAt !== null,
-  mfaEnabledAt: a.mfaEnabledAt,
-  recoveryCodesRemaining: a.mfaRecoveryCodes.length,
+  hasPasskey: a.actionPasskeyHash !== null,
+  passkeySetAt: a.actionPasskeySetAt,
 });
 
 /**
@@ -106,8 +99,9 @@ router.patch(
 // POST /api/v1/admin/account/password
 router.post(
   "/password",
+  passkeyRateLimiter,
   asyncHandler(async (req, res) => {
-    const { currentPassword, newPassword } = accountPasswordSchema.parse(req.body);
+    const { currentPassword, newPassword, passkey } = accountPasswordSchema.parse(req.body);
 
     const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.id } });
     if (!admin) throw ApiError.notFound("Admin not found");
@@ -120,6 +114,10 @@ router.post(
         currentPassword: "Incorrect password",
       });
     }
+
+    // A second, independent secret before a session cookie alone can change
+    // the password — see services/passkey.ts.
+    await verifyActionPasskey({ id: admin.id, name: admin.name }, passkey, req);
 
     // Rules alone can't tell "Tr0ub4dor&3" from a string that has appeared in
     // a hundred breaches and therefore sits in every cracking wordlist. Only
@@ -151,103 +149,64 @@ router.post(
   }),
 );
 
-// ── Two-factor authentication ───────────────────────────────────────────────
+// ── Action passkey ───────────────────────────────────────────────────────
 
-// POST /api/v1/admin/account/mfa/setup — begin enrolment.
-//
-// Stores the secret but leaves MFA off (mfaEnabledAt stays null) until a code
-// is proven in /mfa/enable. Abandoning setup halfway therefore locks nobody
-// out, and re-running it simply supersedes the unfinished attempt.
+// POST /api/v1/admin/account/passkey/setup — first-time generation only.
+// Rejects if one already exists; use /passkey/regenerate to replace it.
 router.post(
-  "/mfa/setup",
+  "/passkey/setup",
   asyncHandler(async (req, res) => {
     const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.id } });
     if (!admin) throw ApiError.notFound("Admin not found");
-    if (admin.mfaEnabledAt) {
-      throw ApiError.badRequest("Two-factor authentication is already on for this account.");
+    if (admin.actionPasskeyHash) {
+      throw ApiError.badRequest(
+        "A passkey is already set up for this account. Use regenerate to replace it.",
+      );
     }
 
-    const secret = generateMfaSecret();
-    await prisma.adminUser.update({ where: { id: admin.id }, data: { mfaSecret: secret } });
-
-    res.json({
-      secret, // shown for manual entry when a QR code cannot be scanned
-      otpauthUri: buildOtpAuthUri(admin.email, secret),
-    });
-  }),
-);
-
-// POST /api/v1/admin/account/mfa/enable — finish enrolment by proving a code.
-router.post(
-  "/mfa/enable",
-  asyncHandler(async (req, res) => {
-    const { code } = mfaCodeSchema.parse(req.body);
-
-    const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.id } });
-    if (!admin) throw ApiError.notFound("Admin not found");
-    if (admin.mfaEnabledAt) {
-      throw ApiError.badRequest("Two-factor authentication is already on for this account.");
-    }
-    if (!admin.mfaSecret) {
-      throw ApiError.badRequest("Start setup again — no pending enrolment was found.");
-    }
-    if (!verifyTotp(code, admin.mfaSecret)) {
-      throw ApiError.badRequest("That code is not right. Check your app and try the current one.", {
-        code: "Incorrect code",
-      });
-    }
-
-    // Returned exactly once. Only the hashes are stored, so these cannot be
-    // shown again later — losing them means turning MFA off and re-enrolling.
-    const recoveryCodes = generateRecoveryCodes();
-
+    const passkey = generatePasskey();
     await prisma.adminUser.update({
       where: { id: admin.id },
-      data: {
-        mfaEnabledAt: new Date(),
-        mfaRecoveryCodes: await hashRecoveryCodes(recoveryCodes),
-      },
+      data: { actionPasskeyHash: await hashPasskey(passkey), actionPasskeySetAt: new Date() },
     });
 
-    await recordAudit({ action: "auth.mfa_enabled", actor: admin.name, adminId: admin.id, req });
+    await recordAudit({ action: "account.passkey_generated", actor: admin.name, adminId: admin.id, req });
 
-    res.json({ enabled: true, recoveryCodes });
+    // Shown exactly once — the server keeps only the hash, so this response is
+    // the only chance to see it.
+    res.json({ passkey });
   }),
 );
 
-// POST /api/v1/admin/account/mfa/disable
-//
-// Requires the account password *and* a current code: an attacker sitting on a
-// stolen session should not be able to strip the second factor off the account.
+// POST /api/v1/admin/account/passkey/regenerate — replaces an existing
+// passkey, e.g. when it's been forgotten. Proven by the account password
+// rather than the passkey itself, since that would be circular.
 router.post(
-  "/mfa/disable",
+  "/passkey/regenerate",
   asyncHandler(async (req, res) => {
-    const { password, code } = mfaDisableSchema.parse(req.body);
+    const { password } = passkeyRegenerateSchema.parse(req.body);
 
     const admin = await prisma.adminUser.findUnique({ where: { id: req.admin!.id } });
     if (!admin) throw ApiError.notFound("Admin not found");
-    if (!admin.mfaEnabledAt || !admin.mfaSecret) {
-      throw ApiError.badRequest("Two-factor authentication is not on for this account.");
-    }
 
     if (!(await verifyPassword(password, admin.passwordHash))) {
       throw ApiError.badRequest("Password is incorrect", { password: "Incorrect password" });
     }
-    if (!verifyTotp(code, admin.mfaSecret)) {
-      throw ApiError.badRequest("That code is not right.", { code: "Incorrect code" });
-    }
 
+    const passkey = generatePasskey();
     await prisma.adminUser.update({
       where: { id: admin.id },
-      data: { mfaEnabledAt: null, mfaSecret: null, mfaRecoveryCodes: [] },
+      data: { actionPasskeyHash: await hashPasskey(passkey), actionPasskeySetAt: new Date() },
     });
 
-    // Lowering the account's protection ends every other session too.
-    await revokeOtherSessions(admin.id, admin.email, res);
+    await recordAudit({
+      action: "account.passkey_regenerated",
+      actor: admin.name,
+      adminId: admin.id,
+      req,
+    });
 
-    await recordAudit({ action: "auth.mfa_disabled", actor: admin.name, adminId: admin.id, req });
-
-    res.json({ enabled: false });
+    res.json({ passkey });
   }),
 );
 

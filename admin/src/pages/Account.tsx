@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, Smartphone, UserCog } from "lucide-react";
+import { KeyRound, ShieldCheck, Fingerprint, UserCog } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import type { AdminAccount, MfaEnableResult, MfaSetup } from "../types";
+import type { AdminAccount, PasskeyResult } from "../types";
 import { Button, Card, ErrorBanner, Field, Input, PageHeader, Spinner } from "../components/ui";
 
 /** Zod field errors come back keyed by field name; surface them inline. */
@@ -69,10 +69,11 @@ function ProfileCard({ account, onSaved }: { account: AdminAccount; onSaved: () 
   );
 }
 
-function PasswordCard() {
+function PasswordCard({ account }: { account: AdminAccount }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [passkey, setPasskey] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -88,11 +89,12 @@ function PasswordCard() {
     setErrors({});
     setDone(false);
     try {
-      await api.post("/api/v1/admin/account/password", { currentPassword, newPassword });
+      await api.post("/api/v1/admin/account/password", { currentPassword, newPassword, passkey });
       setDone(true);
       setCurrentPassword("");
       setNewPassword("");
       setConfirm("");
+      setPasskey("");
     } catch (err) {
       setErrors(fieldErrors(err));
       setError(err instanceof ApiRequestError ? err.message : "Could not change your password");
@@ -113,6 +115,12 @@ function PasswordCard() {
       </p>
 
       <ErrorBanner message={error} />
+
+      {!account.hasPasskey && (
+        <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-300">
+          Set up a passkey below first — changing your password needs it.
+        </p>
+      )}
 
       <form onSubmit={submit} className="flex flex-col gap-4">
         <Field label="Current password" error={errors.currentPassword}>
@@ -145,8 +153,23 @@ function PasswordCard() {
           />
         </Field>
 
+        <Field label="Passkey" error={errors.passkey}>
+          <Input
+            type="password"
+            value={passkey}
+            onChange={(e) => setPasskey(e.target.value)}
+            placeholder="From Account Settings"
+            autoComplete="off"
+            required
+          />
+        </Field>
+
         <div className="flex items-center gap-3">
-          <Button type="submit" loading={saving} disabled={mismatch || !currentPassword || !newPassword}>
+          <Button
+            type="submit"
+            loading={saving}
+            disabled={mismatch || !currentPassword || !newPassword || !passkey}
+          >
             Change password
           </Button>
           {done && <span className="text-xs text-emerald-400">Password changed.</span>}
@@ -157,75 +180,55 @@ function PasswordCard() {
 }
 
 /**
- * Two-factor enrolment and removal.
- *
- * Enrolment is deliberately two steps — /mfa/setup hands back a secret but
- * leaves the account unprotected until /mfa/enable proves a working code. That
- * way closing this page halfway through cannot lock anyone out of their own
- * account.
+ * The action passkey — a second secret required to approve or reject a
+ * finance request, and to change the account password. Generated once here
+ * and shown exactly one time: the server keeps only a hash, so from this
+ * point on it can only be regenerated, never displayed again.
  */
-function TwoFactorCard({ account, onChanged }: { account: AdminAccount; onChanged: () => void }) {
-  const [setup, setSetup] = useState<MfaSetup | null>(null);
-  const [code, setCode] = useState("");
+function PasskeyCard({ account, onChanged }: { account: AdminAccount; onChanged: () => void }) {
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
   const [password, setPassword] = useState("");
-  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [disabling, setDisabling] = useState(false);
 
   const reset = () => {
-    setCode("");
     setPassword("");
     setError("");
     setErrors({});
   };
 
-  const beginSetup = async () => {
+  const generate = async () => {
     setBusy(true);
     reset();
     try {
-      setSetup(await api.post<MfaSetup>("/api/v1/admin/account/mfa/setup"));
-    } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Could not start setup");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const confirmSetup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    setErrors({});
-    try {
-      const result = await api.post<MfaEnableResult>("/api/v1/admin/account/mfa/enable", { code });
-      // Shown once and never retrievable again — the server stores only hashes.
-      setRecoveryCodes(result.recoveryCodes);
-      setSetup(null);
-      setCode("");
+      const result = await api.post<PasskeyResult>("/api/v1/admin/account/passkey/setup");
+      setRevealed(result.passkey);
       onChanged();
     } catch (err) {
-      setErrors(fieldErrors(err));
-      setError(err instanceof ApiRequestError ? err.message : "Could not turn on two-step");
+      setError(err instanceof ApiRequestError ? err.message : "Could not generate a passkey");
     } finally {
       setBusy(false);
     }
   };
 
-  const disable = async (e: React.FormEvent) => {
+  const regenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     setErrors({});
     try {
-      await api.post("/api/v1/admin/account/mfa/disable", { password, code });
-      setDisabling(false);
+      const result = await api.post<PasskeyResult>("/api/v1/admin/account/passkey/regenerate", {
+        password,
+      });
+      setRevealed(result.passkey);
+      setRegenerating(false);
       reset();
       onChanged();
     } catch (err) {
       setErrors(fieldErrors(err));
-      setError(err instanceof ApiRequestError ? err.message : "Could not turn off two-step");
+      setError(err instanceof ApiRequestError ? err.message : "Could not regenerate your passkey");
     } finally {
       setBusy(false);
     }
@@ -234,92 +237,45 @@ function TwoFactorCard({ account, onChanged }: { account: AdminAccount; onChange
   return (
     <Card className="p-6 lg:col-span-2">
       <div className="mb-1 flex items-center gap-2">
-        <Smartphone className="h-4 w-4 text-accent-from" />
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">
-          Two-step verification
-        </h2>
-        {account.mfaEnabled && (
+        <Fingerprint className="h-4 w-4 text-accent-from" />
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Passkey</h2>
+        {account.hasPasskey && (
           <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-emerald-400">
-            On
+            Set
           </span>
         )}
       </div>
       <p className="mb-5 text-xs leading-relaxed text-white/40">
-        Asks for a 6-digit code from your phone after your password. It means a stolen or guessed
-        password isn't enough on its own to reach the ledger or customer details.
+        A second secret, separate from your password. Approving or rejecting a finance request, and
+        changing your password, both ask for it — so a signed-in browser alone is never enough to move
+        money or take over the account.
       </p>
 
       <ErrorBanner message={error} />
 
-      {/* Recovery codes — displayed once, immediately after enrolling. */}
-      {recoveryCodes && (
+      {/* Shown exactly once, immediately after generating or regenerating. */}
+      {revealed && (
         <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-          <p className="mb-2 text-xs font-semibold text-amber-300">
-            Save these recovery codes somewhere safe now.
-          </p>
+          <p className="mb-2 text-xs font-semibold text-amber-300">Save this passkey somewhere safe now.</p>
           <p className="mb-3 text-xs leading-relaxed text-white/50">
-            Each one works once, in place of your phone. This is the only time they'll be shown —
-            we store them scrambled and cannot show them again.
+            This is the only time it will be shown — we store it scrambled and cannot show it again. If
+            you lose it, come back here and regenerate a new one with your password.
           </p>
-          <div className="grid grid-cols-2 gap-2 font-mono text-xs text-white sm:grid-cols-5">
-            {recoveryCodes.map((c) => (
-              <span key={c} className="rounded bg-white/5 px-2 py-1 text-center">
-                {c}
-              </span>
-            ))}
+          <div className="rounded-lg bg-white/5 px-4 py-3 text-center font-mono text-lg tracking-wider text-white">
+            {revealed}
           </div>
-          <Button className="mt-4" onClick={() => setRecoveryCodes(null)}>
-            I've saved them
+          <Button className="mt-4" onClick={() => setRevealed(null)}>
+            I've saved it
           </Button>
         </div>
       )}
 
-      {/* Enrolment in progress */}
-      {setup && (
-        <form onSubmit={confirmSetup} className="flex flex-col gap-4">
+      {/* Regenerating */}
+      {regenerating && !revealed && (
+        <form onSubmit={regenerate} className="flex flex-col gap-4">
           <p className="text-xs leading-relaxed text-white/50">
-            In your authenticator app (Google Authenticator, 1Password, Authy…), add an account and
-            enter this key, then type the code it shows to confirm.
-          </p>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-            <div className="text-[11px] uppercase tracking-wide text-white/40">Setup key</div>
-            <div className="mt-1 break-all font-mono text-sm text-white">{setup.secret}</div>
-          </div>
-          <Field label="Code from your app" error={errors.code}>
-            <Input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
-              required
-            />
-          </Field>
-          <div className="flex items-center gap-3">
-            <Button type="submit" loading={busy} disabled={!code}>
-              Turn on two-step
-            </Button>
-            <button
-              type="button"
-              onClick={() => {
-                setSetup(null);
-                reset();
-              }}
-              className="text-xs text-white/40 transition hover:text-white/70"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Turning it off */}
-      {disabling && (
-        <form onSubmit={disable} className="flex flex-col gap-4">
-          <p className="text-xs leading-relaxed text-white/50">
-            Confirm with your password and a current code. Both are required so that someone who has
-            only got hold of your signed-in browser can't quietly remove this.
+            Confirm with your password. The current passkey stops working the moment the new one is
+            generated.
           </p>
           <Field label="Password" error={errors.password}>
             <Input
@@ -330,25 +286,14 @@ function TwoFactorCard({ account, onChanged }: { account: AdminAccount; onChange
               required
             />
           </Field>
-          <Field label="Code from your app" error={errors.code}>
-            <Input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
-              required
-            />
-          </Field>
           <div className="flex items-center gap-3">
-            <Button type="submit" loading={busy} disabled={!password || !code}>
-              Turn off two-step
+            <Button type="submit" loading={busy} disabled={!password}>
+              Regenerate passkey
             </Button>
             <button
               type="button"
               onClick={() => {
-                setDisabling(false);
+                setRegenerating(false);
                 reset();
               }}
               className="text-xs text-white/40 transition hover:text-white/70"
@@ -360,24 +305,24 @@ function TwoFactorCard({ account, onChanged }: { account: AdminAccount; onChange
       )}
 
       {/* Resting state */}
-      {!setup && !disabling && (
+      {!regenerating && !revealed && (
         <div className="flex flex-wrap items-center gap-4">
-          {account.mfaEnabled ? (
+          {account.hasPasskey ? (
             <>
-              <Button onClick={() => setDisabling(true)}>Turn off</Button>
+              <Button onClick={() => setRegenerating(true)}>Regenerate passkey</Button>
               <span className="text-xs text-white/40">
-                {account.recoveryCodesRemaining} recovery{" "}
-                {account.recoveryCodesRemaining === 1 ? "code" : "codes"} left
-                {account.mfaEnabledAt &&
-                  ` · on since ${new Date(account.mfaEnabledAt).toLocaleDateString()}`}
+                {account.passkeySetAt &&
+                  `Set on ${new Date(account.passkeySetAt).toLocaleDateString()}`}
               </span>
             </>
           ) : (
             <>
-              <Button onClick={beginSetup} loading={busy}>
-                Set up two-step
+              <Button onClick={generate} loading={busy}>
+                Generate passkey
               </Button>
-              <span className="text-xs text-white/40">Recommended — takes about a minute.</span>
+              <span className="text-xs text-white/40">
+                Required before you can approve finance requests or change your password.
+              </span>
             </>
           )}
         </div>
@@ -419,9 +364,9 @@ export default function Account() {
               void refresh();
             }}
           />
-          <PasswordCard />
+          <PasswordCard account={account} />
 
-          <TwoFactorCard account={account} onChanged={load} />
+          <PasskeyCard account={account} onChanged={load} />
 
           <Card className="p-6 lg:col-span-2">
             <div className="mb-1 flex items-center gap-2">

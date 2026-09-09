@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { prisma } from "../../config/database";
 import { authMiddleware, requireRole } from "../../middleware/auth";
+import { passkeyRateLimiter } from "../../middleware/rateLimiter";
 import { recordAudit } from "../../services/audit";
 import { calculateFinanceDashboard } from "../../services/financeCalculations";
+import { verifyActionPasskey } from "../../services/passkey";
 import {
   COMPANY_ACTOR,
   PARTNERS,
@@ -247,10 +249,15 @@ async function loadDecidableRow(id: string, actor: string) {
 // POST /api/v1/admin/finance/investments/:id/approve
 router.post(
   "/investments/:id/approve",
+  passkeyRateLimiter,
   asyncHandler(async (req, res) => {
-    const { note } = decisionInputSchema.parse(req.body ?? {});
+    const { note, passkey } = decisionInputSchema.parse(req.body ?? {});
     const me = await callerIdentity(req.admin!.id);
     const row = await loadDecidableRow(req.params.id, me.actor);
+
+    // A valid session and being the right approver are not enough on their
+    // own to move money — see services/passkey.ts.
+    await verifyActionPasskey({ id: me.id, name: me.name }, passkey, req);
 
     // Re-check the company cap at decision time: the debt may have moved since
     // the request was raised (another repayment approved in the meantime).
@@ -289,10 +296,13 @@ router.post(
 // POST /api/v1/admin/finance/investments/:id/reject
 router.post(
   "/investments/:id/reject",
+  passkeyRateLimiter,
   asyncHandler(async (req, res) => {
-    const { note } = decisionInputSchema.parse(req.body ?? {});
+    const { note, passkey } = decisionInputSchema.parse(req.body ?? {});
     const me = await callerIdentity(req.admin!.id);
     const row = await loadDecidableRow(req.params.id, me.actor);
+
+    await verifyActionPasskey({ id: me.id, name: me.name }, passkey, req);
 
     const updated = await prisma.investment.update({
       where: { id: row.id },

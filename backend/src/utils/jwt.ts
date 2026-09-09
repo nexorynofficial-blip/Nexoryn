@@ -34,35 +34,6 @@ export function verifyAdminToken(token: string): AdminTokenPayload {
   }) as AdminTokenPayload;
 }
 
-// ── Second-factor challenge ────────────────────────────────────────────────
-// Issued once a password checks out but before MFA is satisfied. Deliberately
-// a *different* audience from a session token, so this can never be presented
-// to authMiddleware as a logged-in session — password-only access is exactly
-// what the second factor exists to prevent. Short-lived by design: it only has
-// to survive typing a six-digit code.
-const MFA_AUDIENCE = "nexoryn-mfa-challenge";
-
-export interface MfaChallengePayload {
-  id: string;
-}
-
-export function signMfaChallengeToken(adminId: string): string {
-  return jwt.sign({ id: adminId }, env.jwtSecret, {
-    algorithm: ALGORITHM,
-    issuer: ISSUER,
-    audience: MFA_AUDIENCE,
-    expiresIn: "5m",
-  });
-}
-
-export function verifyMfaChallengeToken(token: string): MfaChallengePayload {
-  return jwt.verify(token, env.jwtSecret, {
-    algorithms: [ALGORITHM],
-    issuer: ISSUER,
-    audience: MFA_AUDIENCE,
-  }) as MfaChallengePayload;
-}
-
 export const SESSION_COOKIE_NAME = "nexoryn_admin_session";
 
 /** Shared cookie options for setting/clearing the admin session cookie.

@@ -69,7 +69,14 @@ export default function Layout() {
   const pending = usePendingCount();
 
   return (
-    <div className="relative flex min-h-screen bg-night">
+    // h-screen + overflow-hidden (not min-h-screen) pins the whole layout to
+    // exactly the viewport height. Without that, the window itself grows with
+    // tall page content and scrolls as a whole — which drags this aside's
+    // account/logout block down with it, off the bottom of the screen. With
+    // the height pinned, only `main` (overflow-y-auto below) scrolls, and the
+    // aside stays exactly one viewport tall, so the account block anchored to
+    // its bottom via flex never moves.
+    <div className="relative flex h-screen overflow-hidden bg-night">
       <AmbientBackground />
 
       <aside className="relative z-10 flex w-60 shrink-0 flex-col border-r border-border-subtle bg-panel/50 p-4 backdrop-blur-sm">
@@ -80,7 +87,10 @@ export default function Layout() {
           <p className="text-[11px] uppercase tracking-wide text-white/30">Admin</p>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1">
+        {/* overflow-y-auto here (not just flex-1) means a nav list too long
+            for the viewport scrolls on its own, instead of pushing the
+            account/logout block below it past the bottom of the screen. */}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
           {NAV.filter((item) => !item.ownerOnly || user?.role === "owner").map(({ to, label, icon: Icon, end, badge }) => (
             <NavLink
               key={to}
@@ -103,7 +113,7 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="border-t border-border-subtle pt-4">
+        <div className="shrink-0 border-t border-border-subtle pt-4">
           <NavLink
             to="/account"
             className={({ isActive }) =>

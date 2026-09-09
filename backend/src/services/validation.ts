@@ -127,6 +127,10 @@ export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 
 export const decisionInputSchema = z.object({
   note: z.string().trim().max(500).optional(),
+  // Verified against AdminUser.actionPasskeyHash in the approve/reject routes
+  // (see verifyActionPasskey in services/passkey.ts) before the decision is
+  // applied — a valid session cookie alone is not enough to move the ledger.
+  passkey: z.string().min(1, "Enter your passkey"),
 });
 
 // ── Admin account self-service ──────────────────────────────────────────
@@ -185,30 +189,22 @@ export const accountPasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Enter your current password"),
     newPassword: passwordFieldSchema,
+    // Same passkey gate as approving/rejecting a finance request — see
+    // verifyActionPasskey in services/passkey.ts.
+    passkey: z.string().min(1, "Enter your passkey"),
   })
   .refine((v) => v.currentPassword !== v.newPassword, {
     message: "New password must be different from the current one",
     path: ["newPassword"],
   });
 
-// ── Two-factor authentication ───────────────────────────────────────────────
+// ── Action passkey ───────────────────────────────────────────────────────
 
-/** A TOTP code as typed — spaces stripped, since apps display "123 456". */
-export const mfaCodeSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .transform((v) => v.replace(/\s/g, ""))
-    .pipe(z.string().regex(/^[0-9]{6}$/, "Enter the 6-digit code from your app")),
-});
-
-export const mfaDisableSchema = z.object({
+/** Proves identity to (re)generate the action passkey when it's been
+ *  forgotten — the account password, not the passkey itself, since needing
+ *  the passkey to replace a forgotten passkey would be a dead end. */
+export const passkeyRegenerateSchema = z.object({
   password: z.string().min(1, "Enter your password"),
-  code: z
-    .string()
-    .trim()
-    .transform((v) => v.replace(/\s/g, ""))
-    .pipe(z.string().regex(/^[0-9]{6}$/, "Enter the 6-digit code from your app")),
 });
 
 const bulletList = z.array(z.string().min(1)).default([]);
