@@ -1,39 +1,17 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { generateSecret, generateURI, verifySync } from "otplib";
+import { buildOtpAuthUri, generateTotpSecret, verifyTotp as verifyTotpCode } from "./totp";
 
-const ISSUER = "Nexoryn Admin";
 const RECOVERY_CODE_COUNT = 10;
 
-/** Accept a code from the adjacent 30-second step in either direction, so one
- *  typed as it rolls over — or from a phone whose clock is slightly off —
- *  still works. Wider than this starts meaningfully extending how long a
- *  phished code stays usable. */
-const EPOCH_TOLERANCE_SECONDS = 30;
-
 export function generateMfaSecret(): string {
-  return generateSecret();
+  return generateTotpSecret();
 }
 
-/** The otpauth:// URI an authenticator app scans. Contains the shared secret,
- *  so it is only ever returned to the account being enrolled, over HTTPS, and
- *  never logged. */
-export function buildOtpAuthUri(email: string, secret: string): string {
-  return generateURI({ issuer: ISSUER, label: email, secret });
-}
+export { buildOtpAuthUri };
 
 export function verifyTotp(code: string, secret: string): boolean {
-  try {
-    return verifySync({
-      secret,
-      token: code.replace(/\s/g, ""),
-      epochTolerance: EPOCH_TOLERANCE_SECONDS,
-    }).valid;
-  } catch {
-    // A malformed secret or token throws rather than returning false; either
-    // way the answer the caller needs is "no".
-    return false;
-  }
+  return verifyTotpCode(code, secret);
 }
 
 /** Ten single-use codes, shown exactly once at enrolment. Only their bcrypt
