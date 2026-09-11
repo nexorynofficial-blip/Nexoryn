@@ -15,6 +15,9 @@ export type AuditAction =
   | "finance.approved"
   | "finance.rejected"
   | "finance.deleted"
+  | "finance.change_requested"
+  | "finance.change_approved"
+  | "finance.change_rejected"
   | "contact.exported"
   | "asset.deleted";
 

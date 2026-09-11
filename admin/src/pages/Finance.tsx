@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Building2, Download, Mail, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Building2, Check, Download, Mail, Pencil, Plus, Trash2, X } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import type { FinanceDashboardData, Investment, LedgerActor, LedgerType, PartnerFinance } from "../types";
@@ -93,6 +93,176 @@ function PartnerCard({ partner, highlight }: { partner: PartnerFinance; highligh
   );
 }
 
+/**
+ * One ledger row, including the two things this only affects on an already
+ * counted (approved) entry:
+ *   - editing its description
+ *   - deleting it
+ * Both now go through a proposal that any *other* partner can approve —
+ * first one to act settles it — instead of happening immediately. A pending
+ * (not yet counted) or rejected entry is untouched by any of this: it keeps
+ * working exactly as it did before, deletable directly by whoever entered it.
+ */
+function LedgerRow({ inv, meActor, onChanged }: { inv: Investment; meActor: string; onChanged: () => void }) {
+  const counted = inv.approvalStatus === "approved";
+  const hasPendingChange = inv.pendingChangeType !== null;
+  const isRequester = hasPendingChange && inv.pendingRequestedBy === meActor;
+  const canDecide = hasPendingChange && !isRequester;
+
+  const [editing, setEditing] = useState(false);
+  const [draftDescription, setDraftDescription] = useState(inv.description);
+  const [passkey, setPasskey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    setError("");
+    try {
+      await fn();
+      onChanged();
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitEdit = () => {
+    const description = draftDescription.trim();
+    if (!description) return;
+    void run(async () => {
+      await api.post(`/api/v1/admin/finance/investments/${inv.id}/request-edit`, { description });
+      setEditing(false);
+    });
+  };
+
+  const requestDelete = () =>
+    void run(async () => {
+      await api.post(`/api/v1/admin/finance/investments/${inv.id}/request-delete`, {});
+    });
+
+  const instantDelete = () =>
+    void run(async () => {
+      await api.delete(`/api/v1/admin/finance/investments/${inv.id}`);
+    });
+
+  const decide = (decision: "approve" | "reject") => {
+    if (!passkey) {
+      setError("Enter your passkey to confirm.");
+      return;
+    }
+    void run(async () => {
+      await api.post(`/api/v1/admin/finance/investments/${inv.id}/pending-change/${decision}`, { passkey });
+      setPasskey("");
+    });
+  };
+
+  return (
+    <>
+      <tr className={`border-b border-white/5 last:border-0 hover:bg-white/[0.02] ${counted ? "" : "opacity-50"}`}>
+        <td className="whitespace-nowrap p-4 text-white/60">{new Date(inv.date).toLocaleDateString()}</td>
+        <td className="whitespace-nowrap p-4 text-white/70">{LEDGER_TYPE_LABELS[inv.type]}</td>
+        <td className="p-4 text-white/80">
+          {editing ? (
+            <Input
+              value={draftDescription}
+              onChange={(e) => setDraftDescription(e.target.value)}
+              className="min-w-[200px]"
+              autoFocus
+            />
+          ) : (
+            <>
+              {inv.description}
+              {inv.pendingChangeType === "edit_description" && (
+                <p className="mt-1 text-xs text-amber-300">→ {inv.pendingDescription}</p>
+              )}
+            </>
+          )}
+        </td>
+        <td className="whitespace-nowrap p-4 text-white/60">{inv.actionBy}</td>
+        <td className="whitespace-nowrap p-4 text-white/60">{inv.paidTo ?? "—"}</td>
+        <td className="whitespace-nowrap p-4 text-white/40">{inv.enteredBy}</td>
+        <td className="whitespace-nowrap p-4">
+          {inv.approvalStatus === "approved" ? (
+            hasPendingChange ? (
+              <Badge tone="warning">{inv.pendingChangeType === "delete" ? "delete requested" : "edit requested"}</Badge>
+            ) : (
+              <span className="text-xs text-white/30">counted</span>
+            )
+          ) : (
+            <Badge tone={inv.approvalStatus === "pending" ? "warning" : "danger"}>{inv.approvalStatus}</Badge>
+          )}
+        </td>
+        <td className={`whitespace-nowrap p-4 text-right ${counted ? "text-white" : "text-white/50 line-through"}`}>
+          {money(Number(inv.amount))}
+        </td>
+        <td className="p-4">
+          <div className="flex items-center justify-end gap-2">
+            {editing ? (
+              <>
+                <button onClick={submitEdit} disabled={busy} title="Submit for approval" className="text-emerald-400/70 hover:text-emerald-400">
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    setDraftDescription(inv.description);
+                  }}
+                  disabled={busy}
+                  title="Cancel"
+                  className="text-white/30 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            ) : canDecide ? (
+              <>
+                <Input
+                  type="password"
+                  value={passkey}
+                  onChange={(e) => setPasskey(e.target.value)}
+                  placeholder="Passkey"
+                  autoComplete="off"
+                  className="w-28 py-1 text-xs"
+                />
+                <button onClick={() => decide("approve")} disabled={busy} title="Approve change" className="text-emerald-400/70 hover:text-emerald-400">
+                  <Check className="h-4 w-4" />
+                </button>
+                <button onClick={() => decide("reject")} disabled={busy} title="Reject change" className="text-red-400/70 hover:text-red-400">
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            ) : isRequester ? (
+              <span className="whitespace-nowrap text-[11px] text-white/30">Awaiting the other partners</span>
+            ) : counted ? (
+              <>
+                <button onClick={() => setEditing(true)} title="Edit description" className="text-white/30 hover:text-white">
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button onClick={requestDelete} disabled={busy} title="Request delete" className="text-white/30 hover:text-red-400">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <button onClick={instantDelete} disabled={busy} title="Delete" className="text-white/30 hover:text-red-400">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+      {error && (
+        <tr className="border-b border-white/5 last:border-0">
+          <td colSpan={9} className="px-4 pb-3 text-right text-xs text-red-400">
+            {error}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 export default function Finance() {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<FinanceDashboardData | null>(null);
@@ -172,15 +342,6 @@ export default function Finance() {
     }
   };
 
-  const handleDeleteEntry = async (id: string) => {
-    try {
-      await api.delete(`/api/v1/admin/finance/investments/${id}`);
-      load();
-    } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : "Delete failed");
-    }
-  };
-
   const handleDownload = () => {
     window.open(`${api.baseUrl}/api/v1/admin/reports/download/${reportYear}/${reportMonth}`, "_blank");
   };
@@ -203,6 +364,11 @@ export default function Finance() {
   const { company, partners, settlements, you } = dashboard;
   // A partner can only repay another partner, or the company.
   const paidToOptions = LEDGER_ACTORS.filter((a) => a !== actionBy);
+  // Same formula the backend uses for a ledger actor's identity (see
+  // callerIdentity in routes/admin/finance.ts) — needed here to tell whether
+  // *this* admin is the one who proposed a pending change on a row, since
+  // they can't be the one to approve or reject their own proposal.
+  const meActor = (user?.partnerName ?? user?.name ?? "").trim();
 
   return (
     <div>
@@ -407,47 +573,9 @@ export default function Finance() {
                   </td>
                 </tr>
               ) : (
-                investments.map((inv) => {
-                  // Anything not approved is counted nowhere above, so it is
-                  // dimmed and struck through rather than reading as real money.
-                  const counted = inv.approvalStatus === "approved";
-                  return (
-                    <tr
-                      key={inv.id}
-                      className={`border-b border-white/5 last:border-0 hover:bg-white/[0.02] ${
-                        counted ? "" : "opacity-50"
-                      }`}
-                    >
-                      <td className="whitespace-nowrap p-4 text-white/60">{new Date(inv.date).toLocaleDateString()}</td>
-                      <td className="whitespace-nowrap p-4 text-white/70">{LEDGER_TYPE_LABELS[inv.type]}</td>
-                      <td className="p-4 text-white/80">{inv.description}</td>
-                      <td className="whitespace-nowrap p-4 text-white/60">{inv.actionBy}</td>
-                      <td className="whitespace-nowrap p-4 text-white/60">{inv.paidTo ?? "—"}</td>
-                      <td className="whitespace-nowrap p-4 text-white/40">{inv.enteredBy}</td>
-                      <td className="whitespace-nowrap p-4">
-                        {inv.approvalStatus === "approved" ? (
-                          <span className="text-xs text-white/30">counted</span>
-                        ) : (
-                          <Badge tone={inv.approvalStatus === "pending" ? "warning" : "danger"}>
-                            {inv.approvalStatus}
-                          </Badge>
-                        )}
-                      </td>
-                      <td
-                        className={`whitespace-nowrap p-4 text-right ${
-                          counted ? "text-white" : "text-white/50 line-through"
-                        }`}
-                      >
-                        {money(Number(inv.amount))}
-                      </td>
-                      <td className="p-4 text-right">
-                        <button onClick={() => handleDeleteEntry(inv.id)} className="text-white/30 hover:text-red-400">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                investments.map((inv) => (
+                  <LedgerRow key={inv.id} inv={inv} meActor={meActor} onChanged={load} />
+                ))
               )}
             </tbody>
           </table>

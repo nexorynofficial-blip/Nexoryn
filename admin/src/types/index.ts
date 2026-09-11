@@ -127,6 +127,13 @@ export interface Investment {
   decidedBy: string | null;
   decidedAt: string | null;
   decisionNote: string | null;
+  /** A proposed edit or delete on an already-approved entry, awaiting
+   *  another admin's approval — see backend/src/routes/admin/finance.ts. Only
+   *  ever set when approvalStatus is "approved". */
+  pendingChangeType: "edit_description" | "delete" | null;
+  pendingDescription: string | null;
+  pendingRequestedBy: string | null;
+  pendingRequestedAt: string | null;
   createdAt: string;
 }
 

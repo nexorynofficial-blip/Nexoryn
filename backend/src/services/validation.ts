@@ -136,6 +136,20 @@ export const decisionInputSchema = z.object({
   passkey: z.string().min(1, "Enter your passkey"),
 });
 
+// ── Pending changes to an already-approved ledger row ────────────────────
+// Proposing a change never needs a passkey (same reasoning as logging a new
+// entry — it's just a claim, and changes nothing until someone else signs off
+// on it). Deciding one does, same as approving/rejecting a debt payment.
+
+export const requestEditDescriptionSchema = z.object({
+  description: z.string().trim().min(1, "Description is required").max(500),
+});
+
+export const pendingChangeDecisionSchema = z.object({
+  note: z.string().trim().max(500).optional(),
+  passkey: z.string().min(1, "Enter your passkey"),
+});
+
 // ── Admin account self-service ──────────────────────────────────────────
 
 export const accountProfileSchema = z.object({

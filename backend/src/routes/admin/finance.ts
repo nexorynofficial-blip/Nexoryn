@@ -10,6 +10,8 @@ import {
   PARTNERS,
   decisionInputSchema,
   investmentInputSchema,
+  pendingChangeDecisionSchema,
+  requestEditDescriptionSchema,
 } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
@@ -57,6 +59,18 @@ function eligibleApprovers(row: { type: string; paidTo: string | null; actionBy:
   }
 
   return [];
+}
+
+/**
+ * Who is allowed to decide a pending *change* to an already-approved row
+ * (editing its description, or deleting it) — deliberately wider than
+ * eligibleApprovers() above: this isn't a claim about one specific person's
+ * money, it's a correction to shared company records, so any partner other
+ * than whoever proposed it can be the one to sign off. Only one approval is
+ * needed; whichever of them acts first settles it.
+ */
+function eligiblePendingChangeApprovers(requestedBy: string): string[] {
+  return PARTNERS.filter((p) => p !== requestedBy);
 }
 
 /** How much of `actor`'s personal withdrawals is still owed back to Nexoryn. */
@@ -327,6 +341,206 @@ router.post(
   }),
 );
 
+/** Shared guard for the two "propose a change" routes below: the row must be
+ *  approved (counted) and not already carrying an unresolved pending change —
+ *  otherwise a second request could silently overwrite or race the first. */
+async function loadApprovedRowWithoutPendingChange(id: string) {
+  const row = await prisma.investment.findUnique({ where: { id } });
+  if (!row) throw ApiError.notFound("Ledger entry not found");
+  if (row.approvalStatus !== "approved") {
+    throw ApiError.badRequest("Only a counted (approved) entry can have a change requested on it.");
+  }
+  if (row.pendingChangeType) {
+    throw ApiError.conflict("This entry already has a pending change request awaiting a decision.");
+  }
+  return row;
+}
+
+// POST /api/v1/admin/finance/investments/:id/request-edit — proposes a new
+// description for an already-approved entry. Takes effect only once another
+// partner approves it (see /pending-change/approve below); the entry keeps
+// its current description and keeps counting exactly as before until then.
+router.post(
+  "/investments/:id/request-edit",
+  asyncHandler(async (req, res) => {
+    const { description } = requestEditDescriptionSchema.parse(req.body);
+    const me = await callerIdentity(req.admin!.id);
+    const row = await loadApprovedRowWithoutPendingChange(req.params.id);
+
+    const updated = await prisma.investment.update({
+      where: { id: row.id },
+      data: {
+        pendingChangeType: "edit_description",
+        pendingDescription: description,
+        pendingRequestedBy: me.actor,
+        pendingRequestedAt: new Date(),
+      },
+    });
+
+    await recordAudit({
+      action: "finance.change_requested",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { changeType: "edit_description", from: row.description, to: description },
+      req,
+    });
+
+    res.json({
+      ...updated,
+      amount: Number(updated.amount),
+      eligibleApprovers: eligiblePendingChangeApprovers(me.actor),
+    });
+  }),
+);
+
+// POST /api/v1/admin/finance/investments/:id/request-delete — same idea, for
+// removing an already-approved entry outright. Nothing is deleted until
+// another partner approves it.
+router.post(
+  "/investments/:id/request-delete",
+  asyncHandler(async (req, res) => {
+    const me = await callerIdentity(req.admin!.id);
+    const row = await loadApprovedRowWithoutPendingChange(req.params.id);
+
+    const updated = await prisma.investment.update({
+      where: { id: row.id },
+      data: {
+        pendingChangeType: "delete",
+        pendingDescription: null,
+        pendingRequestedBy: me.actor,
+        pendingRequestedAt: new Date(),
+      },
+    });
+
+    await recordAudit({
+      action: "finance.change_requested",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { changeType: "delete", description: row.description, amount: Number(row.amount) },
+      req,
+    });
+
+    res.json({
+      ...updated,
+      amount: Number(updated.amount),
+      eligibleApprovers: eligiblePendingChangeApprovers(me.actor),
+    });
+  }),
+);
+
+/** Shared guard for deciding a pending change: it must exist, and the
+ *  decider must not be whoever proposed it — otherwise a single admin could
+ *  both request and approve their own change to a counted entry, which is
+ *  exactly what this whole flow exists to prevent. */
+async function loadDecidablePendingChange(id: string, decidingActor: string) {
+  const row = await prisma.investment.findUnique({ where: { id } });
+  if (!row) throw ApiError.notFound("Ledger entry not found");
+  if (!row.pendingChangeType) {
+    throw ApiError.badRequest("This entry has no pending change to decide.");
+  }
+  if (row.pendingRequestedBy === decidingActor) {
+    throw ApiError.forbidden("You can't approve or reject your own change request.");
+  }
+  return row;
+}
+
+// POST /api/v1/admin/finance/investments/:id/pending-change/approve
+router.post(
+  "/investments/:id/pending-change/approve",
+  passkeyRateLimiter,
+  asyncHandler(async (req, res) => {
+    const { passkey } = pendingChangeDecisionSchema.parse(req.body ?? {});
+    const me = await callerIdentity(req.admin!.id);
+    const row = await loadDecidablePendingChange(req.params.id, me.actor);
+
+    await verifyActionPasskey({ id: me.id, name: me.name }, passkey, req);
+
+    if (row.pendingChangeType === "delete") {
+      await prisma.investment.delete({ where: { id: row.id } });
+
+      await recordAudit({
+        action: "finance.deleted",
+        actor: me.actor,
+        adminId: me.id,
+        target: `investment:${row.id}`,
+        metadata: {
+          type: row.type,
+          amount: Number(row.amount),
+          actionBy: row.actionBy,
+          paidTo: row.paidTo,
+          approvalStatus: row.approvalStatus,
+          description: row.description,
+          requestedBy: row.pendingRequestedBy,
+        },
+        req,
+      });
+
+      res.status(204).send();
+      return;
+    }
+
+    // "edit_description"
+    const updated = await prisma.investment.update({
+      where: { id: row.id },
+      data: {
+        description: row.pendingDescription!,
+        pendingChangeType: null,
+        pendingDescription: null,
+        pendingRequestedBy: null,
+        pendingRequestedAt: null,
+      },
+    });
+
+    await recordAudit({
+      action: "finance.change_approved",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { changeType: "edit_description", from: row.description, to: row.pendingDescription },
+      req,
+    });
+
+    res.json({ ...updated, amount: Number(updated.amount) });
+  }),
+);
+
+// POST /api/v1/admin/finance/investments/:id/pending-change/reject — leaves
+// the entry exactly as it was; only the pending proposal is discarded.
+router.post(
+  "/investments/:id/pending-change/reject",
+  passkeyRateLimiter,
+  asyncHandler(async (req, res) => {
+    const { note, passkey } = pendingChangeDecisionSchema.parse(req.body ?? {});
+    const me = await callerIdentity(req.admin!.id);
+    const row = await loadDecidablePendingChange(req.params.id, me.actor);
+
+    await verifyActionPasskey({ id: me.id, name: me.name }, passkey, req);
+
+    const updated = await prisma.investment.update({
+      where: { id: row.id },
+      data: {
+        pendingChangeType: null,
+        pendingDescription: null,
+        pendingRequestedBy: null,
+        pendingRequestedAt: null,
+      },
+    });
+
+    await recordAudit({
+      action: "finance.change_rejected",
+      actor: me.actor,
+      adminId: me.id,
+      target: `investment:${row.id}`,
+      metadata: { changeType: row.pendingChangeType, note },
+      req,
+    });
+
+    res.json({ ...updated, amount: Number(updated.amount) });
+  }),
+);
+
 // DELETE /api/v1/admin/finance/investments/:id
 router.delete(
   "/investments/:id",
@@ -343,12 +557,17 @@ router.delete(
       throw ApiError.forbidden("Only whoever raised this request can withdraw it. Reject it instead.");
     }
 
-    // An approved row is settled history that other people's balances are
-    // computed from — and until now anyone could erase one outright. Deleting
-    // your own mistake is reasonable; quietly removing a row that records
-    // someone else's money is not. Anything beyond that needs a reversing
-    // entry, which leaves both sides of the correction visible.
-    if (row.approvalStatus !== "pending" && row.enteredBy !== me.actor) {
+    // An approved (counted) row can no longer be deleted directly by anyone,
+    // including whoever entered it — that's what /request-delete +
+    // /pending-change/approve is for now, requiring another partner's
+    // sign-off. Only a row that never counted in the first place (rejected)
+    // can still be removed unilaterally by whoever entered it.
+    if (row.approvalStatus === "approved") {
+      throw ApiError.badRequest(
+        "A counted entry can't be deleted directly anymore — use 'Request delete', which needs another admin's approval.",
+      );
+    }
+    if (row.approvalStatus === "rejected" && row.enteredBy !== me.actor) {
       throw ApiError.forbidden(
         `Only ${row.enteredBy}, who recorded this entry, can delete it. Log a correcting entry instead.`,
       );

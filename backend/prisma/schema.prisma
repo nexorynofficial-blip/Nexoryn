@@ -334,6 +334,19 @@ model Investment {
   decidedAt      DateTime?
   decisionNote   String? // optional reason, mainly for a rejection
 
+  // A correction proposed against an already-*approved* (counted) row —
+  // separate from the approvalStatus workflow above, which governs whether a
+  // freshly created row counts at all. This one governs whether a change to a
+  // row that already counts gets applied. Only ever set on an approved row;
+  // the row keeps counting with its current field values until this is
+  // approved. Any partner other than whoever requested it can approve or
+  // reject — see requestEditSchema / eligiblePendingChangeApprovers() in
+  // routes/admin/finance.ts.
+  pendingChangeType  String? // "edit_description" | "delete", or null for none pending
+  pendingDescription String? // the proposed new description, when type is "edit_description"
+  pendingRequestedBy String? // actor who proposed the change
+  pendingRequestedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
