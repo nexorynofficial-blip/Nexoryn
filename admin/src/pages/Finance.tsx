@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Building2, Check, Download, Mail, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import type { FinanceDashboardData, Investment, LedgerActor, LedgerType, PartnerFinance } from "../types";
@@ -94,24 +95,20 @@ function PartnerCard({ partner, highlight }: { partner: PartnerFinance; highligh
 }
 
 /**
- * One ledger row, including the two things this only affects on an already
- * counted (approved) entry:
- *   - editing its description
- *   - deleting it
- * Both now go through a proposal that any *other* partner can approve —
- * first one to act settles it — instead of happening immediately. A pending
- * (not yet counted) or rejected entry is untouched by any of this: it keeps
- * working exactly as it did before, deletable directly by whoever entered it.
+ * One ledger row. On an already counted (approved) entry, the pencil/trash
+ * icons here only *propose* editing its description or deleting it — the
+ * actual approve/reject decision (by any partner other than whoever
+ * proposed it) happens on the Requests page, not inline here, so every
+ * decision a partner needs to make lives in one place. A pending (not yet
+ * counted) or rejected entry is untouched by any of this: it keeps working
+ * exactly as before, deletable directly by whoever entered it.
  */
-function LedgerRow({ inv, meActor, onChanged }: { inv: Investment; meActor: string; onChanged: () => void }) {
+function LedgerRow({ inv, onChanged }: { inv: Investment; onChanged: () => void }) {
   const counted = inv.approvalStatus === "approved";
   const hasPendingChange = inv.pendingChangeType !== null;
-  const isRequester = hasPendingChange && inv.pendingRequestedBy === meActor;
-  const canDecide = hasPendingChange && !isRequester;
 
   const [editing, setEditing] = useState(false);
   const [draftDescription, setDraftDescription] = useState(inv.description);
-  const [passkey, setPasskey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -146,17 +143,6 @@ function LedgerRow({ inv, meActor, onChanged }: { inv: Investment; meActor: stri
     void run(async () => {
       await api.delete(`/api/v1/admin/finance/investments/${inv.id}`);
     });
-
-  const decide = (decision: "approve" | "reject") => {
-    if (!passkey) {
-      setError("Enter your passkey to confirm.");
-      return;
-    }
-    void run(async () => {
-      await api.post(`/api/v1/admin/finance/investments/${inv.id}/pending-change/${decision}`, { passkey });
-      setPasskey("");
-    });
-  };
 
   return (
     <>
@@ -216,25 +202,10 @@ function LedgerRow({ inv, meActor, onChanged }: { inv: Investment; meActor: stri
                   <X className="h-4 w-4" />
                 </button>
               </>
-            ) : canDecide ? (
-              <>
-                <Input
-                  type="password"
-                  value={passkey}
-                  onChange={(e) => setPasskey(e.target.value)}
-                  placeholder="Passkey"
-                  autoComplete="off"
-                  className="w-28 py-1 text-xs"
-                />
-                <button onClick={() => decide("approve")} disabled={busy} title="Approve change" className="text-emerald-400/70 hover:text-emerald-400">
-                  <Check className="h-4 w-4" />
-                </button>
-                <button onClick={() => decide("reject")} disabled={busy} title="Reject change" className="text-red-400/70 hover:text-red-400">
-                  <X className="h-4 w-4" />
-                </button>
-              </>
-            ) : isRequester ? (
-              <span className="whitespace-nowrap text-[11px] text-white/30">Awaiting the other partners</span>
+            ) : hasPendingChange ? (
+              <Link to="/requests" className="whitespace-nowrap text-[11px] text-accent-to hover:underline">
+                Decide in Requests →
+              </Link>
             ) : counted ? (
               <>
                 <button onClick={() => setEditing(true)} title="Edit description" className="text-white/30 hover:text-white">
@@ -364,11 +335,6 @@ export default function Finance() {
   const { company, partners, settlements, you } = dashboard;
   // A partner can only repay another partner, or the company.
   const paidToOptions = LEDGER_ACTORS.filter((a) => a !== actionBy);
-  // Same formula the backend uses for a ledger actor's identity (see
-  // callerIdentity in routes/admin/finance.ts) — needed here to tell whether
-  // *this* admin is the one who proposed a pending change on a row, since
-  // they can't be the one to approve or reject their own proposal.
-  const meActor = (user?.partnerName ?? user?.name ?? "").trim();
 
   return (
     <div>
@@ -574,7 +540,7 @@ export default function Finance() {
                 </tr>
               ) : (
                 investments.map((inv) => (
-                  <LedgerRow key={inv.id} inv={inv} meActor={meActor} onChanged={load} />
+                  <LedgerRow key={inv.id} inv={inv} onChanged={load} />
                 ))
               )}
             </tbody>

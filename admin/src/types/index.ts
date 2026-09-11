@@ -143,6 +143,10 @@ export interface DebtRequest extends Omit<Investment, "amount"> {
   amount: number;
   eligibleApprovers: string[];
   canDecide: boolean;
+  /** "decision" = a normal pending ledger row (approvalStatus-based).
+   *  "change" = a proposed edit/delete on an already-approved row
+   *  (pendingChangeType-based) — see backend/src/routes/admin/finance.ts. */
+  kind: "decision" | "change";
 }
 
 export interface DebtRequests {

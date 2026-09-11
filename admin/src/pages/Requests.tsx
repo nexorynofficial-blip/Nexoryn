@@ -11,6 +11,11 @@ const STATUS_TONE = { pending: "warning", approved: "success", rejected: "danger
 
 /** Plain-English description of what a request would actually do. */
 function effectOf(r: DebtRequest) {
+  if (r.kind === "change") {
+    return r.pendingChangeType === "delete"
+      ? `Removes this counted entry (${money(r.amount)}, "${r.description}") from the ledger entirely.`
+      : `Changes this entry's description from "${r.description}" to "${r.pendingDescription}". The amount stays the same.`;
+  }
   if (r.paidTo === "Nexoryn") {
     return `Clears ${money(r.amount)} of ${r.actionBy}'s personal withdrawal debt to the company.`;
   }
@@ -29,6 +34,13 @@ function RequestCard({
   const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState("");
 
+  const isChange = request.kind === "change";
+  // A change has no approvalStatus of its own (the row stays "approved" the
+  // whole time — see pendingChangeType in prisma/schema.prisma), so its
+  // status badge and decided-by line come from different fields than a
+  // normal debt decision.
+  const status: "pending" | "approved" | "rejected" = isChange ? "pending" : request.approvalStatus;
+
   const decide = async (decision: "approve" | "reject") => {
     if (!passkey) {
       setError("Enter your passkey to confirm.");
@@ -37,10 +49,10 @@ function RequestCard({
     setBusy(decision);
     setError("");
     try {
-      await api.post(`/api/v1/admin/finance/investments/${request.id}/${decision}`, {
-        note: note.trim() || undefined,
-        passkey,
-      });
+      const path = isChange
+        ? `/api/v1/admin/finance/investments/${request.id}/pending-change/${decision}`
+        : `/api/v1/admin/finance/investments/${request.id}/${decision}`;
+      await api.post(path, { note: note.trim() || undefined, passkey });
       onDecided();
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : `Could not ${decision} this request`);
@@ -53,12 +65,14 @@ function RequestCard({
     <Card className="p-5">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-semibold text-white">{money(request.amount)}</p>
+          <p className="text-lg font-semibold text-white">
+            {isChange ? (request.pendingChangeType === "delete" ? "Delete entry" : "Edit description") : money(request.amount)}
+          </p>
           <p className="text-sm text-white/60">
-            {request.actionBy} → {request.paidTo}
+            {isChange ? `Requested by ${request.pendingRequestedBy}` : `${request.actionBy} → ${request.paidTo}`}
           </p>
         </div>
-        <Badge tone={STATUS_TONE[request.approvalStatus]}>{request.approvalStatus}</Badge>
+        <Badge tone={STATUS_TONE[status]}>{isChange ? "pending" : status}</Badge>
       </div>
 
       <p className="mb-3 text-sm text-white/70">{request.description}</p>
@@ -70,7 +84,7 @@ function RequestCard({
       <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-white/40">
         <span>Logged by {request.enteredBy}</span>
         <span>Dated {new Date(request.date).toLocaleDateString()}</span>
-        {request.decidedBy && (
+        {!isChange && request.decidedBy && (
           <span>
             {request.approvalStatus === "approved" ? "Approved" : "Rejected"} by {request.decidedBy}
             {request.decidedAt ? ` on ${new Date(request.decidedAt).toLocaleDateString()}` : ""}
@@ -78,7 +92,7 @@ function RequestCard({
         )}
       </div>
 
-      {request.decisionNote && (
+      {!isChange && request.decisionNote && (
         <p className="mb-4 text-sm text-white/60">
           <span className="text-white/40">Note: </span>
           {request.decisionNote}
@@ -117,7 +131,7 @@ function RequestCard({
         </div>
       )}
 
-      {!request.canDecide && request.approvalStatus === "pending" && (
+      {!request.canDecide && status === "pending" && (
         <p className="border-t border-white/10 pt-4 text-xs text-white/40">
           Waiting on {request.eligibleApprovers.join(" or ") || "someone"} to decide.
         </p>
@@ -182,7 +196,7 @@ export default function Requests() {
     <div>
       <PageHeader
         title="Requests"
-        description="Debt payments need the other side's approval before they change any number. Nothing here affects the Finance page until it's approved."
+        description="Debt payments, and edits or deletes on already-counted entries, all need someone else's approval before they change anything. Nothing here affects the Finance page until it's approved."
       />
       <ErrorBanner message={error} />
 

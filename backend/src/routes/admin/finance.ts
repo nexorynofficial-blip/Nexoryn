@@ -153,16 +153,40 @@ router.get(
       amount: Number(row.amount),
       eligibleApprovers: approvers,
       canDecide: row.approvalStatus === "pending" && approvers.includes(me.actor),
+      kind: "decision" as const,
+    });
+
+    // Pending changes (edit/delete requests on an already-approved row) are a
+    // second, separate kind of request — they don't move approvalStatus, so
+    // they'd never show up above. They belong in the same Requests panel
+    // rather than inline on the Finance ledger, so any partner deciding one
+    // does it from the same place they decide everything else.
+    const changeRows = allRows.filter((r) => r.pendingChangeType !== null);
+    const myChanges = changeRows.filter(
+      (r) => r.pendingRequestedBy === me.actor || eligiblePendingChangeApprovers(r.pendingRequestedBy!).includes(me.actor),
+    );
+    const decorateChange = (row: (typeof changeRows)[number]) => ({
+      ...row,
+      amount: Number(row.amount),
+      eligibleApprovers: eligiblePendingChangeApprovers(row.pendingRequestedBy!),
+      canDecide: row.pendingRequestedBy !== me.actor,
+      kind: "change" as const,
     });
 
     res.json({
       you: me.actor,
-      incoming: mine
-        .filter(({ row, approvers }) => row.approvalStatus === "pending" && approvers.includes(me.actor))
-        .map(decorate),
-      outgoing: mine
-        .filter(({ row, approvers }) => row.approvalStatus === "pending" && !approvers.includes(me.actor))
-        .map(decorate),
+      incoming: [
+        ...mine
+          .filter(({ row, approvers }) => row.approvalStatus === "pending" && approvers.includes(me.actor))
+          .map(decorate),
+        ...myChanges.filter((r) => r.pendingRequestedBy !== me.actor).map(decorateChange),
+      ],
+      outgoing: [
+        ...mine
+          .filter(({ row, approvers }) => row.approvalStatus === "pending" && !approvers.includes(me.actor))
+          .map(decorate),
+        ...myChanges.filter((r) => r.pendingRequestedBy === me.actor).map(decorateChange),
+      ],
       history: mine.filter(({ row }) => row.approvalStatus !== "pending").map(decorate),
     });
   }),
