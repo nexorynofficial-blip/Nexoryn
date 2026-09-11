@@ -337,16 +337,22 @@ export default function Account() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = () => {
-    setLoading(true);
+  // `background` skips the spinner: a reload after saving the name or
+  // generating a passkey must not swap the whole grid for a <Spinner/>,
+  // which would unmount PasskeyCard mid-reveal and wipe the passkey it just
+  // set as local state before the admin ever gets to read it.
+  const load = (background = false) => {
+    if (!background) setLoading(true);
     api
       .get<AdminAccount>("/api/v1/admin/account")
       .then(setAccount)
       .catch((err) => setError(err instanceof ApiRequestError ? err.message : "Failed to load your account"))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!background) setLoading(false);
+      });
   };
 
-  useEffect(load, []);
+  useEffect(() => load(), []);
 
   return (
     <div>
@@ -360,13 +366,13 @@ export default function Account() {
           <ProfileCard
             account={account}
             onSaved={() => {
-              load();
+              load(true);
               void refresh();
             }}
           />
           <PasswordCard account={account} />
 
-          <PasskeyCard account={account} onChanged={load} />
+          <PasskeyCard account={account} onChanged={() => load(true)} />
 
           <Card className="p-6 lg:col-span-2">
             <div className="mb-1 flex items-center gap-2">
