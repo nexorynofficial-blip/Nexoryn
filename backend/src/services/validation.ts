@@ -55,6 +55,9 @@ export function validateContactForm(formId: ContactFormId, values: unknown) {
 
 // ── Project / case-study validation ─────────────────────────────────────
 
+// Kept only as suggestions for the admin's industry text field (see
+// admin/src/lib/constants.ts) — Project.industry is free text now, not an
+// enum, so a project's industry no longer has to be one of these to save.
 export const INDUSTRIES = [
   "Fintech",
   "E-Commerce",
@@ -276,7 +279,10 @@ export const projectInputSchema = z
       .min(1)
       .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug must be lowercase, hyphen-separated"),
     title: z.string().min(1).max(200),
-    industry: z.enum(INDUSTRIES),
+    // Free text, not an enum — the admin form uses a text input (with the
+    // list above as autocomplete suggestions only) so a project isn't
+    // blocked on typing an industry that hasn't been seen before.
+    industry: z.string().trim().min(1, "Industry is required").max(100),
     service: z.enum(SERVICES),
     description: z.string().min(1).max(1000),
     tags: z.array(z.string().min(1)).default([]),

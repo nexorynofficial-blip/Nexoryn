@@ -3,8 +3,9 @@ import { Check, Clock, Inbox, Send, X } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import type { DebtRequest, DebtRequests } from "../types";
 import { Badge, Button, Card, EmptyState, ErrorBanner, Input, PageHeader, Spinner } from "../components/ui";
+import { formatCurrency } from "../lib/currency";
 
-const money = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = formatCurrency;
 
 const STATUS_TONE = { pending: "warning", approved: "success", rejected: "danger" } as const;
 

@@ -4,6 +4,7 @@ import { Briefcase, GitPullRequestArrow, Inbox, MessageSquareQuote, Users, Walle
 import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import { Badge, Card, Spinner } from "../components/ui";
+import { formatCurrency } from "../lib/currency";
 import type {
   ContactSubmission,
   DebtRequest,
@@ -15,9 +16,7 @@ import type {
   TeamMember,
 } from "../types";
 
-function money(n: number) {
-  return `$${n.toFixed(2)}`;
-}
+const money = formatCurrency;
 
 function greeting() {
   const hour = new Date().getHours();

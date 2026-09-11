@@ -12,9 +12,9 @@ import {
   PARTNERS,
 } from "../lib/constants";
 import { Badge, Button, Card, ErrorBanner, Field, Input, PageHeader, Select, Spinner } from "../components/ui";
+import { formatCurrency } from "../lib/currency";
 
-const money = (n: number) =>
-  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+const money = formatCurrency;
 
 function Stat({ label, value, tone = "default", hint }: { label: string; value: string; tone?: "default" | "good" | "bad" | "accent"; hint?: string }) {
   const tones = {

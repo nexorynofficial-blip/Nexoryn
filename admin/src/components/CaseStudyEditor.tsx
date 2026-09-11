@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { ImageIcon, Plus, Trash2 } from "lucide-react";
 import type { Asset } from "../types";
-import { Button, Field, Input, Select, Textarea } from "./ui";
+import { Button, Field, Input, Textarea } from "./ui";
 import { AssetPicker } from "./AssetPicker";
 
 export type TitledItem = { title: string; description: string };
@@ -390,29 +390,17 @@ export function StandardCaseStudyEditor({ value, onChange, activeTab }: { value:
   if (activeTab === "Tech Stack") {
     return <TechStackEditor value={value.techStack} onChange={(techStack) => onChange({ ...value, techStack })} />;
   }
-  if (activeTab === "Scalability & Flexibility") {
-    return <TitledListEditor label="Scalability & flexibility" values={value.scalability} onChange={(scalability) => onChange({ ...value, scalability })} />;
-  }
-  // The final, variable tab — Gallery / Screenshots / Live Preview / none.
-  return (
-    <div className="flex flex-col gap-5">
-      <Field label="Extra content (this project's final tab)">
-        <Select value={value.extraKind} onChange={(e) => onChange({ ...value, extraKind: e.target.value as ExtraKind })}>
-          <option value="none">None</option>
-          <option value="gallery">Gallery</option>
-          <option value="screenshots">Screenshots</option>
-          <option value="livePreview">Live Preview</option>
-        </Select>
-      </Field>
-      {value.extraKind === "gallery" && <GalleryEditor label="Gallery images" values={value.gallery} onChange={(gallery) => onChange({ ...value, gallery })} />}
-      {value.extraKind === "screenshots" && <GalleryEditor label="Screenshots" values={value.screenshots} onChange={(screenshots) => onChange({ ...value, screenshots })} />}
-      {value.extraKind === "livePreview" && (
-        <Field label="Live preview URL (leave blank for 'coming soon')">
-          <Input value={value.livePreviewUrl} onChange={(e) => onChange({ ...value, livePreviewUrl: e.target.value })} placeholder="https://..." />
-        </Field>
-      )}
-    </div>
-  );
+  // "Scalability & Flexibility" — the last tab in STANDARD_TABS. Gallery/
+  // Screenshots/Live Preview used to be a further, admin-picked "extra tab"
+  // here; that's gone — which of those a project gets is now fixed by its
+  // service (Automation → gallery, Web Development → live preview URL) and
+  // managed in ProjectForm's Media section instead, alongside the thumbnail
+  // picker, so an image can't be uploaded to the gallery without also being
+  // eligible as the thumbnail. `extraKind`/`gallery`/`screenshots`/
+  // `livePreviewUrl` on StandardCaseStudy still exist and are still what
+  // toRawCaseStudy reads — ProjectForm just sets them directly now instead of
+  // through a dropdown here.
+  return <TitledListEditor label="Scalability & flexibility" values={value.scalability} onChange={(scalability) => onChange({ ...value, scalability })} />;
 }
 
 /* ── Full editor: design shape (Brand & Graphic Design) ──────────────── */
@@ -446,9 +434,11 @@ export function DesignCaseStudyEditor({ value, onChange, activeTab }: { value: D
   if (activeTab === "Use Cases") {
     return <TitledListEditor label="Use cases" values={value.useCases} onChange={(useCases) => onChange({ ...value, useCases })} />;
   }
-  if (activeTab === "Customization & Scalability") {
-    return <TitledListEditor label="Customization & scalability" values={value.scalability} onChange={(scalability) => onChange({ ...value, scalability })} />;
-  }
-  // Gallery
-  return <GalleryEditor label="Gallery images (at least one required)" values={value.gallery} onChange={(gallery) => onChange({ ...value, gallery })} />;
+  // "Customization & Scalability" — the last tab in DESIGN_TABS. Gallery used
+  // to be a further tab after this one; it's gone from here for the same
+  // reason as the standard editor above — ProjectForm's Media section now
+  // manages every image for a design project (including which one is the
+  // thumbnail) as one list, and writes the result straight into
+  // DesignCaseStudy.gallery.
+  return <TitledListEditor label="Customization & scalability" values={value.scalability} onChange={(scalability) => onChange({ ...value, scalability })} />;
 }

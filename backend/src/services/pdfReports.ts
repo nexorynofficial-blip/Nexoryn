@@ -15,7 +15,16 @@ function monthYearLabel(year: number, month: number): string {
   });
 }
 
-const money = (n: number) => `$${n.toFixed(2)}`;
+// Matches the admin dashboard's formatCurrency (admin/src/lib/currency.ts) —
+// same locale/options, so a figure reads identically whether it's seen on
+// screen, in this PDF, or in the emailed HTML report.
+const money = (n: number) =>
+  n.toLocaleString("en-PK", {
+    style: "currency",
+    currency: "PKR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 /** Streams a PDF financial report. Pipe the returned document straight to
  * an Express response (`doc.pipe(res); doc.end();`). */

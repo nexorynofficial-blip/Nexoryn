@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
 import { recordAudit } from "../../services/audit";
@@ -38,6 +39,26 @@ router.get(
     });
 
     res.json({ items, next: items.length === take ? items[items.length - 1]?.id : null });
+  }),
+);
+
+// POST /api/v1/admin/assets/lookup-by-url — resolves gallery image URLs
+// (stored in a project's caseStudy JSON as plain {src, alt, width, height},
+// with no asset id) back to their real Asset rows, so the project editor can
+// let an admin re-designate any previously-uploaded gallery image as the
+// thumbnail — which needs a genuine Asset id for Project.photoId, not just a
+// URL. Bulk rather than one-per-image to avoid an N+1 round trip when a
+// project has many gallery images.
+const lookupByUrlSchema = z.object({
+  urls: z.array(z.string()).min(1).max(100),
+});
+
+router.post(
+  "/lookup-by-url",
+  asyncHandler(async (req, res) => {
+    const { urls } = lookupByUrlSchema.parse(req.body);
+    const items = await prisma.asset.findMany({ where: { url: { in: urls } } });
+    res.json({ items });
   }),
 );
 
