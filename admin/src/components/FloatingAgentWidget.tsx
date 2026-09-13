@@ -400,7 +400,12 @@ export default function FloatingAgentWidget({
         {open ? (
           <span className="nxai-fab-glyph">✕</span>
         ) : (
-          <img src="/nexoryn-logo.png" alt="Nexoryn" className="nxai-fab-img" />
+          // Root-absolute would resolve against the *site's* origin root, not
+          // this app's own base — this admin panel builds with base:"/admin/"
+          // (it's deployed as a sub-path of the marketing site), so the asset
+          // actually lives at /admin/nexoryn-logo.png in production. Using
+          // BASE_URL keeps this correct under any base path.
+          <img src={`${import.meta.env.BASE_URL}nexoryn-logo.png`} alt="Nexoryn" className="nxai-fab-img" />
         )}
         {!open && <span className={`nxai-status-dot ${statusLabel}`} title={backendOnline === false ? "Agent backend unreachable" : "Agent backend ready"} />}
       </button>
