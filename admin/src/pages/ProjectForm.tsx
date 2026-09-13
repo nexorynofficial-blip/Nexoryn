@@ -18,6 +18,7 @@ import {
   type GalleryItem,
   type StandardCaseStudy,
 } from "../components/CaseStudyEditor";
+import FloatingAgentWidget, { type AutofillPayload, type UploadedAsset } from "../components/FloatingAgentWidget";
 
 // Matches BASE_TABS / DESIGN_TABS in src/pages/CaseStudyPage.jsx, minus the
 // image-gallery tab each used to end with — that's now the Media section
@@ -26,6 +27,24 @@ import {
 // could accidentally let drift apart.
 const STANDARD_TABS = ["Overview", "Results", "Tech Stack", "Scalability & Flexibility"];
 const DESIGN_TABS = ["Overview", "Design Process", "Key Features", "Use Cases", "Customization & Scalability"];
+
+/** The widget uploads via the same POST /api/v1/admin/assets the AssetPicker
+ *  uses, but its response type (UploadedAsset) omits fields this form's Asset
+ *  type otherwise always has populated from a full GET — mimeType/fileSize/
+ *  uploadedAt are display-only here and never read by handleSubmit (which
+ *  only ever sends photo.id or thumbnailId), so empty placeholders are safe. */
+function uploadedAssetToAsset(u: UploadedAsset): Asset {
+  return {
+    id: u.id,
+    url: u.url,
+    altText: u.altText,
+    width: u.width ?? null,
+    height: u.height ?? null,
+    mimeType: "",
+    fileSize: 0,
+    uploadedAt: "",
+  };
+}
 
 function slugify(input: string): string {
   return input
@@ -166,6 +185,48 @@ export default function ProjectForm() {
     prevServiceRef.current = service;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [service]);
+
+  // Images picked in the AI assistant widget (see FloatingAgentWidget /
+  // handleAutofill below). Applied here, in an effect that runs after the
+  // service-switch effect above (both fire in the same commit when the
+  // widget also changes `service`), instead of directly inside
+  // handleAutofill — setting `photo`/`mediaItems` there would race the
+  // service-switch effect's own reset of those same fields and get
+  // silently overwritten by it.
+  const [pendingAutofillAssets, setPendingAutofillAssets] = useState<UploadedAsset[] | null>(null);
+  useEffect(() => {
+    if (!pendingAutofillAssets) return;
+    if (pendingAutofillAssets.length > 0) {
+      if (service === "Web Development") {
+        setPhoto(uploadedAssetToAsset(pendingAutofillAssets[0]));
+      } else {
+        setMediaItems((prev) => [
+          ...prev,
+          ...pendingAutofillAssets.map((u) => ({ asset: uploadedAssetToAsset(u), alt: u.altText })),
+        ]);
+        // Thumbnail is left untouched deliberately — per the integration
+        // request, the widget must never auto-pick one. If none is set yet,
+        // "Add at least one photo and choose a thumbnail" will prompt the
+        // admin to use the existing star toggle themselves.
+      }
+    }
+    setPendingAutofillAssets(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAutofillAssets, service]);
+
+  const handleAutofill = (data: AutofillPayload) => {
+    setService(data.service);
+    setTitle(data.title);
+    setIndustry(data.industry);
+    setDescription(data.description);
+    setTags(data.tags.join(", "));
+
+    const parsed = fromRawCaseStudy(data.caseStudy);
+    setStandard(parsed.standard);
+    setDesign(parsed.design);
+
+    setPendingAutofillAssets(data.uploadedAssets);
+  };
 
   useEffect(() => {
     if (isNew) {
@@ -455,6 +516,11 @@ export default function ProjectForm() {
           onClose={() => setPickerOpen(false)}
         />
       )}
+
+      <FloatingAgentWidget
+        backendApiBaseUrl={import.meta.env.VITE_NEXORYN_AGENT_URL}
+        onAutofill={handleAutofill}
+      />
     </div>
   );
 }
