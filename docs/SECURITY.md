@@ -128,6 +128,25 @@ nosniff, a Referrer-Policy and a Permissions-Policy.
 > backend URL ever changes, update `vercel.json` in the same commit as
 > `VITE_API_BASE_URL`, or the browser will block every API call.
 
+**`frame-src` is `https:`, not `'none'`, because of one feature:** case study
+pages can embed a client project's live deployed site in an iframe
+(`LivePreviewEmbed` in `src/pages/CaseStudyPage.jsx`), and its URL —
+`livePreviewUrl` — is a free-text field on the case study, set per project
+from the admin panel. There is no fixed set of origins to allowlist; a new
+case study can point at any client's domain at any time, and enumerating
+known ones would silently re-break on the next project (this is what
+happened: the CSP shipped as `'none'`, which blocks every embed, including
+ones added afterward). Scoping this by route isn't possible with a single
+static CSP header covering the whole SPA, so it applies site-wide — bounded
+by the facts that (1) the URL is admin-entered, not visitor-supplied, and (2)
+the iframe itself carries `sandbox="allow-scripts allow-same-origin
+allow-forms allow-popups"` and a `strict-origin-when-cross-origin`
+`referrerPolicy`, so an embedded page can't navigate the parent tab or drop
+top-level popunders regardless of what this directive allows. `frame-ancestors
+'none'` and `X-Frame-Options: DENY` are untouched — those guard whether other
+sites can frame *this* one, which is a separate question from what this site
+is allowed to frame.
+
 `/cfokp`, `/cfokp/` and `/cfokp/*` all return `X-Robots-Tag: noindex, nofollow`.
 All three patterns are needed — `/cfokp/:path*` alone does not match the bare
 `/cfokp/` that people and crawlers actually land on. The admin panel is
