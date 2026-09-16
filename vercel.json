@@ -3,11 +3,11 @@
   "buildCommand": "npm run build:all",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/admin", "destination": "/admin/", "permanent": true }
+    { "source": "/cfokp", "destination": "/cfokp/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/admin/", "destination": "/admin/index.html" },
-    { "source": "/admin/:path*", "destination": "/admin/index.html" },
+    { "source": "/cfokp/", "destination": "/cfokp/index.html" },
+    { "source": "/cfokp/:path*", "destination": "/cfokp/index.html" },
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
@@ -30,15 +30,15 @@
       ]
     },
     {
-      "source": "/admin",
+      "source": "/cfokp",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
-      "source": "/admin/",
+      "source": "/cfokp/",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
-      "source": "/admin/:path*",
+      "source": "/cfokp/:path*",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {

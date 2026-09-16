@@ -1,7 +1,7 @@
 # Netlify / Cloudflare Pages SPA rewrites. Vercel reads vercel.json instead.
 # Order matters: the admin sub-app has to be claimed before the catch-all,
-# or every /admin/* route would fall through to the marketing site's shell.
-/admin              /admin/index.html   200
-/admin/             /admin/index.html   200
-/admin/*            /admin/index.html   200
+# or every /cfokp/* route would fall through to the marketing site's shell.
+/cfokp              /cfokp/index.html   200
+/cfokp/             /cfokp/index.html   200
+/cfokp/*            /cfokp/index.html   200
 /*                  /index.html         200

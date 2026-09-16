@@ -128,9 +128,12 @@ nosniff, a Referrer-Policy and a Permissions-Policy.
 > backend URL ever changes, update `vercel.json` in the same commit as
 > `VITE_API_BASE_URL`, or the browser will block every API call.
 
-`/admin`, `/admin/` and `/admin/*` all return `X-Robots-Tag: noindex, nofollow`.
-All three patterns are needed — `/admin/:path*` alone does not match the bare
-`/admin/` that people and crawlers actually land on.
+`/cfokp`, `/cfokp/` and `/cfokp/*` all return `X-Robots-Tag: noindex, nofollow`.
+All three patterns are needed — `/cfokp/:path*` alone does not match the bare
+`/cfokp/` that people and crawlers actually land on. The admin panel is
+deliberately served at `/cfokp`, not `/admin`, so the URL isn't guessable —
+robots.txt does not list it either, for the same reason (see its comment).
+This is obscurity on top of real auth, not a substitute for it.
 
 ## Dependencies
 

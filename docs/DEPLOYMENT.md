@@ -6,13 +6,14 @@ database:
 | Piece | What it is | Where it goes |
 |---|---|---|
 | Marketing site | Vite SPA in `src/` | Vercel project #1 (existing — `nexoryn-delta.vercel.app`) |
-| Admin panel | Vite SPA in `admin/` | **Same project as the site**, built into `dist/admin`, served at `/admin` |
+| Admin panel | Vite SPA in `admin/` | **Same project as the site**, built into `dist/cfokp`, served at `/cfokp` |
 | Backend API | Express + Prisma in `backend/` | Vercel project #2 (new), as Serverless Functions |
 | Database | Postgres | Neon (free tier) |
 
 The admin panel is *not* a separate deployment — `npm run build:all` builds
-the site into `dist/` and the admin into `dist/admin/`, so project #1's one
-build carries both, and the admin lives at `https://<your-site>.vercel.app/admin`.
+the site into `dist/` and the admin into `dist/cfokp/`, so project #1's one
+build carries both, and the admin lives at `https://<your-site>.vercel.app/cfokp`
+(an unadvertised path, not `/admin` — see the comment in `admin/vite.config.ts`).
 
 The backend *is* a separate Vercel project, because it's a different kind of
 app (an API, not a static site) and needs its own env vars, its own domain,
@@ -167,7 +168,7 @@ build machines too.
 
 1. Visit your site → browse Portfolio. Should look identical — it's now
    reading from the API instead of the bundled static copy.
-2. Visit `<your-site>/admin` → log in with the Waseem account from Step 2 →
+2. Visit `<your-site>/cfokp` → log in with the Waseem account from Step 2 →
    you should land on Overview with real Finance numbers.
 3. Submit the actual contact form on the live site → open **Contact Inbox**
    in the admin → the submission should appear there.

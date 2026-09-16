@@ -31,8 +31,8 @@ function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  // Served under <site>/admin — see the `base` in vite.config.ts. Reusing
-  // Vite's BASE_URL as the router basename keeps dev (/admin/ on :5174) and
+  // Served under <site>/cfokp — see the `base` in vite.config.ts. Reusing
+  // Vite's BASE_URL as the router basename keeps dev (/cfokp/ on :5174) and
   // production on identical paths.
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>

@@ -2,9 +2,10 @@
 User-agent: *
 Allow: /
 
-# The admin panel is not for search engines. This is a courtesy to well-behaved
-# crawlers only, not a security control — the panel is protected by requiring a
-# login, and every /admin URL also returns an X-Robots-Tag: noindex header
-# (see vercel.json), which is what actually keeps it out of an index.
-Disallow: /admin
-Disallow: /admin/
+# The admin panel is deliberately not listed here as a Disallow rule — this
+# file is public and unauthenticated, so naming the path here would publish
+# the very thing keeping it unlisted from casual discovery. It's kept out of
+# search indexes instead by an X-Robots-Tag: noindex header on every response
+# under that path (see vercel.json) — same result, without the leak. Real
+# protection is the login itself (see backend/src/middleware/auth.ts), not
+# this file either way.

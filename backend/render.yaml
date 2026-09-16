@@ -56,7 +56,7 @@ services:
         sync: false # e.g. https://nexoryn-delta.vercel.app
       - key: FRONTEND_PROD_URL
         sync: false # your final custom domain once you have one, e.g. https://nexoryn.ai
-      # The admin panel is served from the frontend origin (<site>/admin), so
+      # The admin panel is served from the frontend origin (<site>/cfokp), so
       # it needs no separate entry in production — these two only matter for
       # a standalone admin deployment or local development.
       - key: ADMIN_URL
