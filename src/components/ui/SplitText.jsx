@@ -1,4 +1,4 @@
-import { Children, Fragment, isValidElement, useMemo, useRef } from "react";
+import { Children, Fragment, isValidElement, useRef } from "react";
 import { gsap, useGSAP } from "../../lib/gsap";
 import { prefersReducedMotion } from "../../lib/easing";
 import { useIntroDone } from "../../lib/IntroContext";
@@ -93,7 +93,11 @@ export default function SplitText({
 }) {
   const ref = useRef(null);
   const introDone = useIntroDone();
-  const tokens = useMemo(() => tokenize(children), [children]);
+  const tokens = tokenize(children);
+  // Keyed on the words themselves, not on `children`: JSX children are a new
+  // object on every parent render, so keying on them replayed the reveal each
+  // time the parent re-rendered for unrelated state (e.g. a carousel step).
+  const signature = JSON.stringify(tokens);
 
   useGSAP(
     () => {
@@ -137,7 +141,7 @@ export default function SplitText({
         }
       );
     },
-    { scope: ref, dependencies: [tokens, introDone], revertOnUpdate: true }
+    { scope: ref, dependencies: [signature, introDone], revertOnUpdate: true }
   );
 
   return (
