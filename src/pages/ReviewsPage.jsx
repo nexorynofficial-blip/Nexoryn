@@ -6,43 +6,13 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import { ReviewCardStack } from "../components/ReviewCardStack";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
+import { SERVICE_TABS, ServiceFilter } from "../components/ui/ServiceFilter";
 import { REVIEWS } from "../data/reviews";
 import { getReviews } from "../lib/content";
 import { useContent } from "../hooks/useContent";
 
-const SERVICES = ["Automation", "Web Development", "Graphic Design"];
-
-// Segmented pill control, same visual language as the site's other tab/pill
-// selectors (Services page's TabBar, Contact's form tabs) — active pill gets
-// the brand gradient, inactive ones sit dim on the shared glass surface.
-function ServiceFilter({ active, onSelect }) {
-  return (
-    <div className="mx-auto flex w-fit flex-wrap justify-center gap-3">
-      {SERVICES.map((service) => (
-        <button
-          key={service}
-          type="button"
-          onClick={() => onSelect(service)}
-          aria-pressed={active === service}
-          className={`glass-panel rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wide transition-all duration-300 sm:px-6 sm:py-3 sm:text-sm ${
-            active === service
-              ? // .glass-panel's `background`/`border` are plain (unlayered) CSS,
-                // which beats Tailwind's own utility layer regardless of class
-                // order — without `!` the gradient/border here were silently
-                // losing and every pill just looked like the inactive one.
-                "border-transparent! bg-gradient-to-r! from-accent-from! to-accent-to! text-black"
-              : "text-white/60 hover:text-white"
-          }`}
-        >
-          {service}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function ReviewsPage() {
-  const [activeService, setActiveService] = useState(SERVICES[0]);
+  const [activeService, setActiveService] = useState(SERVICE_TABS[0]);
   const reviews = useContent(getReviews, REVIEWS);
 
   const filteredReviews = useMemo(

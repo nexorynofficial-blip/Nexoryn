@@ -12,6 +12,7 @@ import {
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
+import { SERVICE_TABS, ServiceFilter } from "../components/ui/ServiceFilter";
 import { ShowMoreButton } from "../components/ui/ShowMoreButton";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
@@ -39,6 +40,15 @@ const INDUSTRIES = [
   "Sports & Recruitment",
   "Nonprofit & Advocacy",
 ];
+
+// Tab label -> the service value projects are stored under. The tabs read
+// the same as the Reviews page, but design projects are saved (by the admin
+// panel and the seed data) as "Brand & Graphic Design".
+const SERVICE_VALUE = {
+  Automation: "Automation",
+  "Web Development": "Web Development",
+  "Graphic Design": "Brand & Graphic Design",
+};
 
 // Icon shown in each card's header tile, chosen by the project's service type
 const SERVICE_ICON = {
@@ -196,6 +206,7 @@ function ChipScroller({ active, onSelect }) {
 export default function PortfolioPage() {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
+  const [service, setService] = useState(SERVICE_TABS[0]);
   const [industry, setIndustry] = useState("All Projects");
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
@@ -206,8 +217,17 @@ export default function PortfolioPage() {
     // a raw window.scrollTo call here fights that (see ScrollToTop.jsx).
   }, []);
 
-  // Deep-link support: /portfolio?industry=Fintech sets the initial filter
+  // Deep-link support: /portfolio?service=Web%20Development&industry=Fintech
+  // sets the initial filters
   useEffect(() => {
+    const serviceParam = searchParams.get("service")?.toLowerCase();
+    const serviceMatch = SERVICE_TABS.find(
+      (s) =>
+        s.toLowerCase() === serviceParam ||
+        SERVICE_VALUE[s].toLowerCase() === serviceParam
+    );
+    if (serviceMatch) setService(serviceMatch);
+
     const param = searchParams.get("industry");
     if (!param) return;
     const match = INDUSTRIES.find(
@@ -220,7 +240,9 @@ export default function PortfolioPage() {
 
   const visible = useMemo(() => {
     let list = projects.filter(
-      (p) => industry === "All Projects" || p.industry === industry
+      (p) =>
+        p.service === SERVICE_VALUE[service] &&
+        (industry === "All Projects" || p.industry === industry)
     );
     const q = query.trim().toLowerCase();
     if (q) {
@@ -232,12 +254,12 @@ export default function PortfolioPage() {
       );
     }
     return list;
-  }, [projects, industry, query]);
+  }, [projects, service, industry, query]);
 
   // Reset pagination whenever the filtered/searched list changes
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
-  }, [industry, query]);
+  }, [service, industry, query]);
 
   const visiblePage = visible.slice(0, visibleCount);
   const allShown = visibleCount >= visible.length;
@@ -272,12 +294,18 @@ export default function PortfolioPage() {
             </Reveal>
           </div>
 
+          {/* Service tabs — same control as the Reviews page, defaults to
+              Automation */}
+          <Reveal y={20} delay={0.26} animateOnMount className="mt-10">
+            <ServiceFilter active={service} onSelect={setService} />
+          </Reveal>
+
           {/* Toolbar — filter chips and search share one row on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            className="mt-12 flex flex-col gap-4 lg:flex-row lg:items-center"
+            className="mt-8 flex flex-col gap-4 lg:flex-row lg:items-center"
           >
             <ChipScroller active={industry} onSelect={setIndustry} />
 
@@ -299,7 +327,7 @@ export default function PortfolioPage() {
               <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {visiblePage.map((project) => (
                   <motion.div
-                    key={project.slug}
+                    key={`${service}-${project.slug}`}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
@@ -321,7 +349,7 @@ export default function PortfolioPage() {
             </>
           ) : (
             <p className="mt-16 text-center text-body-dim">
-              No projects match your search. Try a different industry or term.
+              No {service} projects match your filters. Try a different industry or term.
             </p>
           )}
         </div>
