@@ -122,11 +122,23 @@ router.post(
     if (!submission) throw ApiError.notFound("Submission not found");
     if (!isContactFormId(submission.formId)) throw ApiError.badRequest("Unrecognized form type on this submission");
 
-    await sendContactNotification(
-      submission.formId,
-      submission.fields as Record<string, unknown>,
-      submission.id,
-    );
+    try {
+      await sendContactNotification(
+        submission.formId,
+        submission.fields as Record<string, unknown>,
+        submission.id,
+      );
+    } catch (emailError) {
+      // A bare "internal server error" hides the one thing that lets someone
+      // fix this (unverified sending domain, missing API key, bad address) —
+      // record the real reason and pass it through.
+      const reason = emailError instanceof Error ? emailError.message : String(emailError);
+      await prisma.contactSubmission.update({
+        where: { id: submission.id },
+        data: { emailError: reason },
+      });
+      throw new ApiError(502, `Email could not be sent: ${reason}`);
+    }
 
     const updated = await prisma.contactSubmission.update({
       where: { id: submission.id },
