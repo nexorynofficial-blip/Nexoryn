@@ -2,7 +2,7 @@
 ## Nexoryn Website Backend
 
 **Status:** Draft — for review before technical design is finalized.
-**Owner:** Nexoryn (nexorynofficial@gmail.com)
+**Owner:** Nexoryn (team@nexoryn.tech)
 **Related docs:** [TRD.md](./TRD.md), [DATA-MODEL.md](./DATA-MODEL.md), [API-SPEC.md](./API-SPEC.md), [CURRENT-SITE-INVENTORY.md](./CURRENT-SITE-INVENTORY.md)
 
 ---
@@ -19,7 +19,7 @@ a fully static React SPA with no backend:
   is hardcoded inside `src/data/*.js` and `src/pages/*.jsx` files.
 - The only "dynamic" feature is the Contact page, whose 3 forms submit
   directly from the browser to **EmailJS**, a third-party service that
-  relays the form data as an email to `nexorynofficial@gmail.com`. Nothing
+  relays the form data as an email to `team@nexoryn.tech`. Nothing
   is stored; there is no database, no server, and no record of who
   submitted what beyond that one inbox.
 - There is no admin panel, no login, no user accounts, and no analytics.
@@ -133,7 +133,7 @@ form submissions that are captured, stored, and actionable.
   database *before* any email is sent, so a submission is never lost purely
   because email delivery failed.
 - **FR-9**: On successful persistence, an email notification is sent to
-  `nexorynofficial@gmail.com` (see TRD §5 for whether this stays on EmailJS
+  `team@nexoryn.tech` (see TRD §5 for whether this stays on EmailJS
   or moves server-side) with the same subject-line/body conventions
   currently in `src/lib/sendContactEmail.js` (e.g. `"{name} wants to book a
   consultation with you (from Nexoryn website)"`).

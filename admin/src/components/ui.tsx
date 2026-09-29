@@ -6,6 +6,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
+import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 export function Button({
@@ -131,7 +132,9 @@ export function ConfirmDialog({
   loading?: boolean;
 }) {
   if (!open) return null;
-  return (
+  // Portalled to <body>: Card's backdrop-blur makes it the containing block for
+  // fixed descendants, which would pin this overlay to the card, not the screen.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <Card className="w-full max-w-sm p-6" >
         <div onClick={(e) => e.stopPropagation()}>
@@ -143,6 +146,7 @@ export function ConfirmDialog({
           </div>
         </div>
       </Card>
-    </div>
+    </div>,
+    document.body,
   );
 }

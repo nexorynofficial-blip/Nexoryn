@@ -83,19 +83,19 @@ export default function CookiePolicyPage() {
         <p>
           Questions about this policy? Reach us at{" "}
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=nexorynofficial@gmail.com"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=team@nexoryn.tech"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
           >
-            nexorynofficial@gmail.com
+            team@nexoryn.tech
           </a>{" "}
           or{" "}
           <a
-            href="tel:+923341236462"
+            href="tel:+923023858945"
             className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
           >
-            0334-1236462
+            +92 302 3858945
           </a>
           .
         </p>

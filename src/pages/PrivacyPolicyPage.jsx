@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
           Form submissions are delivered to us by email using EmailJS, a
           third-party email-delivery service that relays your submitted
           information from the Site to our inbox at
-          nexorynofficial@gmail.com. EmailJS processes that data solely to
+          team@nexoryn.tech. EmailJS processes that data solely to
           deliver the message and does not appear to us to use it for any
           other purpose. Beyond EmailJS and our own hosting provider, we do
           not share your information with any other third party, and we
@@ -137,12 +137,12 @@ export default function PrivacyPolicyPage() {
           You can ask us, at any time, to tell you what information we hold
           about you, correct it, or delete it. To do so, email us at{" "}
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=nexorynofficial@gmail.com"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=team@nexoryn.tech"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
           >
-            nexorynofficial@gmail.com
+            team@nexoryn.tech
           </a>{" "}
           and we'll action your request within a reasonable time.
         </p>
@@ -177,19 +177,19 @@ export default function PrivacyPolicyPage() {
         <p>
           Questions about this policy or your information? Reach us at{" "}
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=nexorynofficial@gmail.com"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=team@nexoryn.tech"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
           >
-            nexorynofficial@gmail.com
+            team@nexoryn.tech
           </a>{" "}
           or{" "}
           <a
-            href="tel:+923341236462"
+            href="tel:+923023858945"
             className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
           >
-            0334-1236462
+            +92 302 3858945
           </a>
           .
         </p>

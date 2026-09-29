@@ -1,8 +1,8 @@
 import { Phone, MessageCircle } from "lucide-react";
 
-const PHONE_DISPLAY = "0334-1236462";
-const PHONE_HREF = "tel:+923341236462";
-const WHATSAPP_HREF = "https://wa.me/923341236462";
+const PHONE_DISPLAY = "+92 302 3858945";
+const PHONE_HREF = "tel:+923023858945";
+const WHATSAPP_HREF = "https://wa.me/923023858945";
 
 // Lives inline at the bottom-right of the footer (rendered once, from
 // Footer.jsx) rather than floating over page content on every route.

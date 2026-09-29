@@ -1,7 +1,7 @@
 # How to report a security problem with Nexoryn.
 # Format: RFC 9116 (https://securitytxt.org)
 
-Contact: mailto:nexorynofficial@gmail.com
+Contact: mailto:team@nexoryn.tech
 Preferred-Languages: en
 Canonical: https://nexoryn-delta.vercel.app/.well-known/security.txt
 

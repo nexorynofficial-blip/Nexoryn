@@ -14,7 +14,7 @@
 // dropped the enquiry entirely, whereas a failed notification here still
 // leaves the lead sitting in the admin Contact Inbox.
 
-export const CONTACT_EMAIL = "nexorynofficial@gmail.com";
+export const CONTACT_EMAIL = "team@nexoryn.tech";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
 

@@ -6,7 +6,7 @@ repository and have to be done by hand.
 ## Reporting
 
 `public/.well-known/security.txt` points reporters at
-`nexorynofficial@gmail.com`. It carries an `Expires` date — refresh it before
+`team@nexoryn.tech`. It carries an `Expires` date — refresh it before
 it lapses, or tooling will treat the file as invalid.
 
 ---

@@ -1017,16 +1017,28 @@ export default function CaseStudyPage() {
 
   // Paint the bundled copy of this project immediately, then upgrade to the
   // API's version if one comes back. Starting from the static value means no
-  // spinner and, more importantly, no flash of "Project not found" while the
-  // request is in flight.
+  // spinner for the bundled projects.
+  //
+  // Projects created later (e.g. through the admin's project agent) exist only
+  // in the API, so there is no static copy to start from. `loading` keeps those
+  // on a neutral placeholder until the request settles, instead of flashing
+  // "Project not found" for the second the API takes to answer.
   const [project, setProject] = useState(() => staticProjectBySlug(slug));
+  const [loading, setLoading] = useState(() => !staticProjectBySlug(slug));
 
   useEffect(() => {
-    setProject(staticProjectBySlug(slug));
+    const bundled = staticProjectBySlug(slug);
+    setProject(bundled);
+    setLoading(!bundled);
     let alive = true;
-    getProjectBySlug(slug).then((fresh) => {
-      if (alive && fresh) setProject(fresh);
-    });
+    getProjectBySlug(slug)
+      .then((fresh) => {
+        if (alive && fresh) setProject(fresh);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -1046,6 +1058,18 @@ export default function CaseStudyPage() {
       ? `${project.title} Case Study - Nexoryn`
       : "Case Study - Nexoryn";
   }, [project]);
+
+  if (!project && loading) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center bg-night"
+        role="status"
+        aria-label="Loading case study"
+      >
+        <span className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-accent-to" />
+      </div>
+    );
+  }
 
   if (!project) {
     return (

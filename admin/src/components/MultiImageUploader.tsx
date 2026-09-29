@@ -51,12 +51,16 @@ export function MultiImageUploader({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const addAsset = (asset: Asset) => {
-    const next = [...items, { asset, alt: asset.altText }];
-    // First image added becomes the thumbnail by default — a project can't
-    // realistically be saved without one anyway, so this saves a click on
-    // the common case of adding just one image so far.
-    onChange(next, thumbnailId ?? asset.id);
+  const addAssets = (assets: Asset[]) => {
+    const existing = new Set(items.map((it) => it.asset.id));
+    const fresh = assets.filter((a, i) => !existing.has(a.id) && assets.findIndex((x) => x.id === a.id) === i);
+    if (fresh.length) {
+      const next = [...items, ...fresh.map((asset) => ({ asset, alt: asset.altText }))];
+      // First image added becomes the thumbnail by default — a project can't
+      // realistically be saved without one anyway, so this saves a click on
+      // the common case of adding just one image so far.
+      onChange(next, thumbnailId ?? fresh[0].id);
+    }
     setPickerOpen(false);
   };
 
@@ -137,10 +141,10 @@ export function MultiImageUploader({
       </div>
 
       <Button type="button" variant="ghost" onClick={() => setPickerOpen(true)} className="mt-3">
-        <Plus className="h-3.5 w-3.5" /> Add photo
+        <Plus className="h-3.5 w-3.5" /> Add photos
       </Button>
 
-      {pickerOpen && <AssetPicker onSelect={addAsset} onClose={() => setPickerOpen(false)} />}
+      {pickerOpen && <AssetPicker onSelectMany={addAssets} onClose={() => setPickerOpen(false)} />}
     </div>
   );
 }

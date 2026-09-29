@@ -35,7 +35,7 @@ export const env = {
 
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   resendFromAddress: optional("RESEND_FROM_ADDRESS", "Nexoryn <noreply@nexoryn.ai>"),
-  adminNotificationEmail: optional("ADMIN_NOTIFICATION_EMAIL", "nexorynofficial@gmail.com"),
+  adminNotificationEmail: optional("ADMIN_NOTIFICATION_EMAIL", "team@nexoryn.tech"),
 
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME ?? "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY ?? "",

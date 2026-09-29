@@ -18,8 +18,8 @@ import { sendContactEmail, CONTACT_EMAIL } from "../lib/sendContactEmail";
 const EMAIL = CONTACT_EMAIL;
 const GMAIL_COMPOSE_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}`;
 
-const PHONE_DISPLAY = "0334-1236462";
-const PHONE_E164 = "+923341236462";
+const PHONE_DISPLAY = "+92 302 3858945";
+const PHONE_E164 = "+923023858945";
 const PHONE_TEL = `tel:${PHONE_E164}`;
 
 // Phones dial straight through on tap. Desktop has no dialer, so a click
