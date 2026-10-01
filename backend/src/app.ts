@@ -14,6 +14,8 @@ import publicTeam from "./routes/public/team";
 import publicFaqs from "./routes/public/faqs";
 import publicContact from "./routes/public/contact";
 
+import socialRoutes, { socialAdminRouter } from "./routes/social";
+
 import adminAuth from "./routes/admin/auth";
 import adminAdmins from "./routes/admin/admins";
 import adminProjects from "./routes/admin/projects";
@@ -72,6 +74,9 @@ export function createApp(): Express {
   app.use("/api/v1/faqs", publicFaqs);
   app.use("/api/v1/contact", publicContact);
 
+  // Bearer-token (not session) auth: pushed to by the local Social Agent CLI.
+  app.use("/api/v1/social", socialRoutes);
+
   // ── Admin (auth required — enforced inside each router) ────────────
   app.use("/api/v1/admin/auth", adminAuth);
   app.use("/api/v1/admin/admins", adminAdmins);
@@ -87,6 +92,7 @@ export function createApp(): Express {
   app.use("/api/v1/admin/account", adminAccount);
   app.use("/api/v1/admin/internal-projects", adminInternalProjects);
   app.use("/api/v1/admin/reports", adminReports);
+  app.use("/api/v1/admin/social", socialAdminRouter);
 
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: "Route not found" });

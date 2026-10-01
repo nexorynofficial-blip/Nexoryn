@@ -405,3 +405,26 @@ model InternalProject {
   @@index([uploadedBy])
   @@index([status])
 }
+
+// ============================================================================
+// SOCIAL AGENT SUMMARIES
+// ============================================================================
+
+/// One run of the Nexoryn Social Agent (a local CLI that analyses Facebook
+/// engagement). The agent pushes its JSON here; the admin dashboard reads it
+/// back. Only the newest 100 per platform are kept, see routes/social.ts.
+model SocialSummary {
+  id               String   @id @default(cuid())
+  platform         String   @default("facebook")
+  /// "healthy" | "action_needed"
+  status           String
+  totalActionItems Int      @default(0)
+  /// The agent's full JSON output, stored as received.
+  data             Json
+  /// The agent's own timestamp for the run.
+  generatedAt      DateTime
+  /// When this row was stored (the "fetched_at" the dashboard shows).
+  createdAt        DateTime @default(now())
+
+  @@index([platform, generatedAt])
+}

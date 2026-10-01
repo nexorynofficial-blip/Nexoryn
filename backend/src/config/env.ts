@@ -37,6 +37,10 @@ export const env = {
   resendFromAddress: optional("RESEND_FROM_ADDRESS", "Nexoryn <noreply@nexoryn.ai>"),
   adminNotificationEmail: optional("ADMIN_NOTIFICATION_EMAIL", "team@nexoryn.tech"),
 
+  // Shared secret the Social Agent CLI sends as a Bearer token when pushing a
+  // summary. Unset means ingest is disabled (503), never open.
+  socialIngestToken: process.env.SOCIAL_INGEST_TOKEN ?? "",
+
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME ?? "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY ?? "",
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET ?? "",
