@@ -111,11 +111,22 @@ socialAdminRouter.get(
       orderBy: { generatedAt: "desc" },
     });
 
+    // Newest decision per item, so the dashboard can show which suggestions
+    // have already been dealt with.
+    const decisions = await prisma.socialAction.findMany({
+      where: { platform: PLATFORM },
+      orderBy: { createdAt: "asc" },
+      take: 2000,
+    });
+    const actions: Record<string, { action: string; edited_text: string | null }> = {};
+    for (const d of decisions) actions[d.itemId] = { action: d.action, edited_text: d.editedText };
+
     if (!latest) {
       res.json({
         success: true,
         cached: false,
         data: null,
+        actions,
         message: "No summary yet. Run the Social Agent to generate one.",
       });
       return;
@@ -126,6 +137,7 @@ socialAdminRouter.get(
       cached: true,
       fetched_at: latest.createdAt.toISOString(),
       data: latest.data,
+      actions,
     });
   }),
 );
@@ -155,6 +167,52 @@ socialAdminRouter.get(
         fetched_at: r.createdAt.toISOString(),
       })),
     });
+  }),
+);
+
+// Records an admin's decision on one suggested reply. This stores the choice
+// for the team; nothing is posted to Facebook from here.
+const actionSchema = z
+  .object({
+    comment_id: z.string().min(1).max(200).optional(),
+    dm_id: z.string().min(1).max(200).optional(),
+    action: z.enum(["approve", "edit", "reject", "spam", "hide", "leave"]),
+    edited_text: z.string().trim().min(1).max(2000).optional(),
+  })
+  .refine((v) => Boolean(v.comment_id) !== Boolean(v.dm_id), {
+    message: "Send exactly one of comment_id or dm_id",
+    path: ["comment_id"],
+  })
+  .refine((v) => v.action !== "edit" || Boolean(v.edited_text), {
+    message: "edited_text is required when action is edit",
+    path: ["edited_text"],
+  });
+
+socialAdminRouter.put(
+  "/facebook/action",
+  asyncHandler(async (req, res) => {
+    const parsed = actionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const fields: Record<string, string> = {};
+      for (const issue of parsed.error.issues) fields[issue.path.join(".") || "body"] = issue.message;
+      throw ApiError.validation(fields);
+    }
+    const { comment_id, dm_id, action, edited_text } = parsed.data;
+
+    const row = await prisma.socialAction.create({
+      data: {
+        platform: PLATFORM,
+        itemType: comment_id ? "comment" : "dm",
+        itemId: (comment_id ?? dm_id) as string,
+        action,
+        editedText: action === "edit" ? edited_text : null,
+        adminId: req.admin!.id,
+        actorName: req.admin!.name,
+      },
+    });
+
+    console.info(`[social] ${req.admin!.name} ${action} ${row.itemType} ${row.itemId}`);
+    res.json({ success: true, action: row.action, edited_text: row.editedText });
   }),
 );
 

@@ -15,6 +15,7 @@ import Finance from "./pages/Finance";
 import Requests from "./pages/Requests";
 import Account from "./pages/Account";
 import InternalProjects from "./pages/InternalProjects";
+import FacebookDashboard from "./pages/FacebookDashboard";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/internal-projects" element={<InternalProjects />} />
+            <Route path="/social/facebook" element={<FacebookDashboard />} />
             <Route path="/account" element={<Account />} />
           </Route>
 

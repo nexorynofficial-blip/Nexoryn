@@ -12,6 +12,12 @@ import {
   FolderGit2,
   UserCog,
   LogOut,
+  Share2,
+  ChevronDown,
+  Facebook,
+  Instagram,
+  Twitter,
+  Music2,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
@@ -41,6 +47,73 @@ const NAV = [
   },
   { to: "/internal-projects", label: "Internal Projects", icon: FolderGit2 },
 ];
+
+// Social platforms. Only Facebook has a page; the rest are placeholders so the
+// menu keeps its shape when they are added.
+const SOCIAL = [
+  { to: "/social/facebook", label: "Facebook", icon: Facebook },
+  { label: "Instagram", icon: Instagram },
+  { label: "Twitter", icon: Twitter },
+  { label: "TikTok", icon: Music2 },
+];
+
+function SocialMenu() {
+  const { pathname } = useLocation();
+  const onSocial = pathname.startsWith("/social");
+  const [open, setOpen] = useState(onSocial);
+
+  // Arriving on a /social page by URL or link opens the group.
+  useEffect(() => {
+    if (onSocial) setOpen(true);
+  }, [onSocial]);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+          onSocial ? "text-accent-to" : "text-white/60 hover:bg-white/5 hover:text-white"
+        }`}
+      >
+        <Share2 className="h-4 w-4 shrink-0" />
+        <span className="flex-1 text-left">Social</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-1 flex flex-col gap-1 pl-4">
+          {SOCIAL.map(({ to, label, icon: Icon }) =>
+            to ? (
+              <NavLink
+                key={label}
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                    isActive ? "bg-accent-from/15 text-accent-to" : "text-white/60 hover:bg-white/5 hover:text-white"
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </NavLink>
+            ) : (
+              <span
+                key={label}
+                aria-disabled="true"
+                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/25"
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{label}</span>
+                <span className="text-[10px] uppercase tracking-wide">Soon</span>
+              </span>
+            ),
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Count of debt approvals waiting on this admin. Re-read on every navigation
  *  so approving something on the Requests page clears the badge immediately. */
@@ -111,6 +184,7 @@ export default function Layout() {
               )}
             </NavLink>
           ))}
+          <SocialMenu />
         </nav>
 
         <div className="shrink-0 border-t border-border-subtle pt-4">

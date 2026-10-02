@@ -428,3 +428,24 @@ model SocialSummary {
 
   @@index([platform, generatedAt])
 }
+
+/// An admin's decision on one suggested reply (approve / edit / reject / ...)
+/// shown on the dashboard's social page. Append-only: the newest row for an
+/// item is its current state.
+model SocialAction {
+  id         String   @id @default(cuid())
+  platform   String   @default("facebook")
+  /// "comment" | "dm"
+  itemType   String
+  /// The agent's own id for the comment or DM.
+  itemId     String
+  /// "approve" | "edit" | "reject" | "spam" | "hide" | "leave"
+  action     String
+  /// The admin's rewritten reply, only for action = "edit".
+  editedText String?
+  adminId    String
+  actorName  String
+  createdAt  DateTime @default(now())
+
+  @@index([platform, itemId])
+}
