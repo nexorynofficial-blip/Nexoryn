@@ -28,11 +28,19 @@ export interface SocialPost {
   posted_ago?: string;
 }
 
+// The agent's field names differ from the ones this page was first written
+// against (text / sender / reply_suggestion vs message_text / author /
+// suggested_reply); both are accepted so either end can change without
+// breaking the other.
 export interface SocialDmReply {
   dm_id?: string;
-  message_text: string;
+  text?: string;
+  message_text?: string;
   theme?: string;
+  sender?: string;
   author?: string;
+  time_since?: string;
+  reply_suggestion?: string;
   suggested_reply?: string;
 }
 
@@ -321,24 +329,29 @@ export function DMThemes({
 
       {replies.length > 0 && (
         <ul className="mt-5 space-y-3 border-t border-white/10 pt-4">
-          {replies.map((d, i) => (
-            <li key={d.dm_id ?? i} className="rounded-lg border border-white/10 p-3">
-              <p className="text-sm text-white/80">&ldquo;{d.message_text}&rdquo;</p>
-              {(d.theme || d.author) && (
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/40">
-                  {d.theme && <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">{d.theme}</span>}
-                  {d.author}
-                </p>
-              )}
-              {d.suggested_reply && d.dm_id && (
-                <SuggestedReply
-                  target={{ kind: "dm", id: d.dm_id, reply: d.suggested_reply }}
-                  decision={decisions[d.dm_id]}
-                  onSubmit={onSubmit}
-                />
-              )}
-            </li>
-          ))}
+          {replies.map((d, i) => {
+            const text = d.text ?? d.message_text ?? "";
+            const who = d.sender ?? d.author;
+            const reply = d.reply_suggestion ?? d.suggested_reply;
+            return (
+              <li key={d.dm_id ?? i} className="rounded-lg border border-white/10 p-3">
+                <p className="text-sm text-white/80">&ldquo;{text}&rdquo;</p>
+                {(d.theme || who || d.time_since) && (
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/40">
+                    {d.theme && <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">{d.theme}</span>}
+                    {[who, d.time_since].filter(Boolean).join(" • ")}
+                  </p>
+                )}
+                {reply && d.dm_id && (
+                  <SuggestedReply
+                    target={{ kind: "dm", id: d.dm_id, reply }}
+                    decision={decisions[d.dm_id]}
+                    onSubmit={onSubmit}
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </SectionCard>

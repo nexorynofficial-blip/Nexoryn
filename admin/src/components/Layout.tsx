@@ -14,9 +14,8 @@ import {
   LogOut,
   Share2,
   ChevronDown,
-  Facebook,
-  Instagram,
-  Twitter,
+  Camera,
+  AtSign,
   Music2,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
@@ -48,12 +47,24 @@ const NAV = [
   { to: "/internal-projects", label: "Internal Projects", icon: FolderGit2 },
 ];
 
+// lucide-react dropped its brand logos (Facebook, Instagram, Twitter) in newer
+// releases. The admin's own lockfile pins an older copy, but the production
+// build resolves the newer one from the repo root, so importing them broke the
+// deploy. Facebook's mark is drawn inline; the others use generic icons.
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
 // Social platforms. Only Facebook has a page; the rest are placeholders so the
 // menu keeps its shape when they are added.
 const SOCIAL = [
-  { to: "/social/facebook", label: "Facebook", icon: Facebook },
-  { label: "Instagram", icon: Instagram },
-  { label: "Twitter", icon: Twitter },
+  { to: "/social/facebook", label: "Facebook", icon: FacebookIcon },
+  { label: "Instagram", icon: Camera },
+  { label: "Twitter", icon: AtSign },
   { label: "TikTok", icon: Music2 },
 ];
 
