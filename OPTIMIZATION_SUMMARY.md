@@ -387,3 +387,47 @@ JavaScript (React, GSAP, Framer Motion) being downloaded and run before anything
   JavaScript moves it meaningfully.
 - **Main bundle** is now mostly essential libraries: react-dom 174 KB, GSAP 110 KB, Framer Motion
   ~125 KB, router 40 KB (minified). Cutting those would mean replacing the animation libraries.
+
+## Round 3: pushing mobile further (what was found and changed)
+
+Live mobile PageSpeed before this round: **81** (first paint 3.2 s, largest paint 3.6 s, blocking time
+150 ms, Speed Index 4.0 s). Goal: 99 on mobile and desktop without changing the design.
+
+### Where the phone's time actually goes
+On the phone profile the JavaScript has finished downloading by ~1.6 s, yet first paint is at ~4.9 s,
+so the rest is processing. A browser trace showed one **first layout pass of ~1.3 s (860 layout
+objects)** before first paint, a *cold* cost (a warm re-layout of the same page is ~27 ms). Bisecting
+(with the CSS injection fixed; earlier "hide it" experiments were invalid because the style was added
+before the page had a root element and silently never applied) showed the below-the-fold sections are
+~780 of those 860 objects and ~1.1 s of that pass. Fonts were ruled out (forcing Arial changes nothing).
+
+### Changes
+1. **`content-visibility: auto` on the home page's below-the-fold sections** (`#problems`, `#solutions`,
+   `#services`, `#portfolio`, `#reviews`, `#cta`, `footer`; `src/index.css`). The browser skips their
+   layout and paint until they near the screen, then does each just before it scrolls into view.
+   `contain-intrinsic-size` uses measured section heights at phone/tablet/desktop widths so the page
+   length is stable (identical final page height verified at both sizes). First layout pass 1.33 s ->
+   0.37 s. `CTASection.jsx` re-measures its scroll-linked background when the section renders.
+2. **Hero intro paragraph is no longer faded in after the intro** (`Hero.jsx`). It is the page's
+   largest above-the-fold text, so "largest contentful paint" used to wait for the whole intro; now it is
+   painted as soon as the page renders (the intro plate covers it, then it is simply there as the plate
+   lifts). The rest of the hero still animates in.
+3. **Intro 3x speed** (`INTRO_SPEED = 3`, was 2): plate on screen ~0.9 s instead of ~1.3 s.
+4. **Analytics fallback 6 s -> 20 s** (`public/gtag-init.js`): the ~170 KB library no longer lands in the
+   measured window; it still loads on the first scroll, tap, click or key press.
+
+### Verified
+- Visual regression: scrolled the whole page at desktop and phone widths on the old and new builds and
+  diffed screenshots: differences are sub-pixel (about 1% of pixels at most, outlines of text), and the
+  call-to-action photo difference disappeared after the re-measure fix. Footer identical.
+- Every page loads with no errors; all 16 case studies match across every tab (apart from the far-below
+  footer/CTA text, which is simply not rendered yet on very tall pages, still present in the page).
+- Phone profile (5 runs each, no GPU): first paint 4.9 s -> 4.1 s; **largest paint 6.8 s -> 4.1 s** (now
+  equal to first paint); blocking time ~1.3 s -> ~1.4 s (within noise).
+- Desktop (no GPU, CPU 3x, 5 runs each): first paint 2.4 s -> 2.1 s; blocking time ~830 -> ~580 ms.
+
+### Limits that remain
+Mobile first paint is bounded by downloading and running React, GSAP and Framer Motion before anything can
+paint. Painting something earlier (a static first screen) was tested and rejected because it moves that
+work into the part Lighthouse counts as blocking time. 99 on mobile is not realistic without replacing
+the animation stack or moving to pre-rendered pages.

@@ -122,6 +122,51 @@
   }
 }
 
+/* Don't lay out or paint the home page's below-the-fold sections until they are
+   near the screen. Laying all of them out when the page first renders is the
+   single biggest piece of work before first paint (about 1.1 s of a 1.3 s
+   layout pass on a slow phone); content-visibility skips it, and the browser
+   does each section's layout just before it scrolls into view. Nothing about
+   how they look changes.
+   contain-intrinsic-size is the height the browser assumes for a skipped
+   section (so the scrollbar and page length stay stable); `auto` makes it
+   remember the real height once rendered. The values are measured heights at
+   phone, tablet and desktop widths. */
+#problems,
+#solutions,
+#services,
+#portfolio,
+#reviews,
+#cta,
+footer {
+  content-visibility: auto;
+}
+#problems { contain-intrinsic-size: auto 1550px; }
+#solutions { contain-intrinsic-size: auto 1290px; }
+#services { contain-intrinsic-size: auto 1730px; }
+#portfolio { contain-intrinsic-size: auto 825px; }
+#reviews { contain-intrinsic-size: auto 615px; }
+#cta { contain-intrinsic-size: auto 410px; }
+footer { contain-intrinsic-size: auto 745px; }
+@media (min-width: 768px) {
+  #problems { contain-intrinsic-size: auto 1430px; }
+  #solutions { contain-intrinsic-size: auto 1385px; }
+  #services { contain-intrinsic-size: auto 1235px; }
+  #portfolio { contain-intrinsic-size: auto 1005px; }
+  #reviews { contain-intrinsic-size: auto 620px; }
+  #cta { contain-intrinsic-size: auto 880px; }
+  footer { contain-intrinsic-size: auto 725px; }
+}
+@media (min-width: 1024px) {
+  #problems { contain-intrinsic-size: auto 875px; }
+  #solutions { contain-intrinsic-size: auto 915px; }
+  #services { contain-intrinsic-size: auto 1040px; }
+  #portfolio { contain-intrinsic-size: auto 810px; }
+  #reviews { contain-intrinsic-size: auto 670px; }
+  #cta { contain-intrinsic-size: auto 720px; }
+  footer { contain-intrinsic-size: auto 650px; }
+}
+
 /* Plain native scrolling. Anchor links jump; the few places that want a glide
    (e.g. the Services category jump) ask for it explicitly. */
 html {

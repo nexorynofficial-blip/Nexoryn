@@ -4,7 +4,7 @@ import ctaBg from "../assets/cta-bg.webp";
 import SplitText from "./ui/SplitText";
 import Reveal from "./ui/Reveal";
 import MagneticButton from "./ui/MagneticButton";
-import { gsap, useGSAP } from "../lib/gsap";
+import { gsap, useGSAP, ScrollTrigger } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
 
 export default function CTASection({ compact = false }) {
@@ -32,6 +32,17 @@ export default function CTASection({ compact = false }) {
           },
         }
       );
+
+      // This section is skipped by the browser until it nears the screen
+      // (content-visibility in index.css), so the trigger above was first
+      // measured against a placeholder height. Re-measure once it has really
+      // rendered so the push-in lines up exactly with the section.
+      const section = sectionRef.current;
+      const onRender = (e) => {
+        if (!e.skipped) ScrollTrigger.refresh();
+      };
+      section?.addEventListener("contentvisibilityautostatechange", onRender);
+      return () => section?.removeEventListener("contentvisibilityautostatechange", onRender);
     },
     { scope: sectionRef }
   );

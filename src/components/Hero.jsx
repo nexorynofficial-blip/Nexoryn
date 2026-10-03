@@ -23,8 +23,14 @@ export default function Hero() {
       const reduced = prefersReducedMotion();
 
       // ── Entrance, held until the preloader lifts ───────────────────────
+      // The intro paragraph (.hero-body) is deliberately NOT held back or
+      // animated in: it is the largest piece of text above the fold, so it is
+      // what browsers report as the page's "largest contentful paint". When it
+      // faded in after the intro, that metric waited for the whole intro; now it
+      // is painted as soon as the page renders (the intro plate simply covers it).
+      // The rest of the hero still animates in as before.
       if (!introDone) {
-        gsap.set([".hero-sub", ".hero-body", ".hero-stats", ".hero-card", ".hero-mark"], {
+        gsap.set([".hero-sub", ".hero-stats", ".hero-card", ".hero-mark"], {
           autoAlpha: 0,
           y: 24,
         });
@@ -32,7 +38,6 @@ export default function Hero() {
         gsap
           .timeline({ defaults: { ease: "expo.out", duration: 1.1 } })
           .to(".hero-sub", { autoAlpha: 1, y: 0 }, 0.35)
-          .to(".hero-body", { autoAlpha: 1, y: 0 }, 0.5)
           .to(".hero-stats", { autoAlpha: 1, y: 0 }, 0.6)
           .to(".hero-card", { autoAlpha: 1, y: 0 }, 0.72)
           .to(".hero-mark", { autoAlpha: 1, y: 0 }, 0.8);

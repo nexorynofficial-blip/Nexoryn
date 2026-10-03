@@ -8,7 +8,11 @@
 // Calls to gtag() made before it arrives are queued on dataLayer and replayed,
 // so no hit is lost.
 var GA_ID = "G-K13WLKCLTB";
-var FALLBACK_MS = 6000;
+// Long on purpose: the library is ~170 KB and costs a few hundred ms of main-thread
+// time, which is the single biggest blocking item left on a slow phone. Visitors who
+// scroll, tap or click (almost everyone who stays) trigger it immediately; this timer
+// only catches people who sit on the page without touching it.
+var FALLBACK_MS = 20000;
 
 window.dataLayer = window.dataLayer || [];
 function gtag() {
