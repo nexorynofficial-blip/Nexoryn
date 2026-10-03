@@ -4,6 +4,11 @@ import { prefersReducedMotion } from "../lib/easing";
 
 const WORD = "NEXORYN";
 
+// Playback speed of the whole intro. Every duration, delay and stagger in
+// both timelines is scaled together, so the choreography is unchanged,
+// just faster. 1 = the original timing.
+const INTRO_SPEED = 2;
+
 // Deliberately limited to squared, technical-looking glyphs — a scramble that
 // cycles through lowercase or punctuation reads as "corrupted text" instead of
 // a machine resolving a signal.
@@ -12,7 +17,7 @@ const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&<>/\\";
 const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
 
 /** Resolves on window load, or after `capMs` — so a slow asset can't hang the page. */
-function pageReady(capMs = 1600) {
+function pageReady(capMs = 800) {
   return new Promise((resolve) => {
     if (document.readyState === "complete") return resolve();
     const done = () => {
@@ -28,6 +33,10 @@ function pageReady(capMs = 1600) {
  * Full-screen intro: orange plate, NEXORYN decoding character by character in
  * black, then the camera "flies into" the word as a black iris floods out from
  * its centre and hands off to the (already black) page underneath.
+ *
+ * Runs at INTRO_SPEED x (2 = half the original ~3.5 s) and never blocks the
+ * page: the plate ignores pointer events, so clicks reach the content
+ * beneath it, and page scroll is not locked while it plays.
  */
 export default function Preloader({ onComplete }) {
   const rootRef = useRef(null);
@@ -40,29 +49,23 @@ export default function Preloader({ onComplete }) {
     (_context, contextSafe) => {
       const reduced = prefersReducedMotion();
 
-      // Locks page scroll for as long as the plate is up (see `html.is-loading`
-      // in index.css).
-      document.documentElement.classList.add("is-loading");
-
       let finished = false;
       const finish = () => {
         if (finished) return;
         finished = true;
         clearTimeout(failsafe);
-        document.documentElement.classList.remove("is-loading");
         setDone(true);
-        // Every trigger below the fold measured itself against a locked page;
-        // re-measure now that the real scroll height is live.
+        // The intro can change layout (the plate unmounts); re-measure scroll
+        // triggers against the final page.
         ScrollTrigger.refresh();
         onComplete?.();
       };
 
-      // Absolute backstop. The plate covers the viewport and locks scrolling,
-      // so anything that stops the timeline reaching its end — a killed
-      // context, a promise that never settles — would leave the whole site
-      // unusable behind it. Nothing here is worth that risk: if the intro
-      // hasn't handed off by now, drop it and show the page.
-      const failsafe = setTimeout(finish, 8000);
+      // Absolute backstop. The plate covers the viewport, so anything that
+      // stops the timeline reaching its end — a killed context, a promise
+      // that never settles — would leave the site hidden behind it. If the
+      // intro hasn't handed off by now, drop it and show the page.
+      const failsafe = setTimeout(finish, 4000);
 
       if (reduced) {
         // Reduced motion still holds for assets, but gets no zoom and no
@@ -86,6 +89,7 @@ export default function Preloader({ onComplete }) {
 
       // ── Phase 1: the word resolves ─────────────────────────────────────
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+      intro.timeScale(INTRO_SPEED);
 
       // Each letter slides up out of its own clipping mask while cycling
       // random glyphs, then locks to its real character.
@@ -154,6 +158,7 @@ export default function Preloader({ onComplete }) {
 
         gsap
           .timeline()
+          .timeScale(INTRO_SPEED)
           .to(".pl-meta, .pl-rule-wrap", {
             autoAlpha: 0,
             duration: 0.3,
@@ -199,7 +204,7 @@ export default function Preloader({ onComplete }) {
   return (
     <div
       ref={rootRef}
-      className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden bg-accent-from"
+      className="pointer-events-none fixed inset-0 z-[200] flex items-center justify-center overflow-hidden bg-accent-from"
       role="status"
       aria-label="Loading Nexoryn"
     >

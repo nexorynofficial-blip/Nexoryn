@@ -228,3 +228,44 @@ the navbar hides going down and returns going up, the progress bar tracks, revea
 route changes land at the top, the Services category jump lands at its section, and every page loads
 without errors. Anchor links now jump instead of gliding (sections keep `scroll-mt-24`). Performance
 is unchanged within measurement noise (about 6 KB gzip smaller).
+
+## Path 4: Faster, non-blocking intro
+
+### What the intro really is
+The intro lives in `src/components/Preloader.jsx` (app level, not in Home): an orange plate where
+"NEXORYN" decodes letter by letter (a per-frame text scramble) with a 0-100 counter, then a black
+circle zooms in and the plate fades to the page. It is a GSAP timeline, and the scramble/counter
+change text every frame, so it cannot be a pure-CSS animation without changing the design. It was
+therefore kept as GSAP and changed in place.
+
+### Changes
+1. **Half the duration:** `INTRO_SPEED = 2` scales every duration, delay and stagger in both
+   timelines together (so the choreography is identical, just 2x faster). The wait for the page
+   `load` event cap also dropped from 1.6 s to 0.8 s, and the safety timeout from 8 s to 4 s.
+2. **Non-blocking:** the plate has `pointer-events: none`, so clicks reach the page underneath, and
+   the page-scroll lock (`html.is-loading`) was removed, so the page can be scrolled while it plays.
+
+| Phase | Before | After |
+|---|---|---|
+| Decode + counter + rule | ~1.6 s | ~0.8 s |
+| Zoom + fade outro | ~1.95 s | ~1.0 s |
+| Plate on screen (measured, unthrottled) | ~2.8-2.9 s | ~1.2-1.4 s |
+
+### Measured
+- During the intro: scroll worked (0 -> 500 px), the plate was not the element under the cursor
+  (clicks pass through), no JS errors. Old build: scroll locked, plate captured clicks.
+- Throttled mobile (4x CPU, slow 4G), two alternating rounds of 3 runs:
+  largest contentful paint **7.8 s / 7.4 s -> 6.4 s / 5.8 s**. First contentful paint (~4.3-4.6 s)
+  and total blocking time (~1 s locally) did not change.
+- All pages load without errors.
+
+### Expectations
+Largest contentful paint improves by roughly 1.4-1.7 s because the hero text now appears when the
+shorter intro ends. Blocking time and first paint are unaffected, since they are caused by the
+JavaScript startup, not the intro length, so a large score jump (e.g. to 50-60) should not be
+assumed. Re-run PageSpeed on the deployed site to see the real change.
+
+### Behaviour note
+The plate is still opaque orange, so the page underneath is not *visible* until it fades; it is
+scrollable and clickable (blindly) during the ~1.3 s. Making the page visible through it would
+change the intro's look.

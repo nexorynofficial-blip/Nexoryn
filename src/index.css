@@ -173,12 +173,6 @@ select:-webkit-autofill:focus {
 
 /* ── Motion primitives ───────────────────────────────────────────────────── */
 
-/* Applied to <html> by SmoothScroll until the preloader hands off, so nothing
-   below the fold can flash into view before the reveal plays. */
-html.is-loading body {
-  overflow: hidden;
-}
-
 /* Split-text reveal. Each line gets a clipping mask and the words inside slide
    up out of it — the mask is what makes it read as "typeset" rather than a
    plain fade. GSAP animates .split-word; these are just the resting styles. */
