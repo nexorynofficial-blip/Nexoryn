@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useLenis } from "lenis/react";
 import nexorynFullLogo from "../assets/nexoryn-full-logo.webp";
 import MagneticButton from "./ui/MagneticButton";
 import { gsap, useGSAP } from "../lib/gsap";
@@ -67,25 +66,30 @@ export default function Navbar() {
   const navigate = useNavigate();
   const headerRef = useRef(null);
   const navRef = useRef(null);
-  const lenis = useLenis();
 
   // Hide going down, reveal going up, and thicken the backdrop once the page
-  // has left the hero. Driven off Lenis's direction rather than raw scroll
-  // deltas, which flicker at the top of a fling.
+  // has left the hero. Direction comes from the change since the last event,
+  // ignoring tiny jitters that would otherwise flicker the bar at the top of a
+  // fling.
   useGSAP(
     () => {
-      if (!lenis) return undefined;
-
       const showHide = gsap.quickTo(headerRef.current, "yPercent", {
         duration: 0.45,
         ease: "power3.out",
       });
 
+      let lastY = window.scrollY;
+      let direction = 0;
+
       const onScroll = () => {
-        const y = lenis.scroll;
-        // The menu is anchored to the header — hiding it mid-interaction
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) >= 2) {
+          direction = y > lastY ? 1 : -1;
+          lastY = y;
+        }
+        // The menu is anchored to the header, so hiding it mid-interaction
         // would rip an open menu off the screen.
-        const hide = !menuOpen && y > 220 && lenis.direction === 1;
+        const hide = !menuOpen && y > 220 && direction === 1;
         showHide(hide ? -110 : 0);
 
         gsap.to(navRef.current, {
@@ -97,10 +101,10 @@ export default function Navbar() {
         });
       };
 
-      lenis.on("scroll", onScroll);
-      return () => lenis.off("scroll", onScroll);
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
     },
-    { dependencies: [lenis, menuOpen] }
+    { dependencies: [menuOpen] }
   );
 
   // The underline reflects the current route when we're on a routed page,
@@ -142,6 +146,8 @@ export default function Navbar() {
           <img
             src={nexorynFullLogo}
             alt="Nexoryn"
+            width={1200}
+            height={319}
             className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:group-hover:scale-105"
           />
         </Link>

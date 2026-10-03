@@ -1,13 +1,12 @@
 import { useRef } from "react";
-import { useLenis } from "lenis/react";
 import { gsap, useGSAP } from "../../lib/gsap";
 
 /**
  * Hairline progress bar pinned under the navbar.
  *
- * Driven off Lenis's own `progress` rather than a ScrollTrigger, so it tracks
- * the smoothed position the user is actually looking at instead of the raw
- * scroll offset — at this thickness the two visibly disagree during a fling.
+ * Driven straight off the scroll position (a passive listener feeding a
+ * GSAP quickSetter) rather than a ScrollTrigger, so it stays a single cheap
+ * transform update per scroll event.
  */
 export default function ScrollProgress() {
   const barRef = useRef(null);
@@ -16,13 +15,22 @@ export default function ScrollProgress() {
   useGSAP(() => {
     setScale.current = gsap.quickSetter(barRef.current, "scaleX");
     gsap.set(barRef.current, { scaleX: 0, transformOrigin: "left center" });
-  }, []);
 
-  useLenis((lenis) => {
-    // progress is NaN before the first resize settles (limit is still 0).
-    const p = lenis.progress;
-    if (setScale.current && Number.isFinite(p)) setScale.current(p);
-  });
+    const update = () => {
+      const limit = document.documentElement.scrollHeight - window.innerHeight;
+      // limit is 0 on a page that does not scroll, so avoid dividing by it.
+      const p = limit > 0 ? window.scrollY / limit : 0;
+      if (setScale.current && Number.isFinite(p)) setScale.current(Math.min(1, Math.max(0, p)));
+    };
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   return (
     <div

@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import SmoothScroll from "./components/SmoothScroll";
 import Preloader from "./components/Preloader";
 import ScrollProgress from "./components/ui/ScrollProgress";
 import PageTransition from "./components/PageTransition";
@@ -56,7 +55,6 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <SmoothScroll>
         <Preloader onComplete={() => setIntroDone(true)} />
         <ScrollProgress />
         <ScrollToTop />
@@ -78,7 +76,6 @@ export default function App() {
             thing on the page — with mix-blend-overlay it roughly halved the
             frame rate, and even as a plain opacity layer it still cost ~12fps.
             Scrolling it with the content instead is effectively free. */}
-      </SmoothScroll>
     </BrowserRouter>
   );
 }

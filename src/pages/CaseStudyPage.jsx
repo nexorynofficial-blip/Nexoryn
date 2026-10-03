@@ -90,6 +90,8 @@ function Sidebar({ project }) {
       <img
         src={project.photo}
         alt={project.title}
+        width={800}
+        height={600}
         className="aspect-[4/3] w-full rounded-2xl object-cover"
       />
 

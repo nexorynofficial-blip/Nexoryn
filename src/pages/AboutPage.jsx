@@ -55,7 +55,15 @@ function TeamCard({ photo, name, role }) {
       className="mx-auto flex w-full max-w-[380px] flex-col overflow-hidden rounded-2xl glass-panel p-6"
     >
       <div className="overflow-hidden rounded-xl">
-        <img src={photo} alt={name} className="aspect-[3/4] w-full object-cover" />
+        <img
+          src={photo}
+          alt={name}
+          width={900}
+          height={1200}
+          loading="lazy"
+          decoding="async"
+          className="aspect-[3/4] w-full object-cover"
+        />
       </div>
       <h3 className="mt-4 font-heading text-lg tracking-tight text-white">
         {name}
@@ -91,8 +99,7 @@ export default function AboutPage() {
   useEffect(() => {
     document.title = "About - Nexoryn";
     // No local scroll reset — the global ScrollToTop already resets on every
-    // route change via lenis.scrollTo, which Lenis needs to stay in sync;
-    // a raw window.scrollTo call here fights that (see ScrollToTop.jsx).
+    // route change (see ScrollToTop.jsx), so there is nothing to reset here.
   }, []);
 
   return (
@@ -111,7 +118,7 @@ export default function AboutPage() {
               variants={blurFadeIn}
               className="mx-auto w-full max-w-[300px] sm:max-w-[420px] lg:mx-0 lg:ml-[-40px] lg:max-w-[540px]"
             >
-              <img src={nexorynLogo} alt="Nexoryn logo" className="h-auto w-full" />
+              <img src={nexorynLogo} alt="Nexoryn logo" width={1200} height={1200} className="h-auto w-full" />
             </motion.div>
 
             <motion.div variants={blurFadeIn}>

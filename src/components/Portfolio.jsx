@@ -53,12 +53,16 @@ function ScreenImage({ project }) {
         alt=""
         aria-hidden="true"
         draggable={false}
+        width={1600}
+        height={900}
         className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-xl"
       />
       <img
         src={project.photo}
         alt={project.title}
         draggable={false}
+        width={1600}
+        height={900}
         className="relative h-auto w-full"
       />
     </>
@@ -264,6 +268,8 @@ export default function Portfolio() {
                 alt=""
                 aria-hidden="true"
                 draggable={false}
+                width={1600}
+                height={929}
                 className="pointer-events-none absolute inset-0 z-10 h-full w-full"
               />
             </div>

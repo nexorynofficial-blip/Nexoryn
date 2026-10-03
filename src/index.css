@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "lenis/dist/lenis.css";
 
 /* Compact spacing for short viewports (e.g. 1366x768 laptops) */
 @custom-variant short (@media (max-height: 820px));
@@ -110,8 +109,8 @@
   }
 }
 
-/* Lenis owns scroll position now — native smooth-scroll would fight it, and
-   `scroll-behavior: smooth` on <html> makes Lenis's own scrollTo stutter. */
+/* Plain native scrolling. Anchor links jump; the few places that want a glide
+   (e.g. the Services category jump) ask for it explicitly. */
 html {
   scroll-behavior: auto;
 }

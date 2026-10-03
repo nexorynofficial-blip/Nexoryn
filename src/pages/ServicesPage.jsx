@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
-import { useLenis } from "lenis/react";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
@@ -9,13 +8,13 @@ import { ServiceBox } from "../components/ServiceBox";
 import { SERVICE_CATEGORIES } from "../data/services";
 import { getServices } from "../lib/content";
 import { useContent } from "../hooks/useContent";
+import { prefersReducedMotion } from "../lib/easing";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
   const categories = useContent(getServices, SERVICE_CATEGORIES);
-  const lenis = useLenis();
   // Set by the Hero card's service tags and the home Services section's
   // "Explore This Service in Detail" buttons — links straight into a single
   // category instead of always landing on the top of the page.
@@ -24,20 +23,22 @@ export default function ServicesPage() {
   useEffect(() => {
     document.title = "Services - Nexoryn";
 
-    // No plain scroll-to-top branch here — the global ScrollToTop already
-    // resets to 0 via lenis.scrollTo on every route change. This effect only
-    // needs to handle the one thing that's different: scrolling further down
-    // to a specific category box. Using raw window.scrollTo for that (as
-    // before) left Lenis convinced the page was still at its old position,
-    // the same desync ScrollToTop.jsx's own comment warns about.
-    if (targetCategory && lenis) {
+    // No plain scroll-to-top branch here: the global ScrollToTop already
+    // resets to 0 on every route change. This effect only handles the one
+    // thing that is different, scrolling further down to a specific category.
+    if (targetCategory) {
       // Wait a frame so the page has laid out before measuring its position.
       requestAnimationFrame(() => {
         const el = document.getElementById(`service-${targetCategory}`);
-        if (el) lenis.scrollTo(el, { offset: -96 });
+        if (el) {
+          window.scrollTo({
+            top: el.getBoundingClientRect().top + window.scrollY - 96,
+            behavior: prefersReducedMotion() ? "instant" : "smooth",
+          });
+        }
       });
     }
-  }, [targetCategory, lenis]);
+  }, [targetCategory]);
 
   return (
     <>

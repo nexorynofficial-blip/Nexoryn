@@ -183,6 +183,8 @@ export default function Hero() {
           <img
             src={nexorynLogo}
             alt="Nexoryn"
+            width={1200}
+            height={1200}
             className="hero-mark hidden h-16 w-16 opacity-50 lg:block"
           />
           <div className="hero-card hidden lg:block">

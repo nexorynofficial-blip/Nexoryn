@@ -42,7 +42,8 @@
     </style>
 
     <!-- Analytics: init queues events immediately; the gtag.js library itself
-         is injected after load + idle (see public/gtag-init.js). -->
+         is injected on the first scroll/tap/click/key press, or after 6 s if
+         the visitor never interacts (see public/gtag-init.js). -->
     <script src="/gtag-init.js" defer></script>
     <!-- Core Web Vitals / long-task logging. Does nothing unless the URL has
          ?perf=1 (see public/perf-monitor.js). -->

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { useLenis } from "lenis/react";
+import { useRef, useState } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
 
@@ -36,24 +35,13 @@ export default function Preloader({ onComplete }) {
   const wordRef = useRef(null);
   const counterRef = useRef(null);
   const [done, setDone] = useState(false);
-  const lenis = useLenis();
-
-  // Scroll stays locked for as long as the plate is up. Kept out of the GSAP
-  // hook because `lenis` arrives a tick after mount, and making the animation
-  // depend on it would restart the whole intro the moment it does.
-  useEffect(() => {
-    if (!lenis) return;
-    if (done) lenis.start();
-    else lenis.stop();
-    return () => lenis.start();
-  }, [lenis, done]);
 
   useGSAP(
     (_context, contextSafe) => {
       const reduced = prefersReducedMotion();
 
-      // Belt-and-braces with lenis.stop() above: this also blocks native scroll
-      // during the window before the Lenis instance exists.
+      // Locks page scroll for as long as the plate is up (see `html.is-loading`
+      // in index.css).
       document.documentElement.classList.add("is-loading");
 
       let finished = false;

@@ -1,29 +1,52 @@
 // Google Analytics. Kept as a file rather than inline so the CSP can stay on
 // script-src 'self' without 'unsafe-inline'.
 //
-// The gtag.js library itself (~100 KB of script to parse and run) used to load
-// from a <script async> tag in <head>, competing with the app for the main
-// thread during startup. It is now injected only after the page has loaded and
-// the browser is idle. Calls to gtag() made before it arrives are queued on
-// dataLayer and replayed, so no hit is lost.
+// The gtag.js library itself (~74 KB of script that a home-page visit barely
+// uses) is not loaded during startup. It is injected on the visitor's first
+// interaction (scroll, tap, click or key press), or after FALLBACK_MS if they
+// never interact, so visitors who just look and leave are still counted.
+// Calls to gtag() made before it arrives are queued on dataLayer and replayed,
+// so no hit is lost.
+var GA_ID = "G-K13WLKCLTB";
+var FALLBACK_MS = 6000;
+
 window.dataLayer = window.dataLayer || [];
 function gtag() {
   dataLayer.push(arguments);
 }
 gtag("js", new Date());
-gtag("config", "G-K13WLKCLTB");
+gtag("config", GA_ID);
 
-function loadGtag() {
+var perfOn = /[?&]perf=1/.test(location.search);
+var loaded = false;
+var EVENTS = ["scroll", "click", "touchstart", "keydown", "pointerdown"];
+
+function loadGtag(reason) {
+  if (loaded) return;
+  loaded = true;
+  EVENTS.forEach(function (e) {
+    window.removeEventListener(e, onInteract);
+  });
+  clearTimeout(fallbackTimer);
+
   var s = document.createElement("script");
   s.async = true;
-  s.src = "https://www.googletagmanager.com/gtag/js?id=G-K13WLKCLTB";
+  s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
   document.head.appendChild(s);
+
+  if (performance.mark) performance.mark("gtm-loading");
+  if (perfOn) console.log("[perf] Google Analytics loading (" + reason + ")");
 }
 
-function whenIdle() {
-  if ("requestIdleCallback" in window) window.requestIdleCallback(loadGtag, { timeout: 4000 });
-  else setTimeout(loadGtag, 2000);
+function onInteract(e) {
+  loadGtag("first " + e.type);
 }
 
-if (document.readyState === "complete") whenIdle();
-else window.addEventListener("load", whenIdle);
+EVENTS.forEach(function (e) {
+  window.addEventListener(e, onInteract, { once: true, passive: true });
+});
+var fallbackTimer = setTimeout(function () {
+  loadGtag("no interaction after " + FALLBACK_MS / 1000 + "s");
+}, FALLBACK_MS);
+
+if (perfOn) console.log("[perf] Google Analytics deferred until first interaction (or " + FALLBACK_MS / 1000 + "s)");

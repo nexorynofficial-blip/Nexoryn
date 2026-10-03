@@ -52,6 +52,10 @@ export default function CTASection({ compact = false }) {
       <img
         src={ctaBg}
         alt="Glowing amber horizon curving over a starlit dark sky"
+        width={1600}
+        height={686}
+        loading="lazy"
+        decoding="async"
         className="cta-bg absolute inset-0 h-full w-full object-cover will-change-transform"
       />
 

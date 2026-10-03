@@ -110,7 +110,7 @@ Honest caveats:
 | Library / feature | Where | When it loads |
 |---|---|---|
 | React, React Router | main bundle | Immediately (needed to render anything) |
-| GSAP + ScrollTrigger, Lenis, Framer Motion | main bundle | Immediately. Deliberately **not** deferred: the 3-second intro is a GSAP timeline and every reveal waits for it, so delaying GSAP would delay first paint and leave content hidden. Measured script evaluation for all of it is ~0.15 s of real CPU; the cost was the animation *setup*, which is now lazy (below). |
+| GSAP + ScrollTrigger, Framer Motion | main bundle | Immediately. Deliberately **not** deferred: the 3-second intro is a GSAP timeline and every reveal waits for it, so delaying GSAP would delay first paint and leave content hidden. Measured script evaluation for all of it is ~0.15 s of real CPU; the cost was the animation *setup*, which is now lazy (below). |
 | Scroll reveals (`Reveal`, `SplitText`) | per element | Each animation is created only when its element nears the screen (IntersectionObserver). Hidden state is plain CSS until then. |
 | three.js + background shader | separate chunk (~520 KB) | After the browser is idle (`requestIdleCallback`, max 2.5 s). Mark: `background-ready`. |
 | Reviews marquee (40 cards) | `Reviews.jsx` | After idle (max 3 s), behind a placeholder of identical height, so nothing shifts. Mark: `reviews-ready`. |
@@ -133,3 +133,98 @@ the hidden-until-revealed state is waiting on the intro finishing. Making GSAP a
 move first paint later, and a failed load could leave sections permanently invisible. The
 route-level split is already handled by lazy pages; GSAP is shared by all of them so it stays in one
 cached chunk.
+
+## Path 2 revision: mobile test (no change made)
+
+Question: did deferring the reviews strip and 3D background to idle (`useAfterIdle`) hurt mobile?
+Test: the same production build with deferral on mobile vs. mounting immediately on mobile
+(`window.innerWidth < 768`), measured with Chrome at 4x CPU slowdown + slow 4G, two alternating
+rounds of 3 runs each. (An earlier attempt at this test was invalid: a stale preview server was
+serving the deferred build for both sides, so it was discarded and redone.)
+
+| Mobile, median | Deferred (current) | Immediate on mobile |
+|---|---|---|
+| First contentful paint | 3.49 s / 3.64 s | 3.69 s / 3.84 s |
+| Largest contentful paint | 6.54 s / 6.70 s | 6.67 s / 6.84 s |
+| Blocking time (local) | 0.48 s / 0.62 s | 0.55 s / 0.70 s |
+| Long tasks | 11 | 11 |
+
+Findings:
+- Deferring was slightly **better** on mobile in both rounds, and neither version creates a single
+  large blocking task. So the hook keeps deferring on mobile. A one-line switch
+  (`DEFER_ON_MOBILE` in `src/hooks/useAfterIdle.js`) turns mobile to immediate if your own
+  PageSpeed runs ever favour it.
+- The local FCP/LCP closely match your PageSpeed numbers (3.6 s / ~7 s), so those are
+  reproduced. The 22 s Total Blocking Time is **not**: locally it is ~0.5 s. PageSpeed's TBT
+  before any of this work was 21.9 s and is 22.4 s now, i.e. essentially unchanged, so it comes from
+  something these changes do not touch and that this local test does not trigger.
+- The final LCP element on mobile is the hero paragraph ("At Nexoryn, we build websites..."). It
+  fades in right after the 3-second intro finishes, so LCP = time for the JavaScript to arrive and
+  start + the intro. Cutting it by 1-2 s would mean shortening or skipping the intro (a design
+  change) or shipping less JavaScript up front. It is not an image, so there is nothing to preload.
+- Opening a page with `?perf=1` now prints which path ran, e.g.
+  `useAfterIdle(reviews-ready): MOBILE (idle defer)`.
+
+What would find the real TBT cause: the "Minimize main-thread work", "Reduce JavaScript execution
+time" and "Avoid long main-thread tasks" sections of the PageSpeed report for the live URL show
+which scripts and tasks account for the 22 s.
+
+## Path 3: Analytics deferral, image dimensions, dead-code audit
+
+### Changes made
+1. **Google Analytics now loads on first interaction.** `public/gtag-init.js` injects gtag.js on
+   the first scroll, tap, click or key press, or after 6 s if the visitor never interacts. Before,
+   it loaded after the page's `load` event. The 6 s fallback is deliberate: loading *only* on
+   interaction would silently drop every visitor who looks and leaves. Verified locally: no
+   request at startup; one request on scroll; one on click; with no interaction the script loads
+   at 6 s and sends its tracking hit. `?perf=1` logs when and why it loads (`gtm-loading` mark).
+   The measurement ID stays `G-K13WLKCLTB` (a different ID in a task brief was a typo and would
+   have stopped tracking).
+2. **Explicit `width`/`height` on every `<img>`** (logos, hero mark, CTA background, laptop frame,
+   project and team photos), using each file's real dimensions. The navbar/footer logos size
+   themselves from height (`w-auto`) so they had no width until loaded. Footer logo, CTA background
+   and team photos also got `loading="lazy"` (65 KB less transferred on first load).
+
+### Audited, no change needed
+- **ColorBends / three.js (the "59 KiB unused"):** needed. It is the site-wide animated background
+  (about ten three.js classes). Switching from `import * as THREE` to named imports gave a
+  byte-identical bundle (509.2 KB), i.e. the bundler already drops what it can and the renderer
+  itself is the bulk. It loads after idle in its own chunk, off the critical path.
+- **"Unused JavaScript" in the main bundle (38 KiB):** PageSpeed counts code that did not *run*
+  during load, not dead code. A scan for exports nothing imports found only a few tiny constants
+  (already removed by the bundler) and no commented-out code. The unused modules were removed in
+  the first optimization pass. Nothing more is safely removable.
+- **Analytics was never render-blocking** (it was already after `load`); "73.8 KiB unused" is the
+  gtag library, most of which a home-page visit does not use.
+- **Script evaluation time** is dominated by GSAP/React and the animation setup, which is the
+  design the site keeps.
+
+### Measured effect (local, 4x CPU + slow 4G; noisy)
+- Layout shift was already tiny before (0.001-0.005 on mobile), so it does not move; the change
+  clears PageSpeed's missing-dimensions audit.
+- Mobile FCP/LCP/TBT differences between the old and new build were within run-to-run noise.
+- Transferred on first load: 1016 KB -> 951 KB (mobile).
+- I do not expect a visible PageSpeed *score* change from this pass. The remaining cost is the
+  JavaScript executing at startup (GSAP, React) and the 3-second intro.
+
+## Lenis smooth scrolling removed
+
+The site now uses plain native browser scrolling. Removed: the `lenis` package (and from
+`package.json`, `package-lock.json`, `bun.lock`), `src/components/SmoothScroll.jsx`, and Lenis's
+stylesheet import. Replaced, one for one:
+
+| Was (Lenis) | Now (native) |
+|---|---|
+| Smoothed wheel scrolling | Normal browser scrolling |
+| Preloader scroll lock (`lenis.stop()`) | `html.is-loading { overflow: hidden }` (already in `index.css`) |
+| Scroll to top on route change | `window.scrollTo({ top: 0, behavior: "instant" })` in `ScrollToTop.jsx` |
+| Navbar hide/show (Lenis direction) | Passive scroll listener comparing to the last position |
+| Progress bar (Lenis `progress`) | Passive scroll listener: `scrollY / (scrollHeight - innerHeight)` |
+| Services `?category=` jump | `window.scrollTo` with smooth behaviour (instant for reduced motion) |
+| Lenis-to-ScrollTrigger bridge | Not needed: ScrollTrigger reads native scroll directly |
+
+Tested with real mouse-wheel input: scroll locks during the preloader, the page scrolls natively,
+the navbar hides going down and returns going up, the progress bar tracks, reveals still fire,
+route changes land at the top, the Services category jump lands at its section, and every page loads
+without errors. Anchor links now jump instead of gliding (sections keep `scroll-mt-24`). Performance
+is unchanged within measurement noise (about 6 KB gzip smaller).

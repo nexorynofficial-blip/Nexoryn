@@ -116,6 +116,8 @@ function ProjectCard({ project }) {
           <img
             src={project.photo}
             alt={project.title}
+            width={800}
+            height={600}
             loading="lazy"
             className="h-52 w-full rounded-2xl object-cover lg:h-full"
           />
@@ -213,8 +215,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     document.title = "Portfolio - Nexoryn";
     // No local scroll reset — the global ScrollToTop already resets on every
-    // route change via lenis.scrollTo, which Lenis needs to stay in sync;
-    // a raw window.scrollTo call here fights that (see ScrollToTop.jsx).
+    // route change (see ScrollToTop.jsx), so there is nothing to reset here.
   }, []);
 
   // Deep-link support: /portfolio?service=Web%20Development&industry=Fintech
