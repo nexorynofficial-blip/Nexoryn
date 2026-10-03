@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLenis } from "lenis/react";
-import nexorynFullLogo from "../assets/nexoryn-full-logo.png";
+import nexorynFullLogo from "../assets/nexoryn-full-logo.webp";
 import MagneticButton from "./ui/MagneticButton";
 import { gsap, useGSAP } from "../lib/gsap";
 

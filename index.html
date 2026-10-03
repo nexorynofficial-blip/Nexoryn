@@ -4,17 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#150c05" />
     <meta
       name="description"
       content="Nexoryn - Where Automation Meets Ambition."
     />
     <title>Nexoryn - Where Automation Meets Ambition</title>
+
+    <!-- Resource hints. fonts.* are needed immediately; the analytics origins
+         are only warmed (dns-prefetch) because gtag now loads after idle. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+
+    <!-- Fonts: fetched at high priority but applied by /load-fonts.js so the
+         stylesheet no longer blocks first paint. Anton and Unbounded were
+         requested here but are not used anywhere in the site, so they are
+         dropped. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Anton&family=Chakra+Petch:wght@500;600;700&family=Unbounded:wght@600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@800&display=swap"
     />
+    <script src="/load-fonts.js"></script>
+
     <!-- Site base colour as the very first paint, so there's no white flash
          between the browser's default canvas and React mounting.
          Deliberately NOT the preloader's orange: if the app ever fails to
@@ -26,9 +40,13 @@
         background: #150c05;
       }
     </style>
-    <!-- Google tag (gtag.js) -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-K13WLKCLTB"></script>
-      <script src="/gtag-init.js"></script>
+
+    <!-- Analytics: init queues events immediately; the gtag.js library itself
+         is injected after load + idle (see public/gtag-init.js). -->
+    <script src="/gtag-init.js" defer></script>
+    <!-- Core Web Vitals / long-task logging. Does nothing unless the URL has
+         ?perf=1 (see public/perf-monitor.js). -->
+    <script src="/perf-monitor.js" defer></script>
   </head>
   <body>
     <div id="root"></div>

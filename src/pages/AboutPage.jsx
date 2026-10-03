@@ -7,10 +7,10 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import { AboutGlobe } from "../components/AboutGlobe";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
-import nexorynLogo from "../assets/nexoryn-logo.png";
-import waseemPhoto from "../assets/team-waseem-farooq.png";
-import abdulPhoto from "../assets/team-abdul-ahad.png";
-import akbarPhoto from "../assets/team-akbar-khan.png";
+import nexorynLogo from "../assets/nexoryn-logo.webp";
+import waseemPhoto from "../assets/team-waseem-farooq.webp";
+import abdulPhoto from "../assets/team-abdul-ahad.webp";
+import akbarPhoto from "../assets/team-akbar-khan.webp";
 import { getTeam } from "../lib/content";
 import { useContent } from "../hooks/useContent";
 

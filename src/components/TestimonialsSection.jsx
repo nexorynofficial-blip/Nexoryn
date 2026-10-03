@@ -1,10 +1,18 @@
 import { TestimonialCard } from "./ui/TestimonialCard";
 
-// More copies than the previous 4 so there's always a deep buffer of content
-// flowing across wide viewports before the loop needs to repeat.
-const SETS = 6;
+// The loop translates by exactly one copy's width, so the track only needs to
+// be (viewport + one copy) wide to repeat seamlessly. It used to render a fixed
+// 6 copies — 120 cards, each with a 28px backdrop blur — which was ~60% of the
+// whole page's DOM. Size the copy count from the review count instead: a
+// card (+ gap) is at least 256px wide, and the widest viewport we plan for is
+// 2560px, so copies = 1 + 2560 / copyWidth, clamped to 2..6.
+const MIN_CARD_PX = 256;
+const MAX_VIEWPORT_PX = 2560;
+const setsFor = (count) =>
+  Math.min(6, Math.max(2, Math.ceil(1 + MAX_VIEWPORT_PX / (Math.max(count, 1) * MIN_CARD_PX))));
 
 export function TestimonialsSection({ testimonials, className = "" }) {
+  const SETS = setsFor(testimonials.length);
   return (
     <div
       className={`relative flex w-full flex-col items-center justify-center overflow-hidden ${className}`}

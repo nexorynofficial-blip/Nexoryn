@@ -199,7 +199,26 @@ html.is-loading body {
 }
 .split-word {
   display: inline-block;
-  will-change: transform;
+  /* No will-change here: it promoted every single word on the page to its own
+     compositor layer, which costs memory and startup time for nothing — GSAP
+     animates these for under a second, once. */
+}
+
+/* Resting "not yet revealed" states for Reveal and SplitText. Pure CSS, so
+   nothing runs in JS until an element is about to be seen (lib/inView.js). The
+   components remove the class in the same frame their GSAP tween applies the
+   same start values inline, so there is no flash. */
+.reveal-hold {
+  opacity: 0;
+  transform: translateY(var(--reveal-y, 46px));
+}
+.reveal-hold-children > * {
+  opacity: 0;
+  transform: translateY(var(--reveal-y, 46px));
+}
+.split-hold .split-word {
+  opacity: 0;
+  transform: translateY(118%);
 }
 
 /* Pressable elements. Instant physical feedback beats any entrance animation —

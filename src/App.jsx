@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import SmoothScroll from "./components/SmoothScroll";
@@ -8,15 +8,19 @@ import PageTransition from "./components/PageTransition";
 import ScrollToTop from "./components/ScrollToTop";
 import { IntroProvider } from "./lib/IntroContext";
 import Home from "./pages/Home";
-import AboutPage from "./pages/AboutPage";
-import ServicesPage from "./pages/ServicesPage";
-import PortfolioPage from "./pages/PortfolioPage";
-import CaseStudyPage from "./pages/CaseStudyPage";
-import ReviewsPage from "./pages/ReviewsPage";
-import ContactPage from "./pages/ContactPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfServicePage from "./pages/TermsOfServicePage";
-import CookiePolicyPage from "./pages/CookiePolicyPage";
+// Home is the landing route, so it stays in the main bundle. Every other page
+// is split into its own chunk and fetched on navigation — previously the whole
+// site (CaseStudyPage alone is ~1000 lines, AboutPage pulls in the 3D globe)
+// was parsed and executed before the first paint.
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const PortfolioPage = lazy(() => import("./pages/PortfolioPage"));
+const CaseStudyPage = lazy(() => import("./pages/CaseStudyPage"));
+const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
+const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
 import { SiteBackground } from "./components/SiteBackground";
 
 function AppRoutes() {
@@ -26,6 +30,9 @@ function AppRoutes() {
     // Keying on pathname makes each route a fresh subtree, so every section's
     // scroll-in animation replays on navigation instead of arriving already
     // finished from the previous page.
+    // fallback={null}: the page background and navbar are already on screen,
+    // so a blank gap for the few ms a chunk takes beats a spinner flash.
+    <Suspense fallback={null}>
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<AboutPage />} />
@@ -38,6 +45,7 @@ function AppRoutes() {
       <Route path="/terms-of-service" element={<TermsOfServicePage />} />
       <Route path="/cookie-policy" element={<CookiePolicyPage />} />
     </Routes>
+    </Suspense>
   );
 }
 

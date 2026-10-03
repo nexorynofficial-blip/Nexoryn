@@ -2,6 +2,7 @@ import { Children, Fragment, isValidElement, useRef } from "react";
 import { gsap, useGSAP } from "../../lib/gsap";
 import { prefersReducedMotion } from "../../lib/easing";
 import { useIntroDone } from "../../lib/IntroContext";
+import { onceInView } from "../../lib/inView";
 
 /**
  * Flattens a React subtree into a list of whitespace-delimited words, where
@@ -88,7 +89,6 @@ export default function SplitText({
   delay = 0,
   stagger = 0.045,
   duration = 0.95,
-  start = "top 85%",
   animateOnMount = false,
 }) {
   const ref = useRef(null);
@@ -101,51 +101,58 @@ export default function SplitText({
 
   useGSAP(
     () => {
-      const words = gsap.utils.toArray(".split-word", ref.current);
-      if (!words.length) return;
+      const el = ref.current;
+      if (!el) return;
 
-      // Above-the-fold headings sit inside a viewport-height trigger zone, so
-      // without this gate they'd play out and finish behind the preloader
-      // plate — the user would only ever see the finished state.
-      if (!introDone) {
-        gsap.set(words, { yPercent: 118, autoAlpha: 0 });
-        return;
-      }
+      // Above-the-fold headings would otherwise play out and finish behind the
+      // preloader plate. Until it lifts, the words stay hidden by the
+      // .split-hold CSS class — no GSAP work at all (see lib/inView.js).
+      if (!introDone) return;
 
-      const scrollTrigger = animateOnMount
-        ? undefined
-        : { trigger: ref.current, start, once: true };
+      // Re-hold on a re-run (see Reveal.jsx) so a reverted heading can't flash.
+      el.classList.add("split-hold");
 
-      if (prefersReducedMotion()) {
-        // Movement is what causes trouble; a short fade still communicates
-        // "this just arrived" without any travel.
-        gsap.fromTo(
-          words,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 0.3, delay, scrollTrigger }
-        );
-        return;
-      }
+      const play = () => {
+        const words = gsap.utils.toArray(".split-word", el);
+        // Drop the CSS hold BEFORE building the tween: GSAP reads the element's
+        // current transform at init, and would otherwise adopt the held
+        // translateY(118%) as a fixed pixel offset it never animates away.
+        // The fromTo below applies its own start values in this same task, so
+        // nothing paints in between.
+        el.classList.remove("split-hold");
+        if (!words.length) return;
 
-      gsap.fromTo(
-        words,
-        { yPercent: 118, autoAlpha: 0 },
-        {
-          yPercent: 0,
-          autoAlpha: 1,
-          duration,
-          delay,
-          stagger,
-          ease: "expo.out",
-          scrollTrigger,
+        if (prefersReducedMotion()) {
+          // Movement is what causes trouble; a short fade still communicates
+          // "this just arrived" without any travel.
+          gsap.fromTo(words, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, delay });
+        } else {
+          gsap.fromTo(
+            words,
+            { yPercent: 118, autoAlpha: 0 },
+            {
+              yPercent: 0,
+              autoAlpha: 1,
+              duration,
+              delay,
+              stagger,
+              ease: "expo.out",
+            }
+          );
         }
-      );
+      };
+
+      if (animateOnMount) {
+        play();
+        return;
+      }
+      return onceInView(el, play);
     },
     { scope: ref, dependencies: [signature, introDone], revertOnUpdate: true }
   );
 
   return (
-    <Tag ref={ref} className={className}>
+    <Tag ref={ref} className={`split-hold ${className}`}>
       {tokens.map((token, i) =>
         token.type === "break" ? (
           <br key={`br-${i}`} />

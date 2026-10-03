@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import ctaBg from "../assets/cta-bg.png";
+import ctaBg from "../assets/cta-bg.webp";
 import SplitText from "./ui/SplitText";
 import Reveal from "./ui/Reveal";
 import MagneticButton from "./ui/MagneticButton";

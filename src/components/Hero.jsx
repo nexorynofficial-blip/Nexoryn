@@ -1,16 +1,21 @@
 import { useRef } from "react";
-import heroBg from "../assets/hero-bg.png";
-import nexorynLogo from "../assets/nexoryn-logo.png";
+import heroBg from "../assets/hero-bg.webp";
+import nexorynLogo from "../assets/nexoryn-logo.webp";
 import StatsColumn from "./StatsColumn";
 import InfoCard from "./InfoCard";
 import SplitText from "./ui/SplitText";
 import { gsap, useGSAP } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
 import { useIntroDone } from "../lib/IntroContext";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 export default function Hero() {
   const sectionRef = useRef(null);
   const introDone = useIntroDone();
+  // The video wrapper below is `hidden md:block`, but a display:none <video
+  // autoplay> still downloads its 2.5 MB file on phones that never show it.
+  // Only mount the element at desktop widths.
+  const showVideo = useMediaQuery("(min-width: 768px)");
 
   useGSAP(
     () => {
@@ -78,17 +83,19 @@ export default function Hero() {
           route) shows through instead, since the section itself is
           transparent on mobile rather than painted over with bg-night. */}
       <div className="hero-media absolute inset-0 hidden h-[115%] w-full will-change-transform md:block">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          poster={heroBg}
-          aria-label="Man wearing futuristic glowing AR glasses"
-          className="absolute inset-0 h-full w-full object-cover object-[center_top]"
-        >
-          <source src="/hero-bg.mp4" type="video/mp4" />
-        </video>
+        {showVideo && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={heroBg}
+            aria-label="Man wearing futuristic glowing AR glasses"
+            className="absolute inset-0 h-full w-full object-cover object-[center_top]"
+          >
+            <source src="/hero-bg.mp4" type="video/mp4" />
+          </video>
+        )}
       </div>
 
       {/* Near-zero contrast overlay: photo stays vivid, cards carry their own

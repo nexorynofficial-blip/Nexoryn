@@ -35,6 +35,22 @@ for (const [key, url] of Object.entries(modules)) {
   const file = clean.split("/").pop();
   // Last-resort key so a moved file still resolves by basename.
   if (!byPath.has(file)) byPath.set(file, url);
+
+  // Many bundled images were converted from PNG/JPEG to WebP for size. The
+  // API's rows (and the seed fixtures) still name the original extension, so
+  // register those names as aliases of the .webp file. Without this every
+  // project photo stored as "src/assets/foo.png" would stop resolving.
+  if (clean.endsWith(".webp")) {
+    const stem = clean.slice(0, -".webp".length);
+    for (const ext of [".png", ".jpg", ".jpeg"]) {
+      for (const prefix of ["", "src/", "/"]) {
+        const alias = `${prefix}${stem}${ext}`;
+        if (!byPath.has(alias)) byPath.set(alias, url);
+      }
+      const fileAlias = `${file.slice(0, -".webp".length)}${ext}`;
+      if (!byPath.has(fileAlias)) byPath.set(fileAlias, url);
+    }
+  }
 }
 
 /**

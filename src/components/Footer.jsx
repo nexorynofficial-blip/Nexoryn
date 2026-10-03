@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import nexorynFullLogo from "../assets/nexoryn-full-logo.png";
+import nexorynFullLogo from "../assets/nexoryn-full-logo.webp";
 import { ContactShortcuts } from "./ui/ContactShortcuts";
 
 // Links get a real href wherever a matching page/account exists; FAQ has no

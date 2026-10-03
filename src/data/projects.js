@@ -65,40 +65,40 @@
   Map,
   Heart,
 } from "lucide-react";
-import chatbotThumb from "../assets/project-ai-chatbot-thumb.png";
-import workflowOverview from "../assets/case-study-screenshots/workflow-overview.png";
+import chatbotThumb from "../assets/project-ai-chatbot-thumb.webp";
+import workflowOverview from "../assets/case-study-screenshots/workflow-overview.webp";
 import chatRefundRequest from "../assets/case-study-screenshots/chat-refund-request.png";
 import slackRefundApproval from "../assets/case-study-screenshots/slack-refund-approval.png";
 import gmailRefundDraft from "../assets/case-study-screenshots/gmail-refund-draft.png";
-import slackApprovalRouting from "../assets/case-study-screenshots/slack-approval-routing.png";
-import coldEmailThumb from "../assets/project-cold-email-thumb.png";
-import coldEmailWorkflow from "../assets/case-study-screenshots/cold-email-n8n-workflow.png";
+import slackApprovalRouting from "../assets/case-study-screenshots/slack-approval-routing.webp";
+import coldEmailThumb from "../assets/project-cold-email-thumb.webp";
+import coldEmailWorkflow from "../assets/case-study-screenshots/cold-email-n8n-workflow.webp";
 import coldEmailLeadSheet from "../assets/case-study-screenshots/cold-email-lead-sheet.png";
 import coldEmailAirtable from "../assets/case-study-screenshots/cold-email-airtable-crm.png";
-import coldEmailGmailSent from "../assets/case-study-screenshots/cold-email-gmail-sent.png";
-import repurposingThumb from "../assets/project-content-repurposing-thumb.png";
+import coldEmailGmailSent from "../assets/case-study-screenshots/cold-email-gmail-sent.webp";
+import repurposingThumb from "../assets/project-content-repurposing-thumb.webp";
 import repurposingForm from "../assets/case-study-screenshots/repurposing-form.png";
-import repurposingSlackApproval from "../assets/case-study-screenshots/repurposing-slack-approval.png";
-import repurposingBufferWorkflow from "../assets/case-study-screenshots/repurposing-buffer-workflow.png";
-import repurposingBufferQueue from "../assets/case-study-screenshots/repurposing-buffer-queue.png";
-import aurumThumb from "../assets/project-aurum-thumb.png";
-import analyticsHubThumb from "../assets/project-analytics-hub-thumb.png";
-import execIntelligenceThumb from "../assets/project-exec-intelligence-thumb.jpeg";
+import repurposingSlackApproval from "../assets/case-study-screenshots/repurposing-slack-approval.webp";
+import repurposingBufferWorkflow from "../assets/case-study-screenshots/repurposing-buffer-workflow.webp";
+import repurposingBufferQueue from "../assets/case-study-screenshots/repurposing-buffer-queue.webp";
+import aurumThumb from "../assets/project-aurum-thumb.webp";
+import analyticsHubThumb from "../assets/project-analytics-hub-thumb.webp";
+import execIntelligenceThumb from "../assets/project-exec-intelligence-thumb.webp";
 import execIntelligenceKpiDashboard from "../assets/case-study-screenshots/exec-intelligence-kpi-dashboard.jpeg";
 import execIntelligenceAiAnalysis from "../assets/case-study-screenshots/exec-intelligence-ai-analysis.jpeg";
-import candidateScreeningThumb from "../assets/project-candidate-screening-thumb.jpeg";
+import candidateScreeningThumb from "../assets/project-candidate-screening-thumb.webp";
 import candidateScreeningShortlistEmail from "../assets/case-study-screenshots/candidate-screening-shortlist-email.jpeg";
-import candidateScreeningDeclineEmail from "../assets/case-study-screenshots/candidate-screening-decline-email.jpeg";
-import invoiceProcessingThumb from "../assets/project-invoice-processing-thumb.jpeg";
-import invoiceProcessingSlackAlerts from "../assets/case-study-screenshots/invoice-processing-slack-alerts.jpeg";
-import restaurantStandeeThumb from "../assets/project-restaurant-standee-thumb.png";
-import wellnessFlyerThumb from "../assets/project-wellness-flyer-thumb.png";
-import sportsBillboardThumb from "../assets/project-sports-billboard-thumb.png";
-import candyPackagingThumb from "../assets/project-candy-packaging-thumb.png";
-import coffeeBrandThumb from "../assets/project-coffee-brand-thumb.png";
-import activismPosterThumb from "../assets/project-activism-poster-thumb.png";
-import luxuryFashionStandeeThumb from "../assets/project-luxury-fashion-standee-thumb.png";
-import citizenlinkThumb from "../assets/project-citizenlink-thumb.jpeg";
+import candidateScreeningDeclineEmail from "../assets/case-study-screenshots/candidate-screening-decline-email.webp";
+import invoiceProcessingThumb from "../assets/project-invoice-processing-thumb.webp";
+import invoiceProcessingSlackAlerts from "../assets/case-study-screenshots/invoice-processing-slack-alerts.webp";
+import restaurantStandeeThumb from "../assets/project-restaurant-standee-thumb.webp";
+import wellnessFlyerThumb from "../assets/project-wellness-flyer-thumb.webp";
+import sportsBillboardThumb from "../assets/project-sports-billboard-thumb.webp";
+import candyPackagingThumb from "../assets/project-candy-packaging-thumb.webp";
+import coffeeBrandThumb from "../assets/project-coffee-brand-thumb.webp";
+import activismPosterThumb from "../assets/project-activism-poster-thumb.webp";
+import luxuryFashionStandeeThumb from "../assets/project-luxury-fashion-standee-thumb.webp";
+import citizenlinkThumb from "../assets/project-citizenlink-thumb.webp";
 
 /**
  * A single real project. Everything the Portfolio grid card needs (title,
