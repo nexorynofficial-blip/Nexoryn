@@ -20,7 +20,7 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Reveal from "../components/ui/Reveal";
-import { getProjectBySlug as staticProjectBySlug } from "../data/projects";
+import { getProjectBySlug as staticProjectBySlug } from "../data/projectsFull";
 import { getProjectBySlug } from "../lib/content";
 import { resolveIcon } from "../lib/iconMap";
 

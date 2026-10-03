@@ -327,3 +327,63 @@ Tried and **reverted** (each measured against the step 1 build, alternating runs
 Conclusion: the remaining cost is mostly one-time page layout and animation-library start-up,
 which these re-orderings don't remove. Further drops would need to remove work (less DOM/CSS, a
 lighter intro, or dropping analytics from the page-load window), not reschedule it.
+
+## Result of step 1 on the live site, and the small fixes that followed
+
+Live PageSpeed (desktop) after step 1: **96** (was 59). Blocking time 50 ms (30/30), Speed Index
+1.8 s (7/10), largest paint 0.9 s (24/25), layout shift 0.006 (25/25), first paint 0.8 s (10/10).
+
+Small fixes from the report's remaining findings:
+| Finding | Fix | Verified |
+|---|---|---|
+| `load-fonts.js` render-blocking (160 ms) | `defer` | in built HTML |
+| LCP image discovered late (poster requested by the video after React rendered) | `<link rel="preload" as="image" fetchpriority="high" media="(min-width: 768px)">` for the hero poster (Vite rewrites it to the hashed file) | poster now requested at 42 ms by the page head, was 539 ms; phones fetch neither poster nor video |
+| Oversized images (82 KiB) | Navbar/footer logo 1200 px -> 480 px (26 -> 11 KB); hero mark gets a 256 px copy (35 -> 7 KB); About page keeps the full logo | no broken images |
+| Hero video only cached 7 days | Moved from `public/` to `src/assets/` so it gets a content hash and the existing one-year immutable cache for `/assets/*` (removed the special rule in `vercel.json`) | plays from `/assets/hero-bg-<hash>.mp4` |
+| Non-composited animation (pulsing dot animated `box-shadow`) | Glow moved to a pseudo-element that animates opacity/scale | animation present on `::after` |
+
+Not changed: the intro speed (the only remaining lever aimed at Speed Index; it is a design
+choice), and the laptop-frame image (its sizing is tied to measured screen coordinates).
+
+## Mobile report (PageSpeed 74): what was found and fixed
+
+Live mobile PageSpeed before these fixes: **74**: first paint 3.6 s (3/10), largest paint 4.5 s
+(9/25), blocking time 110 ms (29/30), layout shift 0.005 (25/25), Speed Index 4.7 s (7/10).
+
+### Tried and rejected: static "boot plate" in the HTML
+Painting the intro's orange screen from plain HTML moved first paint from ~3.8 s to ~0.77 s in my
+phone-profile test, but total blocking time jumped from ~0.6 s to ~2.5 s. Lighthouse counts blocking
+time only *after* first paint, and the app's heavy start-up work currently happens *before* it, which
+is exactly why mobile blocking time is a near-perfect 110 ms. An early first paint would move that
+work into the counted window (trading ~7 first-paint points for ~29 blocking-time points). Reverted.
+Lesson: do not add anything that makes first paint earlier unless the work after it is also small.
+
+### Changes kept
+1. **Case-study data split out of the main bundle.** `src/data/projects.js` was 223 KB of source
+   (190 KB minified, a third of the main JavaScript) because every project's full case-study text
+   shipped to every home-page visitor. It is now three files: `projects.js` (the 10 KB card list),
+   `projectCaseStudies.js` (the long content, keyed by slug) and `projectsFull.js` (the two combined).
+   Only the case-study page imports the full version (`lib/content.js` loads it on demand).
+   Main bundle 575 KB -> 414 KB minified (184 -> 132 KB gzip); ~50 KB less transferred up front.
+   **Verified identical:** the combined data deep-equals the original for all 16 projects (icons and
+   image paths included), and every case-study page matches the old build across 87 tab views.
+2. **Preload of the hero wordmark font** (`TachyonW00-Regular.ttf`). It was the last item in the
+   loading chain (requested at ~2.4 s on the phone profile); now requested at ~0.2 s from the HTML.
+   This also targets the "NEXORYN" heading layout shift in the report.
+3. **Preconnect to the API origin** (`%VITE_API_BASE_URL%`, filled in at build time); Lighthouse
+   estimated ~310 ms of largest-paint savings.
+4. (From the desktop round, also relevant here) `load-fonts.js` is now `defer`; it was the biggest
+   render-blocking item on mobile (470 ms).
+
+### Measured (phone profile, 4x CPU, slow 4G, no GPU, before vs after all of today's mobile fixes)
+First paint ~3.5-3.8 s -> ~3.5-3.6 s, largest paint unchanged within noise (~5.0-5.2 s locally),
+transferred 787 KB -> 737 KB, blocking time unchanged within noise, layout shift unchanged. Desktop
+unchanged within noise. These are small gains by design: the remaining mobile time is the app's
+JavaScript (React, GSAP, Framer Motion) being downloaded and run before anything paints.
+
+### What remains, and why
+- **Largest paint (4.5 s)** is the hero paragraph, which fades in right after the intro; the report
+  attributes 2.5 s of that to render delay. Only a shorter intro (a design choice) or far less
+  JavaScript moves it meaningfully.
+- **Main bundle** is now mostly essential libraries: react-dom 174 KB, GSAP 110 KB, Framer Motion
+  ~125 KB, router 40 KB (minified). Cutting those would mean replacing the animation libraries.

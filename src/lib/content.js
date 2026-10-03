@@ -12,7 +12,10 @@
 // Set VITE_API_BASE_URL to point at the backend. Leave it unset and the site
 // runs purely on static data, exactly as it did before the backend existed.
 
-import { PROJECTS, getProjectBySlug as staticProjectBySlug } from "../data/projects";
+// The light list only: the long case-study content is a separate module that
+// is loaded on demand (see getProjectBySlug below), so it is not part of the
+// bundle every visitor downloads.
+import { PROJECTS } from "../data/projects";
 import { SERVICE_CATEGORIES } from "../data/services";
 import { REVIEWS } from "../data/reviews";
 import { assetUrl } from "./assetUrl";
@@ -71,7 +74,10 @@ export async function getProjects() {
 
 export async function getProjectBySlug(slug) {
   const data = await apiGet(`/api/v1/projects/${encodeURIComponent(slug)}`);
-  if (!data?.slug) return staticProjectBySlug(slug);
+  if (!data?.slug) {
+    const { getProjectBySlug: staticProjectBySlug } = await import("../data/projectsFull");
+    return staticProjectBySlug(slug);
+  }
   return withResolvedImages(data);
 }
 

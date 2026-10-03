@@ -73,8 +73,8 @@ export default function Footer() {
               <img
                 src={nexorynFullLogo}
                 alt="Nexoryn"
-                width={1200}
-                height={319}
+                width={480}
+                height={128}
                 loading="lazy"
                 decoding="async"
                 className="h-12 w-auto grayscale brightness-200 md:grayscale-0 md:brightness-100"

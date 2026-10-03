@@ -15,6 +15,7 @@
          are only warmed (dns-prefetch) because gtag now loads after idle. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="%VITE_API_BASE_URL%" crossorigin />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
@@ -27,7 +28,33 @@
       as="style"
       href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@800&display=swap"
     />
-    <script src="/load-fonts.js"></script>
+    <script src="/load-fonts.js" defer></script>
+
+    <!-- The hero wordmark's font. Without this the browser only discovers it after
+         the CSS is parsed and the text is laid out, so it arrives last in the
+         loading chain and the heading re-flows when it lands (the layout shift
+         Lighthouse reports on "NEXORYN"). Fonts must be preloaded with
+         crossorigin even when same-origin. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/ttf"
+      href="/fonts/TachyonW00-Regular.ttf"
+      crossorigin
+    />
+
+    <!-- The hero video's poster is the largest element on desktop, but it is
+         only requested once React has rendered the <video>. Preloading it lets
+         the browser start the download immediately. Desktop only: the video
+         (and poster) are not mounted on phones. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/src/assets/hero-bg.webp"
+      type="image/webp"
+      fetchpriority="high"
+      media="(min-width: 768px)"
+    />
 
     <!-- Site base colour as the very first paint, so there's no white flash
          between the browser's default canvas and React mounting.

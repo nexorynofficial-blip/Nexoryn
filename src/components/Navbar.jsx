@@ -146,8 +146,8 @@ export default function Navbar() {
           <img
             src={nexorynFullLogo}
             alt="Nexoryn"
-            width={1200}
-            height={319}
+            width={480}
+            height={128}
             className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:group-hover:scale-105"
           />
         </Link>

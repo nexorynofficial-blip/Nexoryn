@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import heroBg from "../assets/hero-bg.webp";
-import nexorynLogo from "../assets/nexoryn-logo.webp";
+import nexorynLogo from "../assets/nexoryn-logo-sm.webp";
+import heroVideo from "../assets/hero-bg.mp4";
 import StatsColumn from "./StatsColumn";
 import InfoCard from "./InfoCard";
 import SplitText from "./ui/SplitText";
@@ -93,7 +94,7 @@ export default function Hero() {
             aria-label="Man wearing futuristic glowing AR glasses"
             className="absolute inset-0 h-full w-full object-cover object-[center_top]"
           >
-            <source src="/hero-bg.mp4" type="video/mp4" />
+            <source src={heroVideo} type="video/mp4" />
           </video>
         )}
       </div>
@@ -183,8 +184,8 @@ export default function Hero() {
           <img
             src={nexorynLogo}
             alt="Nexoryn"
-            width={1200}
-            height={1200}
+            width={256}
+            height={256}
             className="hero-mark hidden h-16 w-16 opacity-50 lg:block"
           />
           <div className="hero-card hidden lg:block">
