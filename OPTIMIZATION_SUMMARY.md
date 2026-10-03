@@ -269,3 +269,61 @@ assumed. Re-run PageSpeed on the deployed site to see the real change.
 The plate is still opaque orange, so the page underneath is not *visible* until it fades; it is
 scrollable and clickable (blindly) during the ~1.3 s. Making the page visible through it would
 change the intro's look.
+
+## Step 1 (from the desktop PageSpeed report): background shader on devices with no GPU
+
+### Diagnosis
+Desktop PageSpeed was 59: layout shift, largest paint and first paint were already full marks;
+the missing ~41 points were Total Blocking Time (7.9 s) and Speed Index (6.8 s). The report showed
+"Other: 30.7 s" of main-thread time but only ~1 s of script evaluation. Cause (verified): the
+site-wide animated background is a full-screen fragment shader, and Lighthouse's test machine has no
+GPU, so the browser draws it on the CPU every frame and starves the page. In a no-GPU Chrome with
+the CPU slowed 3x: blocking time 6.0-6.4 s with the shader, 0.3-0.6 s with it blocked. The page's
+blur/glass effects made no difference.
+
+### Changes
+1. **`src/lib/gpu.js`** detects software-only WebGL (`failIfMajorPerformanceCaveat` plus the
+   driver's renderer name: SwiftShader, llvmpipe, etc.).
+2. **`src/components/SiteBackground.jsx`**: with real graphics hardware, the animated shader loads
+   exactly as before. Without it, the shader (and three.js, 520 KB) is never loaded and a still
+   frame of the same background is shown instead (`site-bg-still.webp` 16 KB desktop,
+   `site-bg-still-mobile.webp` 12 KB phone, captured from the real shader). `?perf=1` logs which
+   one was chosen and why; marks `background-shader` / `background-still`.
+3. **`src/components/ui/ColorBends.jsx`** (for everyone with a GPU): renders at half resolution
+   (`RENDER_SCALE = 0.5`, 4x fewer pixels) and caps at 30 fps (`MAX_FPS`). Side-by-side captures
+   of the old and new shader are indistinguishable apart from marginally softer edges.
+
+### Measured (Chrome with no GPU)
+| | Before | After |
+|---|---|---|
+| Desktop (CPU 3x): blocking time / long tasks | 6.2-6.4 s / 52-54 | 0.40-0.43 s / 8 |
+| Phone profile (4x CPU, slow 4G): blocking time / long tasks | 11.2-11.4 s / 104-109 | 0.9 s / 12 |
+| Phone profile: data transferred | 945 KB | 829 KB (no three.js) |
+
+On this machine's real Intel GPU, detection reports hardware and the shader runs as before. All
+pages load with no errors.
+
+### Behaviour change to know about
+Visitors on devices without graphics acceleration (some virtual machines, remote desktops, very old
+PCs, and Lighthouse itself) now see a still background instead of the moving one. Everyone else is
+unchanged.
+
+## Step 2 (trim remaining startup work): experiments and findings, no code kept
+
+With step 1 in place, what blocks the page in a no-GPU Chrome (CPU 3x, desktop) is ~190 ms from the
+page's own code plus ~140 ms from Google Analytics (total ~330 ms; measured by blocking the
+analytics requests). The page's own part is dominated by the intro's GSAP setup: its first
+computed-style read forces the browser to lay out the whole page in one task, and a second wave
+when the intro ends and the first-screen reveals start.
+
+Tried and **reverted** (each measured against the step 1 build, alternating runs):
+| Idea | Result |
+|---|---|
+| `content-visibility: auto` on the below-the-fold sections | No consistent change (noise) |
+| Mount the home sections one per task after the hero | First paint earlier (1.7 s -> 0.9 s) but blocking time **worse** (~330 -> 540-700 ms): slices land after first paint, where blocking is counted, and each is still over 50 ms |
+| Start reveal animations one per frame instead of together | Same or slightly worse (~300 -> 310-350 ms) |
+| Pre-reading element styles in one batch (earlier round) | No change |
+
+Conclusion: the remaining cost is mostly one-time page layout and animation-library start-up,
+which these re-orderings don't remove. Further drops would need to remove work (less DOM/CSS, a
+lighter intro, or dropping analytics from the page-load window), not reschedule it.

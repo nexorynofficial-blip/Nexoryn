@@ -107,6 +107,15 @@ void main() {
 }
 `;
 
+// The bands are soft gradients, so the shader doesn't need to run at full
+// screen resolution: drawing at RENDER_SCALE x the display size is visually
+// indistinguishable but is (1/RENDER_SCALE)^2 times fewer pixels per frame.
+// Capping at MAX_FPS likewise halves the work on 60 Hz screens; a slow
+// drift doesn't read as choppy at 30.
+const RENDER_SCALE = 0.5;
+const MAX_FPS = 30;
+const MIN_FRAME_MS = 1000 / MAX_FPS - 2;
+
 export default function ColorBends({
   className,
   style,
@@ -190,7 +199,9 @@ export default function ColorBends({
       typeof window !== "undefined" &&
       window.matchMedia("(pointer: coarse)").matches;
     const dprCap = isCoarsePointer ? 1.5 : 2;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, dprCap) * RENDER_SCALE,
+    );
     renderer.setClearColor(0x000000, transparent ? 0 : 1);
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
@@ -243,7 +254,13 @@ export default function ColorBends({
       window.addEventListener("resize", handleResize);
     }
 
-    const loop = () => {
+    let lastDraw = 0;
+    const loop = (now) => {
+      rafRef.current = requestAnimationFrame(loop);
+      // Skip frames beyond MAX_FPS. The next one is already scheduled.
+      if (now - lastDraw < MIN_FRAME_MS) return;
+      lastDraw = now;
+
       const dt = clock.getDelta();
       const elapsed = clock.elapsedTime;
       material.uniforms.uTime.value = elapsed;
@@ -260,7 +277,6 @@ export default function ColorBends({
       cur.lerp(tgt, amt);
       material.uniforms.uPointer.value.copy(cur);
       renderer.render(scene, camera);
-      rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
 
