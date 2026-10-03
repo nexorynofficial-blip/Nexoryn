@@ -1,24 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
+import { useAfterIdle } from "../hooks/useAfterIdle";
 
 // The shader pulls in all of three.js (~half a megabyte). Loading it lazily
 // and only once the browser is idle keeps it off the critical path: the page
 // paints on the plain black base below, and the shader fades in afterwards.
 const ColorBends = lazy(() => import("./ui/ColorBends"));
-
-/** True once the main thread has gone idle (or after `timeout` ms regardless). */
-function useAfterIdle(timeout = 2500) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const start = () => setReady(true);
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(start, { timeout });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = setTimeout(start, 800);
-    return () => clearTimeout(id);
-  }, [timeout]);
-  return ready;
-}
 
 /** Nexoryn brand palette — black and orange only. */
 export const SITE_COLOR_BENDS = {
@@ -43,7 +29,7 @@ export const SITE_COLOR_BENDS = {
  * restarting per section.
  */
 export function SiteBackground() {
-  const ready = useAfterIdle();
+  const ready = useAfterIdle(2500, "background-ready");
   return (
     <div
       className="pointer-events-none fixed inset-0 z-0 bg-black"

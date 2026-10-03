@@ -104,3 +104,32 @@ Honest caveats:
 - On a phone: no hero video, fonts apply, nothing jumps.
 - Google Analytics Realtime still records a visit.
 - Open any page with `?perf=1` and check the console shows the metrics.
+
+## Animation libraries: what loads when
+
+| Library / feature | Where | When it loads |
+|---|---|---|
+| React, React Router | main bundle | Immediately (needed to render anything) |
+| GSAP + ScrollTrigger, Lenis, Framer Motion | main bundle | Immediately. Deliberately **not** deferred: the 3-second intro is a GSAP timeline and every reveal waits for it, so delaying GSAP would delay first paint and leave content hidden. Measured script evaluation for all of it is ~0.15 s of real CPU; the cost was the animation *setup*, which is now lazy (below). |
+| Scroll reveals (`Reveal`, `SplitText`) | per element | Each animation is created only when its element nears the screen (IntersectionObserver). Hidden state is plain CSS until then. |
+| three.js + background shader | separate chunk (~520 KB) | After the browser is idle (`requestIdleCallback`, max 2.5 s). Mark: `background-ready`. |
+| Reviews marquee (40 cards) | `Reviews.jsx` | After idle (max 3 s), behind a placeholder of identical height, so nothing shifts. Mark: `reviews-ready`. |
+| About page 3D globe | `AboutPage` route chunk | Only when visiting /about. |
+| Other pages | one chunk each | Only when visited. |
+| Google Analytics | `public/gtag-init.js` | After the page `load` event and idle. |
+
+Open any page with `?perf=1` and the console prints the timeline, including the `background-ready`
+and `reviews-ready` marks, so you can see these happen after content is visible. Example from a
+local run: `background-ready` at ~2.4 s, `reviews-ready` at ~2.4 s.
+
+The shared hook is `src/hooks/useAfterIdle.js` (`requestIdleCallback`, with a timer fallback for
+Safari).
+
+### Why not defer GSAP / split it per route
+
+The proposed per-page loaders (`useHomePageAnimations`, route config, etc.) were not built.
+Nearly every component uses GSAP directly through `useGSAP`, the intro depends on it at startup, and
+the hidden-until-revealed state is waiting on the intro finishing. Making GSAP arrive late would
+move first paint later, and a failed load could leave sections permanently invisible. The
+route-level split is already handled by lazy pages; GSAP is shared by all of them so it stays in one
+cached chunk.

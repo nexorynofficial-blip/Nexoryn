@@ -4,6 +4,7 @@ import Reveal from "./ui/Reveal";
 import { REVIEWS } from "../data/reviews";
 import { getReviews } from "../lib/content";
 import { useContent } from "../hooks/useContent";
+import { useAfterIdle } from "../hooks/useAfterIdle";
 
 const toTestimonials = (reviews) =>
   reviews.map((review) => ({
@@ -14,6 +15,10 @@ const toTestimonials = (reviews) =>
 export default function Reviews() {
   const reviews = useContent(getReviews, REVIEWS);
   const testimonials = toTestimonials(reviews);
+  // The marquee is ~40 glass cards, far below the fold. Mount it once the
+  // browser is idle so it isn't part of the first layout; the placeholder
+  // matches the strip's height (card + 8px padding each side) so nothing shifts.
+  const stripReady = useAfterIdle(3000, "reviews-ready");
 
   return (
     <section
@@ -36,7 +41,11 @@ export default function Reviews() {
       </div>
 
       <Reveal y={40} duration={1.1} className="relative z-20">
-        <TestimonialsSection testimonials={testimonials} className="mt-12" />
+        {stripReady ? (
+          <TestimonialsSection testimonials={testimonials} className="mt-12" />
+        ) : (
+          <div aria-hidden="true" className="mt-12 h-[186px] sm:h-[236px]" />
+        )}
       </Reveal>
 
       {/* Soft blend into the CTA section below, mirroring the Hero's own

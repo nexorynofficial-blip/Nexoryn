@@ -31,6 +31,11 @@
     }
   }
 
+  // Named marks from the app (background-ready, reviews-ready, ...)
+  observe("mark", function (e) {
+    log("mark " + e.name, Math.round(e.startTime) + " ms");
+  });
+
   // Paint timings
   observe("paint", function (e) {
     log(e.name, Math.round(e.startTime) + " ms");
