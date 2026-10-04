@@ -7,7 +7,7 @@ const WORD = "NEXORYN";
 // Playback speed of the whole intro. Every duration, delay and stagger in
 // both timelines is scaled together, so the choreography is unchanged,
 // just faster. 1 = the original timing.
-const INTRO_SPEED = 3;
+const INTRO_SPEED = 1.2;
 
 // Deliberately limited to squared, technical-looking glyphs — a scramble that
 // cycles through lowercase or punctuation reads as "corrupted text" instead of
@@ -34,7 +34,7 @@ function pageReady(capMs = 800) {
  * black, then the camera "flies into" the word as a black iris floods out from
  * its centre and hands off to the (already black) page underneath.
  *
- * Runs at INTRO_SPEED x (3 = a third of the original ~3.5 s) and never blocks the
+ * Runs at INTRO_SPEED x (1.2 = the original ~3.5 s in about 3 s) and never blocks the
  * page: the plate ignores pointer events, so clicks reach the content
  * beneath it, and page scroll is not locked while it plays.
  */
@@ -65,7 +65,7 @@ export default function Preloader({ onComplete }) {
       // stops the timeline reaching its end — a killed context, a promise
       // that never settles — would leave the site hidden behind it. If the
       // intro hasn't handed off by now, drop it and show the page.
-      const failsafe = setTimeout(finish, 4000);
+      const failsafe = setTimeout(finish, 6000);
 
       if (reduced) {
         // Reduced motion still holds for assets, but gets no zoom and no
