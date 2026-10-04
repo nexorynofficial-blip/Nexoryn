@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:admin": "cd admin && bun run dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/seo-pages.mjs",
     "build:admin": "cd admin && bun run build",
     "build:all": "bun run build && bun run build:admin",
     "lint": "oxlint",
