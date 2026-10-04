@@ -467,3 +467,12 @@ Result: JavaScript needed before first paint **190 KB -> 105 KB gzip (-45%)**; m
 - `react` and `react-dom` remain in `package.json` as peer dependencies of the libraries; the build never bundles them.
 - Components must use `m.div` (not `motion.div`): `<LazyMotion strict>` will warn if `motion.*` is used.
 - If a library ever misbehaves on Preact, the fallback is to restore `@vitejs/plugin-react` in `vite.config.js`.
+
+### Deploy fix after round 4
+The first deploy of the Preact change failed in the **admin build** (not the site): Vercel builds the admin with the
+*root* project's installed packages (admin/node_modules is not installed there), and `admin/vite.config.ts` imported
+`@vitejs/plugin-react`, which the root no longer installs. Fix: the admin config now loads that plugin only if it is
+available (it only adds local-dev hot reload; the JSX transform comes from the admin's tsconfig `react-jsx`).
+Re-adding the plugin to the root was not an option: with `@preact/preset-vite` present, npm cannot resolve the plugin's
+optional Babel peer (ERESOLVE). Verified by running `bun run build:all` with `admin/node_modules` moved aside, then
+loading the built admin login page (renders, no errors) and the main site from the same output.
