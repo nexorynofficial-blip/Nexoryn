@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useInView, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import SplitText from "./ui/SplitText";
 import { Eyebrow } from "./ui/Eyebrow";
@@ -96,7 +96,7 @@ function Counter({ index, total, running, className = "" }) {
       <span className="relative h-px w-16 overflow-hidden bg-white/15">
         {running && (
           // Remounts per slide, so it always tracks the live autoplay timer.
-          <motion.span
+          <m.span
             key={index}
             className="absolute inset-0 origin-left bg-gradient-to-r from-accent-from to-accent-to"
             initial={{ scaleX: 0 }}
@@ -244,7 +244,7 @@ export default function Portfolio() {
             >
               <div className="absolute overflow-hidden bg-[#0a0a0a]" style={SCREEN_BOX}>
                 <AnimatePresence initial={false} custom={dir}>
-                  <motion.div
+                  <m.div
                     key={current.slug}
                     custom={dir}
                     variants={slideVariants}
@@ -258,7 +258,7 @@ export default function Portfolio() {
                     className="absolute inset-0 flex items-center justify-center"
                   >
                     <ScreenImage project={current} />
-                  </motion.div>
+                  </m.div>
                 </AnimatePresence>
               </div>
               {/* Drawn over the screen box: its opaque bezel is what frames
@@ -296,7 +296,7 @@ export default function Portfolio() {
             {featured.map((project, i) => {
               const active = i === index;
               return (
-                <motion.div
+                <m.div
                   key={project.slug}
                   className={`col-start-1 row-start-1 ${active ? "" : "pointer-events-none"}`}
                   initial={false}
@@ -322,7 +322,7 @@ export default function Portfolio() {
                     </span>
                     <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/case:-translate-y-0.5 group-hover/case:translate-x-0.5" />
                   </Link>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>

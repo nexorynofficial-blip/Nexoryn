@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   Zap,
   Code2,
@@ -76,7 +76,7 @@ function TabBar({ tabs, activeIndex, onSelect, gooeyId }) {
 
   return (
     <div className="no-scrollbar relative flex gap-2 overflow-x-auto">
-      <motion.div
+      <m.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent-from to-accent-to"
         style={{ filter: `url(#${gooeyId})` }}
@@ -136,7 +136,7 @@ function InfoPanel({ icon: OverviewIcon, heading, body }) {
 
       {/* Block 3: category photo/graphic — expands to fill whatever
           vertical space the heading + summary blocks leave behind. */}
-      <motion.div
+      <m.div
         variants={blurFadeIn}
         initial="hidden"
         whileInView="show"
@@ -156,7 +156,7 @@ function InfoPanel({ icon: OverviewIcon, heading, body }) {
             <OverviewIcon className="h-9 w-9 text-accent-to" strokeWidth={1.5} />
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -318,7 +318,7 @@ export function ServiceBox({
       </div>
 
       {/* Desktop: original InfoPanel + tabbed sub-services, unchanged */}
-      <motion.div
+      <m.div
         layout
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="hidden md:flex md:flex-col md:gap-8 lg:flex-row lg:items-stretch lg:gap-10"
@@ -328,9 +328,9 @@ export function ServiceBox({
         <div className="min-w-0 flex-1">
           <TabBar tabs={tabs} activeIndex={activeIndex} onSelect={setActiveIndex} gooeyId={gooeyId} />
 
-          <motion.div layout transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="mt-8">
+          <m.div layout transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="mt-8">
             <AnimatePresence mode="wait" initial={false}>
-              <motion.div
+              <m.div
                 key={activeId}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -338,11 +338,11 @@ export function ServiceBox({
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 <SubServicePanel sub={subServices[activeIndex]} />
-              </motion.div>
+              </m.div>
             </AnimatePresence>
-          </motion.div>
+          </m.div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

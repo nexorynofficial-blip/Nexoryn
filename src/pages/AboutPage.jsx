@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Target, Eye } from "lucide-react";
 import { staggerContainer, blurFadeIn, viewportOnce } from "../lib/motion";
 import SplitText from "../components/ui/SplitText";
@@ -50,7 +50,7 @@ const TEAM = [
 
 function TeamCard({ photo, name, role }) {
   return (
-    <motion.div
+    <m.div
       variants={blurFadeIn}
       className="mx-auto flex w-full max-w-[380px] flex-col overflow-hidden rounded-2xl glass-panel p-6"
     >
@@ -69,13 +69,13 @@ function TeamCard({ photo, name, role }) {
         {name}
       </h3>
       <p className="mt-1 text-sm font-light text-white/50">{role}</p>
-    </motion.div>
+    </m.div>
   );
 }
 
 function MissionVisionBox({ icon: Icon, heading, body }) {
   return (
-    <motion.div
+    <m.div
       variants={blurFadeIn}
       className="rounded-3xl glass-panel p-6 backdrop-blur-xl md:p-8"
     >
@@ -88,7 +88,7 @@ function MissionVisionBox({ icon: Icon, heading, body }) {
       <p className="mt-3 text-sm font-light leading-relaxed text-body-dim md:text-base">
         {body}
       </p>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -108,20 +108,20 @@ export default function AboutPage() {
         <SectionsBackground />
         <div className="relative z-10 w-full px-4 pb-12 pt-32 md:px-10 lg:px-[300px] lg:pt-40">
           {/* Section 1 — Agency Intro */}
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             animate="show"
             className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20"
           >
-            <motion.div
+            <m.div
               variants={blurFadeIn}
               className="mx-auto w-full max-w-[300px] sm:max-w-[420px] lg:mx-0 lg:ml-[-40px] lg:max-w-[540px]"
             >
               <img src={nexorynLogo} alt="Nexoryn logo" width={1200} height={1200} className="h-auto w-full" />
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={blurFadeIn}>
+            <m.div variants={blurFadeIn}>
               <SplitText
                 animateOnMount
                 delay={0.15}
@@ -132,11 +132,11 @@ export default function AboutPage() {
               <p className="mt-5 text-lg font-light leading-relaxed text-body-dim">
                 {INTRO_PARAGRAPH}
               </p>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
 
           {/* Section 2 — Our Mission & Our Vision */}
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
@@ -155,10 +155,10 @@ export default function AboutPage() {
                 <MissionVisionBox key={item.heading} {...item} />
               ))}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Section 3 — Our Team */}
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
@@ -176,11 +176,11 @@ export default function AboutPage() {
                 <TeamCard key={member.name} {...member} />
               ))}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Section 4 — Global Presence */}
           <div className="mt-28 grid grid-cols-1 items-center gap-12 lg:mt-36 lg:grid-cols-2 lg:gap-20">
-            <motion.div
+            <m.div
               variants={staggerContainer}
               initial="hidden"
               whileInView="show"
@@ -190,16 +190,16 @@ export default function AboutPage() {
               <SplitText className="mt-6 font-heading text-3xl leading-tight tracking-tight text-white md:text-5xl">
                 Global <span className="text-accent-from">Reach</span>
               </SplitText>
-              <motion.p
+              <m.p
                 variants={blurFadeIn}
                 className="mt-5 text-lg font-light leading-relaxed text-body-dim"
               >
                 Nexoryn works with clients across multiple countries and time
                 zones, automation and design don't stop at a border.
-              </motion.p>
-            </motion.div>
+              </m.p>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={viewportOnce}
@@ -207,7 +207,7 @@ export default function AboutPage() {
               className="relative order-1 h-[340px] w-full sm:h-[400px] lg:order-2 lg:h-[460px]"
             >
               <AboutGlobe />
-            </motion.div>
+            </m.div>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useTilt3D } from "../hooks/useTilt3D";
 
 // `slug` must match a SERVICE_CATEGORIES id in data/services.js — the
@@ -15,7 +15,7 @@ export default function InfoCard({ className = "" }) {
 
   return (
     <div className={className} style={{ perspective: 1000 }}>
-      <motion.div
+      <m.div
         ref={tilt.ref}
         onMouseMove={tilt.onMouseMove}
         onMouseLeave={tilt.onMouseLeave}
@@ -68,7 +68,7 @@ export default function InfoCard({ className = "" }) {
             View Our Work
           </Link>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

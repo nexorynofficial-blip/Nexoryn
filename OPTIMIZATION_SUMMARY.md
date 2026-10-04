@@ -431,3 +431,39 @@ Mobile first paint is bounded by downloading and running React, GSAP and Framer 
 paint. Painting something earlier (a static first screen) was tested and rejected because it moves that
 work into the part Lighthouse counts as blocking time. 99 on mobile is not realistic without replacing
 the animation stack or moving to pre-rendered pages.
+
+## Round 4: less JavaScript before first paint (Preact + light Framer Motion core)
+
+Live mobile PageSpeed before this round: **83** (first paint 3.2 s, largest paint 3.4 s, blocking time 80 ms,
+Speed Index 3.9 s). Direction given: anything is allowed except removing animations.
+
+### Where the phone's time is
+Once the first-layout cost was cut (round 3), the phone's first paint is: download the JavaScript (about 0.7 s
+at the test's 1.6 Mbps), then run it. So bytes matter directly. A static first screen was already rejected
+(it moves work into the part Lighthouse counts as blocking time).
+
+### Changes
+1. **Preact instead of React** (`vite.config.js`: `@preact/preset-vite` replaces `@vitejs/plugin-react`; `preact` and
+   the preset added to `package.json`/lockfiles). Preact's React-compatibility layer aliases `react`/`react-dom` for
+   the router, Framer Motion and GSAP's React hook too; **no component code changed**. React's 174 KB (min) runtime
+   becomes ~15 KB. Works in `vite build` and in the dev server.
+2. **Framer Motion's light core + lazily loaded feature pack** (14 files: `motion.x` -> `m.x`; `<LazyMotion>` in
+   `App.jsx`; `src/lib/motionFeatures.js`). The ~22 KB (gz) feature pack (animations, gestures, in-view, layout)
+   loads right after first paint instead of before it. Animations are unchanged.
+
+Result: JavaScript needed before first paint **190 KB -> 105 KB gzip (-45%)**; main file 129 KB -> 44 KB gzip.
+
+### Verified (old live build vs new build)
+- Every page loads with zero JavaScript errors; navigation through the router, the back button and scroll-to-top behave identically.
+- Interactions identical: portfolio carousel next/previous, navbar hide/show on scroll, progress bar, phone menu open/close,
+  FAQ accordion, form typing, case-study tabs, services filter.
+- Animations still *animate*: sampled mid-fade elements while the phone menu opens (9 vs 9) and on the About page scroll-in (7 vs 7).
+- Whole-page screenshots at desktop and phone widths: largest difference 0.4% of pixels, none over 2%; page heights identical.
+- All 16 case studies, 87 tab views, full text content and images: 0 differences.
+- Phone profile (alternating runs, noisy machine): JavaScript ready ~0.5 s sooner and first paint ~0.45 s (about 7%) earlier;
+  blocking time slightly higher in the test harness (it is measured from first paint, which now comes sooner).
+
+### Notes for maintenance
+- `react` and `react-dom` remain in `package.json` as peer dependencies of the libraries; the build never bundles them.
+- Components must use `m.div` (not `motion.div`): `<LazyMotion strict>` will warn if `motion.*` is used.
+- If a library ever misbehaves on Preact, the fallback is to restore `@vitejs/plugin-react` in `vite.config.js`.

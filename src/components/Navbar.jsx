@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import nexorynFullLogo from "../assets/nexoryn-full-logo.webp";
 import MagneticButton from "./ui/MagneticButton";
@@ -19,7 +19,7 @@ const ROUTES = {
 
 function NavLink({ label, active, onClick, mobile = false }) {
   return (
-    <motion.button
+    <m.button
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.92 }}
@@ -34,13 +34,13 @@ function NavLink({ label, active, onClick, mobile = false }) {
       {!active && (
         <span className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-from/60 to-accent-to/60 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100" />
       )}
-      <motion.span
+      <m.span
         className="absolute bottom-0 left-0 h-0.5 w-full origin-left rounded-full bg-gradient-to-r from-accent-from to-accent-to"
         initial={false}
         animate={{ scaleX: active ? 1 : 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
       />
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -185,17 +185,17 @@ export default function Navbar() {
           aria-expanded={menuOpen}
           className="flex h-10 w-10 cursor-pointer flex-col items-center justify-center gap-1.5 md:hidden"
         >
-          <motion.span
+          <m.span
             animate={menuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="h-0.5 w-6 rounded-full bg-white"
           />
-          <motion.span
+          <m.span
             animate={menuOpen ? { opacity: 0, x: -8 } : { opacity: 1, x: 0 }}
             transition={{ duration: 0.2 }}
             className="h-0.5 w-6 rounded-full bg-white"
           />
-          <motion.span
+          <m.span
             animate={menuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="h-0.5 w-6 rounded-full bg-white"
@@ -214,7 +214,7 @@ export default function Navbar() {
       <AnimatePresence>
         {menuOpen && (
           <>
-            <motion.div
+            <m.div
               key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -224,7 +224,7 @@ export default function Navbar() {
               aria-hidden="true"
               className="fixed inset-0 z-0 bg-black/70 backdrop-blur-sm md:hidden"
             />
-            <motion.div
+            <m.div
               key="panel"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -232,7 +232,7 @@ export default function Navbar() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="relative z-10 overflow-hidden border-t border-glass-border bg-black/80 backdrop-blur-xl md:hidden"
             >
-              <motion.div
+              <m.div
                 variants={{
                   open: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
                   closed: {},
@@ -242,7 +242,7 @@ export default function Navbar() {
                 className="flex flex-col items-start gap-6 px-6 py-10 text-left"
               >
                 {LINKS.map((label) => (
-                  <motion.div
+                  <m.div
                     key={label}
                     variants={{
                       closed: { opacity: 0, y: -12 },
@@ -256,10 +256,10 @@ export default function Navbar() {
                       active={active === label}
                       onClick={() => handleClick(label)}
                     />
-                  </motion.div>
+                  </m.div>
                 ))}
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

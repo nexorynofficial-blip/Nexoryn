@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -302,7 +302,7 @@ export default function PortfolioPage() {
           </Reveal>
 
           {/* Toolbar — filter chips and search share one row on desktop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
@@ -320,21 +320,21 @@ export default function PortfolioPage() {
                 className="w-full rounded-full border border-white/10 bg-white/[0.05] py-3 pl-11 pr-4 text-sm text-white placeholder-white/40 backdrop-blur-xl transition duration-300 focus:border-orange-400/40 focus:outline-none"
               />
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Grid — 2 wide split-layout cards per row on desktop */}
           {visible.length > 0 ? (
             <>
               <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {visiblePage.map((project) => (
-                  <motion.div
+                  <m.div
                     key={`${service}-${project.slug}`}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                   >
                     <ProjectCard project={project} />
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
 

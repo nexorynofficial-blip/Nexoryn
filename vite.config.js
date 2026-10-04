@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// Preact (via its React-compatibility layer) instead of React: same components and hooks,
+// ~10x smaller runtime. The preset also aliases react/react-dom to preact/compat for
+// every dependency (router, framer-motion, gsap's React hook) and wires up dev HMR.
+import preact from '@preact/preset-vite'
 import tailwindcss from '@tailwindcss/vite'
 
 // The admin sub-app is served with base "/cfokp/", so its dev server only
@@ -23,7 +26,7 @@ const adminTrailingSlash = {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), adminTrailingSlash],
+  plugins: [preact(), tailwindcss(), adminTrailingSlash],
   server: {
     port: 5173,
     proxy: {

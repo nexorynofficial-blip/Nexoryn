@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import { GlowCard } from "./ui/GlowCard";
 import { DefaultAvatar } from "./ui/DefaultAvatar";
@@ -91,7 +91,7 @@ export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
           // screen at a time, at exactly one position.
           const isOpen = active?.id === review.id;
           return (
-            <motion.div
+            <m.div
               key={review.id}
               ref={(el) => {
                 cardRefs.current[review.id] = el;
@@ -127,7 +127,7 @@ export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
                   </button>
                 </div>
               </GlowCard>
-            </motion.div>
+            </m.div>
           );
         })}
       </div>
@@ -144,7 +144,7 @@ export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
         <AnimatePresence>
           {active && anchorRect && (
             <>
-              <motion.div
+              <m.div
                 key="overlay"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -152,7 +152,7 @@ export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
                 className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm"
                 onClick={closeReview}
               />
-              <motion.div
+              <m.div
                 ref={modalRef}
                 // Rendered via a portal straight onto <body> on purpose: any
                 // transformed ancestor (Framer Motion leaves a lingering
@@ -201,7 +201,7 @@ export function ReviewCardStack({ reviews = ALL_REVIEWS }) {
                 <p className="mt-5 text-base font-light leading-relaxed text-body-dim">
                   {active.text}
                 </p>
-              </motion.div>
+              </m.div>
             </>
           )}
         </AnimatePresence>,

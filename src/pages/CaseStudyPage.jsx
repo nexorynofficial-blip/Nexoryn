@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
 import {
   ChevronDown,
@@ -81,7 +81,7 @@ const inner = (borderClass = "border-accent-from/30") =>
 function Sidebar({ project }) {
   const { caseStudy } = project;
   return (
-    <motion.aside
+    <m.aside
       initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
       animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -128,7 +128,7 @@ function Sidebar({ project }) {
       <p className="mt-6 border-t border-white/10 pt-5 text-sm leading-relaxed text-body-dim">
         {caseStudy.summary}
       </p>
-    </motion.aside>
+    </m.aside>
   );
 }
 
@@ -350,7 +350,7 @@ function TechnicalBreakdown({ sections }) {
 
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div
+          <m.div
             key="content"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -373,7 +373,7 @@ function TechnicalBreakdown({ sections }) {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -740,7 +740,7 @@ function ScreenshotsTab({ screenshots }) {
 }
 
 // Portal straight onto <body>: this tab sits inside several ancestor
-// motion.div's that animate in with a filter/transform, and Framer leaves
+// m.div's that animate in with a filter/transform, and Framer leaves
 // that transform on the element (even at rest) once the animation settles —
 // any non-"none" transform on an ancestor turns a descendant's
 // `position: fixed` into "fixed relative to that ancestor" instead of the
@@ -766,7 +766,7 @@ function ScreenshotLightbox({ shot, onClose }) {
   return createPortal(
     <AnimatePresence>
       {shot && (
-        <motion.div
+        <m.div
           key="lightbox-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -783,7 +783,7 @@ function ScreenshotLightbox({ shot, onClose }) {
             Close
           </button>
 
-          <motion.img
+          <m.img
             ref={panelRef}
             key={shot.src}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -794,7 +794,7 @@ function ScreenshotLightbox({ shot, onClose }) {
             alt={shot.alt}
             className="max-h-full max-w-full rounded-2xl object-contain shadow-[0_0_60px_rgba(0,0,0,0.6)]"
           />
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>,
     document.body,
@@ -1098,19 +1098,19 @@ export default function CaseStudyPage() {
       <div className="relative">
         <SectionsBackground />
         <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
-          <motion.div
+          <m.div
             variants={staggerContainer}
             initial="hidden"
             animate="show"
             className="mb-10"
           >
-            <motion.span
+            <m.span
               variants={blurFadeIn}
               className="text-xs font-bold uppercase tracking-[0.25em] text-accent-to"
             >
               Case Study
-            </motion.span>
-          </motion.div>
+            </m.span>
+          </m.div>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[340px_1fr] lg:items-start lg:gap-10">
             <Sidebar project={project} />
@@ -1119,7 +1119,7 @@ export default function CaseStudyPage() {
                 so the tab bar and every tab panel sit on solid charcoal with no
                 gaps exposing the aurora backdrop between them — the individual
                 cards then nest inside it as their own bordered panels. */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
@@ -1129,7 +1129,7 @@ export default function CaseStudyPage() {
 
               <div className="relative mt-6">
                 <AnimatePresence mode="wait">
-                  <motion.div
+                  <m.div
                     key={activeTab}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1188,10 +1188,10 @@ export default function CaseStudyPage() {
                         )}
                       </>
                     )}
-                  </motion.div>
+                  </m.div>
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </div>
 

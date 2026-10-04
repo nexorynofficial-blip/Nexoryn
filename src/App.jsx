@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { LazyMotion } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Preloader from "./components/Preloader";
 import ScrollProgress from "./components/ui/ScrollProgress";
@@ -21,6 +22,9 @@ const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const CookiePolicyPage = lazy(() => import("./pages/CookiePolicyPage"));
 import { SiteBackground } from "./components/SiteBackground";
+
+// Framer Motion's features load after first paint (see lib/motionFeatures.js).
+const loadMotionFeatures = () => import("./lib/motionFeatures").then((mod) => mod.default);
 
 function AppRoutes() {
   const location = useLocation();
@@ -55,6 +59,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <LazyMotion features={loadMotionFeatures} strict>
         <Preloader onComplete={() => setIntroDone(true)} />
         <ScrollProgress />
         <ScrollToTop />
@@ -76,6 +81,7 @@ export default function App() {
             thing on the page — with mix-blend-overlay it roughly halved the
             frame rate, and even as a plain opacity layer it still cost ~12fps.
             Scrolling it with the content instead is effectively free. */}
+      </LazyMotion>
     </BrowserRouter>
   );
 }

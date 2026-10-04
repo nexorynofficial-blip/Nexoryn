@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
@@ -70,7 +70,7 @@ export default function ServicesPage() {
           {/* Three independent service boxes, each with its own tab state */}
           <div className="mt-16 flex flex-col gap-10 md:mt-20 md:gap-14">
             {categories.map((category, i) => (
-              <motion.div
+              <m.div
                 key={category.id}
                 id={`service-${category.id}`}
                 initial={{ opacity: 0, y: 24 }}
@@ -90,7 +90,7 @@ export default function ServicesPage() {
                   subServices={category.subServices}
                   mobileSummary={category.mobileSummary}
                 />
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

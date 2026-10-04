@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   MessageCircleQuestion,
   CalendarClock,
@@ -49,7 +49,7 @@ function PhoneLink() {
       </a>
       <AnimatePresence>
         {copied && (
-          <motion.span
+          <m.span
             initial={{ opacity: 0, y: 4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
@@ -58,7 +58,7 @@ function PhoneLink() {
           >
             <Check className="h-3 w-3" />
             Copied
-          </motion.span>
+          </m.span>
         )}
       </AnimatePresence>
     </span>
@@ -138,7 +138,7 @@ function FormTab({ label, icon: Icon, active, onClick }) {
     >
       <Icon className="h-4 w-4 shrink-0" />
       <span className="font-heading tracking-tight">{label}</span>
-      <motion.span
+      <m.span
         className="absolute bottom-0 left-0 h-0.5 w-full origin-left rounded-full bg-gradient-to-r from-accent-from to-accent-to"
         initial={false}
         animate={{ scaleX: active ? 1 : 0 }}
@@ -226,7 +226,7 @@ function ContactFormPanel() {
         <div className="mt-6 min-h-[420px]">
           <AnimatePresence mode="wait" initial={false}>
             {submitted ? (
-              <motion.div
+              <m.div
                 key="success"
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -234,21 +234,21 @@ function ContactFormPanel() {
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="flex flex-col items-center py-14 text-center"
               >
-                <motion.div
+                <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
                   className="flex h-16 w-16 items-center justify-center rounded-full border border-status-green/30 bg-emerald-500/10"
                 >
                   <CheckCircle2 className="h-8 w-8 text-status-green" />
-                </motion.div>
+                </m.div>
                 <h3 className="mt-5 font-heading text-xl text-white">Message sent</h3>
                 <p className="mt-2 max-w-xs text-sm font-light leading-relaxed text-body-dim">
                   Thanks, we'll be in touch shortly.
                 </p>
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.form
+              <m.form
                 key={activeTab}
                 onSubmit={handleSubmit}
                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -319,7 +319,7 @@ function ContactFormPanel() {
                 >
                   {submitting ? "Sending…" : currentForm.submitLabel}
                 </button>
-              </motion.form>
+              </m.form>
             )}
           </AnimatePresence>
         </div>
@@ -398,14 +398,14 @@ export default function ContactPage() {
               <FaqAccordion className="mt-8" />
             </Reveal>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
               className="order-first lg:order-last lg:col-span-3"
             >
               <ContactFormPanel />
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </div>

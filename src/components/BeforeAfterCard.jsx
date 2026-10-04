@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useInView } from "framer-motion";
+import { AnimatePresence, m, useInView } from "framer-motion";
 import { useCountUp } from "../hooks/useCountUp";
 import { ZapIcon, TrendingUpIcon, TrendingDownIcon } from "./ui/Icons";
 
@@ -203,7 +203,7 @@ export default function BeforeAfterCard({ className = "" }) {
       {/* Header: state chip + icon */}
       <div className="flex items-center justify-between">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.span
+          <m.span
             key={after ? "after" : "before"}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -221,7 +221,7 @@ export default function BeforeAfterCard({ className = "" }) {
               }`}
             />
             {after ? "After Automation" : "Before Automation"}
-          </motion.span>
+          </m.span>
         </AnimatePresence>
         <ZapIcon
           className={`h-6 w-6 transition-colors duration-500 ${

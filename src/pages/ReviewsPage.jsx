@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
@@ -61,7 +61,7 @@ export default function ReviewsPage() {
           </Reveal>
 
           {/* Expandable review card stack */}
-          <motion.div
+          <m.div
             key={activeService}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,7 +69,7 @@ export default function ReviewsPage() {
             className="mt-10"
           >
             <ReviewCardStack reviews={filteredReviews} />
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Soft blend into the CTA section below, mirroring the Hero's own

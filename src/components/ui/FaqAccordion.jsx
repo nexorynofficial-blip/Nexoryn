@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { getFaqs } from "../../lib/content";
 import { useContent } from "../../hooks/useContent";
@@ -73,7 +73,7 @@ export default function FaqAccordion({ items, className = "" }) {
 
             <AnimatePresence initial={false}>
               {isOpen && (
-                <motion.div
+                <m.div
                   key="content"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
@@ -84,7 +84,7 @@ export default function FaqAccordion({ items, className = "" }) {
                   <p className="px-6 pb-5 text-sm font-light leading-relaxed text-body-dim md:px-8 md:pb-6 md:text-base">
                     {item.answer}
                   </p>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>

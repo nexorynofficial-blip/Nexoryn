@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useState } from "react";
 
 /**
@@ -33,7 +33,7 @@ export function AnimatedList({
           shift smoothly while the old item fades out — no two-phase stutter */}
       <AnimatePresence initial={false} mode="popLayout">
         {visible.map(({ id, item }) => (
-          <motion.div
+          <m.div
             key={id}
             layout
             initial={{ opacity: 0, y: -30, scale: 0.9 }}
@@ -42,7 +42,7 @@ export function AnimatedList({
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {item}
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>
