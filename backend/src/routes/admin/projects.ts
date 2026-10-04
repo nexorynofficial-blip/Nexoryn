@@ -5,6 +5,7 @@ import { authMiddleware } from "../../middleware/auth";
 import { projectInputSchema } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
+import { pingIndexNow } from "../../services/indexnow";
 
 const router = Router();
 router.use(authMiddleware);
@@ -49,6 +50,7 @@ router.post(
       include: { photo: true },
     });
 
+    await pingIndexNow([`/portfolio/${project.slug}`, "/portfolio", "/sitemap.xml"]);
     res.status(201).json(project);
   }),
 );
@@ -73,6 +75,10 @@ router.put(
       include: { photo: true },
     });
 
+    await pingIndexNow([
+      `/portfolio/${project.slug}`,
+      ...(project.slug !== existing.slug ? [`/portfolio/${existing.slug}`] : []),
+    ]);
     res.json(project);
   }),
 );
@@ -99,6 +105,7 @@ router.delete(
     const existing = await prisma.project.findUnique({ where: { id: req.params.id } });
     if (!existing) throw ApiError.notFound("Project not found");
     await prisma.project.delete({ where: { id: req.params.id } });
+    await pingIndexNow([`/portfolio/${existing.slug}`, "/portfolio"]);
     res.status(204).send();
   }),
 );

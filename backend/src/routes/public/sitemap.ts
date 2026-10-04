@@ -38,6 +38,8 @@ router.get(
       ),
     ];
 
+    // The API sends noindex on everything; a sitemap must not carry it.
+    res.removeHeader("X-Robots-Tag");
     res
       .type("application/xml")
       .set("Cache-Control", "public, max-age=0, s-maxage=3600")
