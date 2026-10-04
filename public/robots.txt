@@ -1,4 +1,4 @@
-# Nexoryn — https://nexoryn-delta.vercel.app
+# Nexoryn — https://www.nexoryn.tech
 User-agent: *
 Allow: /
 
@@ -9,3 +9,5 @@ Allow: /
 # under that path (see vercel.json) — same result, without the leak. Real
 # protection is the login itself (see backend/src/middleware/auth.ts), not
 # this file either way.
+
+Sitemap: https://www.nexoryn.tech/sitemap.xml
