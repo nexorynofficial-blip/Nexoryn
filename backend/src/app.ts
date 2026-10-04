@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { globalRateLimiter } from "./middleware/rateLimiter";
 
 import publicProjects from "./routes/public/projects";
+import publicSitemap from "./routes/public/sitemap";
 import publicServices from "./routes/public/services";
 import publicReviews from "./routes/public/reviews";
 import publicTeam from "./routes/public/team";
@@ -68,6 +69,7 @@ export function createApp(): Express {
 
   // ── Public (no auth) ────────────────────────────────────────────────
   app.use("/api/v1/projects", publicProjects);
+  app.use("/api/v1/sitemap.xml", publicSitemap);
   app.use("/api/v1/services", publicServices);
   app.use("/api/v1/reviews", publicReviews);
   app.use("/api/v1/team", publicTeam);
