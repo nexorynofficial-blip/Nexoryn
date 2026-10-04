@@ -476,3 +476,41 @@ available (it only adds local-dev hot reload; the JSX transform comes from the a
 Re-adding the plugin to the root was not an option: with `@preact/preset-vite` present, npm cannot resolve the plugin's
 optional Babel peer (ERESOLVE). Verified by running `bun run build:all` with `admin/node_modules` moved aside, then
 loading the built admin login page (renders, no errors) and the main site from the same output.
+
+## Round 5: mobile 88 -> 95+ target (progressive mounting of below-the-fold sections)
+
+Live mobile PageSpeed before this round: **88** (first paint 2.9 s, largest paint 3.2 s, blocking time 50 ms,
+Speed Index 3.0 s). Missing: first paint 4 pts, largest paint 6, Speed Index 1.
+
+### A better way to predict the mobile score
+My earlier test harness (Chrome with a throttled CPU and network) overstated blocking time about 10-20x compared with
+the real PageSpeed number, which led to a wrong conclusion in round 3 (see below). PageSpeed does not throttle the
+browser: it records an *unthrottled* load and scales each main-thread task by 4. Reproducing that (trace at 1x, then
+`first paint ~ network + 4 x main-thread work before first paint`) matches the real report: it predicted ~2.1 s of
+processing + ~0.8 s network = ~2.9 s, the value PageSpeed measured. It is good for first/largest paint; its blocking-time
+output stays inflated, so blocking time is judged relatively.
+
+### What the phone does before first paint (live build)
+~0.5 s of main-thread work (x4 = ~2 s): the intro setup, Preact rendering the *entire* home page tree (all 7 sections
+below the hero), GSAP, and style/layout. Experiments: removing GSAP calls from the intro screen alone saved only ~0.15 s;
+not loading GSAP at all saved much more but breaks every animation.
+
+### Change
+**Mount the sections below the hero one per task, right after first paint** (`src/hooks/useProgressiveMount.js`,
+`src/pages/Home.jsx`). The hero, navbar and intro plate render immediately; Problems, Solutions, Services, Portfolio,
+Reviews, the call-to-action and the footer follow, one per task. Everything is on the page within ~0.7 s of the first
+screen, while the intro plate is still covering it (the intro lasts ~0.9 s).
+
+### Verified
+- Pages, router navigation and every interaction identical to the previous build; whole-page screenshots at desktop and phone widths
+  match (the one visible difference was the Problems section's looping notification feed caught at a different moment).
+- Measured (unthrottled trace, 3 alternating rounds): main-thread work before first paint **-55 to -60%**
+  (e.g. 864 ms -> 395 ms); hero appears ~140 ms sooner even on a fast machine; whole page built by ~1.0 s.
+- Predicted effect on mobile PageSpeed: first paint ~2.9 s -> ~1.8-2.0 s, largest paint ~3.2 s -> ~2.2 s, blocking time
+  50 ms -> ~80-110 ms (about -1 point).
+
+### Why round 3 rejected this and why it is now adopted
+Round 3 measured this idea (and a static boot screen) with the throttled harness, where it looked like a large blocking-time
+regression. That harness exaggerates blocking time ~10-20x, and by then `content-visibility` had already made each slice's
+layout nearly free, so each section now mounts in a few milliseconds. The boot-screen idea is still rejected (it moves the
+*whole* app's work after first paint, not a few small slices).
