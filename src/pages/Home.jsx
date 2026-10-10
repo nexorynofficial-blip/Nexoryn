@@ -1,4 +1,5 @@
 import Hero from "../components/Hero";
+import AutomationShowcase from "../components/AutomationShowcase";
 import Problems from "../components/Problems";
 import Solutions from "../components/Solutions";
 import Services from "../components/Services";
@@ -14,7 +15,7 @@ import { useProgressiveMount } from "../hooks/useProgressiveMount";
 // plate) render immediately; these mount one per task right after the first
 // paint (see useProgressiveMount), so the first paint doesn't have to wait for
 // the whole page to be built.
-const SLICES = 7; // Problems, Solutions, Services, Portfolio, Reviews, CTA, Footer
+const SLICES = 8; // Automation, Problems, Solutions, Services, Portfolio, Reviews, CTA, Footer
 
 export default function Home() {
   const n = useProgressiveMount(SLICES, () => ScrollTrigger.refresh());
@@ -27,15 +28,16 @@ export default function Home() {
       <div className="relative">
         <SectionsBackground hideTopFadeOnMobile />
         <div className="relative z-10">
-          {n >= 1 && <Problems />}
-          {n >= 2 && <Solutions />}
-          {n >= 3 && <Services />}
-          {n >= 4 && <Portfolio />}
-          {n >= 5 && <Reviews />}
+          {n >= 1 && <AutomationShowcase />}
+          {n >= 2 && <Problems />}
+          {n >= 3 && <Solutions />}
+          {n >= 4 && <Services />}
+          {n >= 5 && <Portfolio />}
+          {n >= 6 && <Reviews />}
         </div>
       </div>
-      {n >= 6 && <CTASection />}
-      {n >= 7 && <Footer />}
+      {n >= 7 && <CTASection />}
+      {n >= 8 && <Footer />}
     </>
   );
 }

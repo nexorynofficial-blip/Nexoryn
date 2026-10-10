@@ -1,216 +1,194 @@
 import { useRef, useState } from "react";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import nexorynFullLogo from "../assets/nexoryn-full-logo.webp";
-import MagneticButton from "./ui/MagneticButton";
-import { gsap, useGSAP } from "../lib/gsap";
+import { Menu, X } from "lucide-react";
+import nexorynLogo from "../assets/nexoryn-logo-sm.webp";
 
-const LINKS = ["HOME", "SERVICES", "PORTFOLIO", "REVIEWS", "ABOUT", "CONTACT"];
+const LEFT_LINKS = ["HOME", "SERVICES", "PORTFOLIO"];
+const RIGHT_LINKS = ["REVIEWS", "ABOUT", "CONTACT"];
+const ALL_LINKS = [...LEFT_LINKS, ...RIGHT_LINKS];
 
-// Links that navigate to a real route; the rest stay in-page decorative items
 const ROUTES = {
   HOME: "/",
-  ABOUT: "/about",
   SERVICES: "/services",
   PORTFOLIO: "/portfolio",
   REVIEWS: "/reviews",
+  ABOUT: "/about",
   CONTACT: "/contact",
 };
 
-function NavLink({ label, active, onClick, mobile = false }) {
+// Scroll down past COLLAPSE_AFTER and the notch tucks its links away, leaving
+// just the logo; scroll back up by EXPAND_AFTER (or click it) and it opens.
+const COLLAPSE_AFTER = 150;
+const EXPAND_AFTER = 80;
+
+const spring = { type: "spring", damping: 22, stiffness: 260 };
+
+// Solid black throughout.
+const BAR_GRADIENT = "#000";
+const NOTCH_GRADIENT = "#000";
+
+/**
+ * One side of the notch: an S-curve from the thin top bar down to the notch's
+ * full depth. Drawn for the left side; the right one is the same shape mirrored.
+ */
+function Shoulder({ side, className }) {
+  const id = `notch-shoulder-${side}`;
   return (
-    <m.button
+    <svg
+      viewBox="0 0 140 56"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      className={`block shrink-0 ${side === "right" ? "-scale-x-100" : ""} ${className}`}
+    >
+      <defs>
+        <linearGradient id={id} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#000" />
+          <stop offset="0.55" stopColor="#000" />
+          <stop offset="1" stopColor="#000" />
+        </linearGradient>
+      </defs>
+      <path d="M0,0 H140 V56 C82,56 70,6 0,6 Z" fill={`url(#${id})`} />
+    </svg>
+  );
+}
+
+function NavLink({ label, active, onClick, className = "" }) {
+  return (
+    <button
       type="button"
       onClick={onClick}
-      whileTap={{ scale: 0.92 }}
-      className={`group relative w-fit cursor-pointer pb-1.5 font-semibold uppercase tracking-[0.15em] transition-colors duration-300 ${
+      className={`relative isolate cursor-pointer whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-bold uppercase tracking-wide transition-colors duration-300 ${
         active ? "text-accent-from" : "text-white hover:text-accent-to"
-      } ${mobile ? "text-base" : "text-sm"}`}
+      } ${className}`}
     >
       {label}
-      {/* Hover underline, drawn only for inactive links so it can't fight the
-          active one. Sweeps in from the left and out to the right rather than
-          retracting, so moving along the nav reads as one continuous motion. */}
-      {!active && (
-        <span className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-accent-from/60 to-accent-to/60 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100" />
-      )}
-      <m.span
-        className="absolute bottom-0 left-0 h-0.5 w-full origin-left rounded-full bg-gradient-to-r from-accent-from to-accent-to"
-        initial={false}
-        animate={{ scaleX: active ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      />
-    </m.button>
+    </button>
   );
 }
 
-function BookACallButton({ className = "", compact = false }) {
-  return (
-    <MagneticButton strength={0.28} className={className}>
-      <Link
-        to="/contact"
-        className={`pressable block rounded-full bg-gradient-to-r from-accent-from to-accent-to font-bold uppercase tracking-wide text-black shadow-[0_0_0_0_rgba(255,122,26,0.5)] transition-[box-shadow,filter] duration-300 hover:shadow-[0_0_30px_0_rgba(255,122,26,0.45)] hover:brightness-110 ${
-          compact ? "px-4 py-2 text-xs" : "px-7 py-3 text-sm"
-        }`}
-      >
-        Book a Call
-      </Link>
-    </MagneticButton>
-  );
-}
+const linkGroup = {
+  expanded: { width: "auto", opacity: 1, transition: { ...spring, opacity: { duration: 0.25, delay: 0.1 } } },
+  collapsed: { width: 0, opacity: 0, transition: { ...spring, opacity: { duration: 0.15 } } },
+};
 
 export default function Navbar() {
-  const [clicked, setClicked] = useState("HOME");
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const headerRef = useRef(null);
-  const navRef = useRef(null);
+  const [expanded, setExpanded] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
+  const lastY = useRef(0);
+  const collapsedAt = useRef(0);
 
-  // Hide going down, reveal going up, and thicken the backdrop once the page
-  // has left the hero. Direction comes from the change since the last event,
-  // ignoring tiny jitters that would otherwise flicker the bar at the top of a
-  // fling.
-  useGSAP(
-    () => {
-      const showHide = gsap.quickTo(headerRef.current, "yPercent", {
-        duration: 0.45,
-        ease: "power3.out",
-      });
+  useMotionValueEvent(scrollY, "change", (y) => {
+    const prev = lastY.current;
+    if (expanded && y > prev && y > COLLAPSE_AFTER) {
+      setExpanded(false);
+      setMenuOpen(false);
+      collapsedAt.current = y;
+    } else if (!expanded && (y < COLLAPSE_AFTER || (y < prev && collapsedAt.current - y > EXPAND_AFTER))) {
+      setExpanded(true);
+    }
+    if (y < prev) collapsedAt.current = Math.max(collapsedAt.current, y);
+    lastY.current = y;
+  });
 
-      let lastY = window.scrollY;
-      let direction = 0;
+  const active =
+    ALL_LINKS.find((l) => l !== "HOME" && location.pathname.startsWith(ROUTES[l])) ??
+    (location.pathname === "/" ? "HOME" : null);
 
-      const onScroll = () => {
-        const y = window.scrollY;
-        if (Math.abs(y - lastY) >= 2) {
-          direction = y > lastY ? 1 : -1;
-          lastY = y;
-        }
-        // The menu is anchored to the header, so hiding it mid-interaction
-        // would rip an open menu off the screen.
-        const hide = !menuOpen && y > 220 && direction === 1;
-        showHide(hide ? -110 : 0);
-
-        gsap.to(navRef.current, {
-          backgroundColor:
-            y > 40 ? "rgba(0,0,0,0.62)" : "rgba(0,0,0,0.35)",
-          duration: 0.35,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
-      };
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => window.removeEventListener("scroll", onScroll);
-    },
-    { dependencies: [menuOpen] }
-  );
-
-  // The underline reflects the current route when we're on a routed page,
-  // otherwise it falls back to the last-clicked in-page item on the homepage.
-  const routeActive = location.pathname.startsWith("/about")
-    ? "ABOUT"
-    : location.pathname.startsWith("/services")
-    ? "SERVICES"
-    : location.pathname.startsWith("/portfolio")
-    ? "PORTFOLIO"
-    : location.pathname.startsWith("/reviews")
-    ? "REVIEWS"
-    : location.pathname.startsWith("/contact")
-    ? "CONTACT"
-    : null;
-  const active = routeActive ?? clicked;
-
-  const handleClick = (label) => {
-    setClicked(label);
+  const go = (label) => {
     setMenuOpen(false);
-    if (ROUTES[label]) navigate(ROUTES[label]);
+    navigate(ROUTES[label]);
   };
 
+  const renderLinks = (links) =>
+    links.map((label) => (
+      <NavLink key={label} label={label} active={active === label} onClick={() => go(label)} />
+    ));
+
   return (
-    <header ref={headerRef} className="fixed inset-x-0 top-0 z-50 will-change-transform">
-      <nav
-        ref={navRef}
-        className="relative z-10 flex items-center justify-between bg-black/35 px-4 py-4 backdrop-blur-md md:px-10"
-      >
-        {/* Full logo (icon + wordmark baked into one image) — desktop only.
-            Left-most flex child, exactly as before md: this element is the
-            only one visible there, so desktop position/markup is untouched. */}
-        <Link
-          to="/"
-          onClick={() => setClicked("HOME")}
-          className="hidden items-center md:flex md:group"
-          aria-label="Nexoryn home"
-        >
-          <img
-            src={nexorynFullLogo}
-            alt="Nexoryn"
-            width={480}
-            height={128}
-            className="h-9 w-auto transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:group-hover:scale-105"
-          />
-        </Link>
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
+      {/* Thin bar across the full width */}
+      <div className="h-1.5 w-full" style={{ background: BAR_GRADIENT }} />
 
-        {/* Desktop links */}
-        <div className="hidden items-center gap-10 md:flex">
-          {LINKS.map((label) => (
-            <NavLink
-              key={label}
-              label={label}
-              active={active === label}
-              onClick={() => handleClick(label)}
+      {/* The notch hangs from the bar, centred */}
+      <div className="absolute inset-x-0 top-0 flex justify-center">
+        <Shoulder side="left" className="h-11 w-20 lg:h-14 lg:w-36" />
+
+        <m.nav
+          aria-label="Main"
+          onClick={() => !expanded && setExpanded(true)}
+          className={`pointer-events-auto relative flex h-11 items-center lg:h-14 ${
+            expanded ? "" : "cursor-pointer"
+          }`}
+          style={{ background: NOTCH_GRADIENT }}
+        >
+          {/* Desktop: links either side of the logo */}
+          <m.div
+            variants={linkGroup}
+            initial={false}
+            animate={expanded ? "expanded" : "collapsed"}
+            className="hidden overflow-hidden lg:block"
+          >
+            <div className="flex items-center gap-1 pr-6">{renderLinks(LEFT_LINKS)}</div>
+          </m.div>
+
+          {/* Mobile: balances the menu button so the logo stays centred */}
+          <span aria-hidden="true" className="w-8 lg:hidden" />
+
+          <Link
+            to="/"
+            onClick={(e) => {
+              if (!expanded) {
+                e.preventDefault();
+                setExpanded(true);
+              }
+            }}
+            aria-label="Nexoryn home"
+            className="group flex shrink-0 items-center px-3"
+          >
+            <m.img
+              src={nexorynLogo}
+              alt="Nexoryn"
+              width={256}
+              height={256}
+              animate={{ rotate: expanded ? 0 : -360 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="h-9 w-9 transition-transform duration-300 group-hover:scale-110 lg:h-11 lg:w-11"
             />
-          ))}
-        </div>
+          </Link>
 
-        {/* Wrapping instead of passing "hidden md:inline-block" straight to
-            BookACallButton: MagneticButton hardcodes an unconditional
-            "inline-block" ahead of its className prop, which ties with a
-            plain "hidden" utility on the same display property — depending
-            on Tailwind's generated rule order, "inline-block" can win,
-            leaving this desktop button rendered (and visible left of the
-            hamburger) on mobile too. A wrapper element has no competing
-            class of its own, so "hidden"/"md:inline-block" apply cleanly. */}
-        <div className="hidden md:inline-block">
-          <BookACallButton />
-        </div>
+          <m.div
+            variants={linkGroup}
+            initial={false}
+            animate={expanded ? "expanded" : "collapsed"}
+            className="hidden overflow-hidden lg:block"
+          >
+            <div className="flex items-center gap-1 pl-6">{renderLinks(RIGHT_LINKS)}</div>
+          </m.div>
 
-        {/* Hamburger — mobile only, first visible flex child there so it
-            pins to the left edge (justify-between) */}
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          className="flex h-10 w-10 cursor-pointer flex-col items-center justify-center gap-1.5 md:hidden"
-        >
-          <m.span
-            animate={menuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="h-0.5 w-6 rounded-full bg-white"
-          />
-          <m.span
-            animate={menuOpen ? { opacity: 0, x: -8 } : { opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-            className="h-0.5 w-6 rounded-full bg-white"
-          />
-          <m.span
-            animate={menuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="h-0.5 w-6 rounded-full bg-white"
-          />
-        </button>
+          {/* Mobile / tablet: a menu button beside the logo */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(true);
+              setMenuOpen((o) => !o);
+            }}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-white lg:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </m.nav>
 
-        {/* Mobile-only Book a Call — no logo in the mobile bar at all now,
-            so this is the last (and only other) visible flex child, pinning
-            to the right edge opposite the hamburger */}
-        <BookACallButton compact className="md:hidden" />
-      </nav>
+        <Shoulder side="right" className="h-11 w-20 lg:h-14 lg:w-36" />
+      </div>
 
-      {/* Mobile menu — full-width animated panel with a dimming backdrop and
-          a staggered reveal of each link, so it reads as one deliberate
-          motion rather than the whole block popping in at once. */}
+      {/* Mobile / tablet menu drops out of the notch */}
       <AnimatePresence>
         {menuOpen && (
           <>
@@ -219,42 +197,35 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
               onClick={() => setMenuOpen(false)}
               aria-hidden="true"
-              className="fixed inset-0 z-0 bg-black/70 backdrop-blur-sm md:hidden"
+              className="pointer-events-auto fixed inset-0 -z-10 bg-black/60 lg:hidden"
             />
             <m.div
               key="panel"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="relative z-10 overflow-hidden border-t border-glass-border bg-black/80 backdrop-blur-xl md:hidden"
+              initial={{ opacity: 0, y: -12, scaleY: 0.9 }}
+              animate={{ opacity: 1, y: 0, scaleY: 1 }}
+              exit={{ opacity: 0, y: -12, scaleY: 0.9 }}
+              transition={spring}
+              style={{ originY: 0 }}
+              className="pointer-events-auto absolute left-1/2 top-11 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-b-2xl bg-black px-3 pb-4 pt-2 shadow-[0_20px_40px_rgba(0,0,0,0.5)] lg:hidden"
             >
               <m.div
-                variants={{
-                  open: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
-                  closed: {},
-                }}
-                initial="closed"
-                animate="open"
-                className="flex flex-col items-start gap-6 px-6 py-10 text-left"
+                initial="hidden"
+                animate="shown"
+                variants={{ shown: { transition: { staggerChildren: 0.05 } } }}
+                className="grid grid-cols-2 gap-1"
               >
-                {LINKS.map((label) => (
+                {ALL_LINKS.map((label) => (
                   <m.div
                     key={label}
-                    variants={{
-                      closed: { opacity: 0, y: -12 },
-                      open: { opacity: 1, y: 0 },
-                    }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    variants={{ hidden: { opacity: 0, y: -8 }, shown: { opacity: 1, y: 0 } }}
                   >
                     <NavLink
                       label={label}
-                      mobile
                       active={active === label}
-                      onClick={() => handleClick(label)}
+                      onClick={() => go(label)}
+                      className="w-full py-2.5 text-center"
                     />
                   </m.div>
                 ))}

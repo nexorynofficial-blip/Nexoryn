@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { m, AnimatePresence } from "framer-motion";
 import { Link, useParams } from "react-router-dom";
 import {
+  ArrowLeft,
+  ArrowUpRight,
   ChevronDown,
   CheckCircle2,
   X,
@@ -11,7 +13,6 @@ import {
   Maximize2,
   ExternalLink,
 } from "lucide-react";
-import { staggerContainer, blurFadeIn } from "../lib/motion";
 import { gsap, useGSAP } from "../lib/gsap";
 import { prefersReducedMotion } from "../lib/easing";
 import { useOutsideClick } from "../hooks/useOutsideClick";
@@ -21,6 +22,7 @@ import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Reveal from "../components/ui/Reveal";
 import { getProjectBySlug as staticProjectBySlug } from "../data/projectsFull";
+import { PROJECTS } from "../data/projects";
 import { getProjectBySlug } from "../lib/content";
 import { resolveIcon } from "../lib/iconMap";
 
@@ -60,7 +62,7 @@ function tabsForCaseStudy(caseStudy) {
 // the tab bar + tab content. The nested `inner` cards below are already
 // translucent themselves; if this were as sheer as a typical glass card too,
 // the shader backdrop would bleed through both layers and wash them out.
-const OUTER = "rounded-3xl glass-panel backdrop-blur-xl";
+const OUTER = "rounded-[2rem] border border-white/[0.08] bg-[#111111]/95 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]";
 
 // Inner panel — the cards nested inside an OUTER box (problem/solution,
 // workflow, stat tiles, tool cards, etc). A thin orange-tinted outline all
@@ -73,62 +75,171 @@ const OUTER = "rounded-3xl glass-panel backdrop-blur-xl";
 // and rounded-full (icon tiles), and two rounded-* utilities on one element
 // have equal specificity — whichever Tailwind happens to emit last in the
 // stylesheet would silently win. Each call site adds its own.
-const inner = (borderClass = "border-accent-from/30") =>
-  `border ${borderClass} bg-white/[0.045]`;
+const inner = (borderClass = "border-accent-from/25") =>
+  `border ${borderClass} bg-[linear-gradient(150deg,rgba(58,20,6,0.45)_0%,rgba(20,10,5,0.35)_40%,rgba(255,255,255,0.025)_100%)]`;
 
-/* ── Sidebar ──────────────────────────────────────────────────────────── */
+/* ── Hero ─────────────────────────────────────────────────────────────── */
 
-function Sidebar({ project }) {
+// Split a title so its last two words can carry the orange highlight.
+function splitTitle(title = "") {
+  const words = title.split(" ");
+  const cut = Math.max(1, words.length - 2);
+  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+}
+
+function CaseHero({ project }) {
   const { caseStudy } = project;
+  const [lead, highlight] = splitTitle(project.title);
+  const meta = [
+    ["Service", project.service],
+    ["Industry", project.industry],
+    ["Category", caseStudy.category],
+  ].filter(([, v]) => v);
+
   return (
-    <m.aside
-      initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`${OUTER} hover-lift p-6 lg:sticky lg:top-28`}
-    >
-      <img
-        src={project.photo}
-        alt={project.title}
-        width={800}
-        height={600}
-        className="aspect-[4/3] w-full rounded-2xl object-cover"
-      />
+    <header>
+      {/* Breadcrumb */}
+      <m.nav
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]"
+      >
+        <Link to="/portfolio" className="group inline-flex items-center gap-1.5 text-white/50 transition-colors hover:text-accent-to">
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
+          Portfolio
+        </Link>
+        <span className="text-white/25">/</span>
+        <span className="truncate text-accent-from">Case Study</span>
+      </m.nav>
 
-      <h1 className="mt-5 font-heading text-2xl leading-tight text-white">
-        {project.title}
-      </h1>
-
-      <span className="mt-3 inline-flex items-center rounded-full border border-accent-from/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-accent-to">
-        {caseStudy.category}
-      </span>
-
-      {/* Icon alone doesn't say "n8n" vs "Ollama" to anyone unfamiliar with
-          the tools — the name has to be on the tile itself, not just in a
-          hover title that a touch device can never trigger. */}
-      <div className="mt-5 grid grid-cols-2 gap-2.5">
-        {caseStudy.techIcons.map(({ name, icon }) => {
-          const Icon = resolveIcon(icon);
-          return (
-          <div
-            key={name}
-            className={`${inner()} flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors duration-300 hover:border-orange-400/60`}
+      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-14">
+        <div>
+          <m.h1
+            initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+            className="font-heading text-4xl leading-[1.05] tracking-tight text-white md:text-5xl xl:text-6xl"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-orange-400/25 bg-orange-500/10 text-accent-to">
-              <Icon className="h-4 w-4" />
-            </div>
-            <span className="truncate text-xs font-semibold text-white/80">
-              {name}
-            </span>
-          </div>
-          );
-        })}
-      </div>
+            {lead}{" "}
+            <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">{highlight}</span>
+          </m.h1>
 
-      <p className="mt-6 border-t border-white/10 pt-5 text-sm leading-relaxed text-body-dim">
-        {caseStudy.summary}
-      </p>
-    </m.aside>
+          <m.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+            className="mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+          >
+            {caseStudy.summary}
+          </m.p>
+
+          {/* Meta */}
+          <m.dl
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 }}
+            className="mt-8 grid max-w-xl grid-cols-2 gap-x-6 gap-y-4 border-t border-white/10 pt-6 sm:grid-cols-3"
+          >
+            {meta.map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">{label}</dt>
+                <dd className="mt-1 text-sm font-semibold text-white">{value}</dd>
+              </div>
+            ))}
+          </m.dl>
+
+          {/* Tech stack — names on the tiles, not only in a hover title a
+              touch device can never trigger. */}
+          {caseStudy.techIcons?.length > 0 && (
+            <m.ul
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.35 }}
+              className="mt-6 flex flex-wrap gap-2"
+            >
+              {caseStudy.techIcons.map(({ name, icon }) => {
+                const Icon = resolveIcon(icon);
+                return (
+                  <li
+                    key={name}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-1.5 pl-1.5 pr-3.5 text-[11px] font-semibold uppercase tracking-wider text-white/85 transition-colors duration-300 hover:border-accent-from/50"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-from/15 text-accent-from">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    {name}
+                  </li>
+                );
+              })}
+            </m.ul>
+          )}
+        </div>
+
+        {/* Hero image */}
+        <m.div
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          className="rounded-[2rem] border border-white/[0.08] bg-[linear-gradient(150deg,#3a1406_0%,#140803_35%,#070707_70%)] p-3 shadow-[0_30px_90px_-30px_rgba(255,122,26,0.4)]"
+        >
+          <div className="overflow-hidden rounded-3xl border border-white/[0.06] bg-[#0d0d0d]">
+            <m.img
+              src={project.photo}
+              alt={project.title}
+              width={1200}
+              height={750}
+              initial={{ scale: 1.08 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+              className="aspect-[16/10] w-full object-cover"
+            />
+          </div>
+        </m.div>
+      </div>
+    </header>
+  );
+}
+
+/* ── Next case study ──────────────────────────────────────────────────── */
+
+function NextProject({ slug }) {
+  const i = PROJECTS.findIndex((p) => p.slug === slug);
+  const next = PROJECTS[(i + 1) % PROJECTS.length];
+  if (!next || next.slug === slug) return null;
+  const [lead, highlight] = splitTitle(next.title);
+
+  return (
+    <Reveal y={30} className="mt-16 md:mt-24">
+      <Link
+        to={`/portfolio/${next.slug}`}
+        className="group grid overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[linear-gradient(150deg,#3a1406_0%,#140803_35%,#070707_70%)] transition duration-500 hover:border-accent-from/40 hover:shadow-[0_30px_80px_-25px_rgba(255,122,26,0.4)] md:grid-cols-[1.2fr_1fr]"
+      >
+        <div className="flex flex-col justify-center p-7 md:p-10 lg:p-12">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-from">Next Case Study</span>
+          <h2 className="mt-4 font-heading text-2xl font-extrabold uppercase leading-tight text-white md:text-4xl">
+            {lead}{" "}
+            <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">{highlight}</span>
+          </h2>
+          <p className="mt-4 line-clamp-2 max-w-lg text-sm leading-relaxed text-body-dim md:text-base">{next.description}</p>
+          <span className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-accent-from to-accent-to px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-black">
+            View Case Study
+            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </span>
+        </div>
+        <div className="relative min-h-[220px] overflow-hidden md:m-3 md:rounded-3xl">
+          <img
+            src={next.photo}
+            alt=""
+            loading="lazy"
+            width={800}
+            height={500}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+          />
+        </div>
+      </Link>
+    </Reveal>
   );
 }
 
@@ -136,7 +247,7 @@ function Sidebar({ project }) {
 
 function TabBar({ tabs, active, onSelect }) {
   return (
-    <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
+    <div className="no-scrollbar mx-auto flex w-fit max-w-full gap-1 overflow-x-auto rounded-full border border-white/10 bg-black/75 p-1 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl">
       {tabs.map((tab) => {
         const isActive = tab === active;
         return (
@@ -144,12 +255,18 @@ function TabBar({ tabs, active, onSelect }) {
             key={tab}
             type="button"
             onClick={() => onSelect(tab)}
-            className={`shrink-0 whitespace-nowrap rounded-full border px-5 py-2.5 text-sm font-semibold transition duration-300 ${
-              isActive
-                ? "border-transparent bg-gradient-to-r from-accent-from to-accent-to text-white shadow-[0_0_24px_-4px_rgba(255,122,26,0.55)]"
-                : "border-white/10 bg-white/[0.045] text-white/60 hover:border-orange-400/40 hover:text-white hover:brightness-110"
+            aria-pressed={isActive}
+            className={`relative isolate shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors duration-300 md:px-5 md:text-xs ${
+              isActive ? "text-black" : "text-white/65 hover:text-white"
             }`}
           >
+            {isActive && (
+              <m.span
+                layoutId="case-tab-pill"
+                transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                className="absolute inset-0 -z-10 rounded-full bg-gradient-to-r from-accent-from to-accent-to"
+              />
+            )}
             {tab}
           </button>
         );
@@ -1097,102 +1214,88 @@ export default function CaseStudyPage() {
     <>
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
-          <m.div
-            variants={staggerContainer}
-            initial="hidden"
-            animate="show"
-            className="mb-10"
-          >
-            <m.span
-              variants={blurFadeIn}
-              className="text-xs font-bold uppercase tracking-[0.25em] text-accent-to"
-            >
-              Case Study
-            </m.span>
-          </m.div>
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:px-[7.8vw] lg:pt-40">
+          <CaseHero project={project} />
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[340px_1fr] lg:items-start lg:gap-10">
-            <Sidebar project={project} />
-
-            {/* Right side is one continuous outer box (mirroring the sidebar's),
-                so the tab bar and every tab panel sit on solid charcoal with no
-                gaps exposing the aurora backdrop between them — the individual
-                cards then nest inside it as their own bordered panels. */}
-            <m.div
-              initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-              className={`${OUTER} min-w-0 p-6 md:p-8`}
-            >
+          {/* Tabs: the bar pins under the navbar while the panel scrolls */}
+          <div className="mt-14 md:mt-20">
+            <div className="sticky top-20 z-30 py-3">
               <TabBar tabs={tabs} active={activeTab} onSelect={setActiveTab} />
-
-              <div className="relative mt-6">
-                <AnimatePresence mode="wait">
-                  <m.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    {isDesignCaseStudy ? (
-                      <>
-                        {activeTab === "Overview" && (
-                          <DesignOverviewTab overview={caseStudy.overview} />
-                        )}
-                        {activeTab === "Gallery" && (
-                          <DesignGalleryTab gallery={caseStudy.gallery} />
-                        )}
-                        {activeTab === "Design Process" && (
-                          <DesignProcessTab designProcess={caseStudy.designProcess} />
-                        )}
-                        {activeTab === "Key Features" && (
-                          <KeyFeaturesTab items={caseStudy.keyFeatures} />
-                        )}
-                        {activeTab === "Use Cases" && (
-                          <UseCasesTab items={caseStudy.useCases} />
-                        )}
-                        {activeTab === "Customization & Scalability" && (
-                          <ScalabilityTab
-                            items={caseStudy.scalability}
-                            heading="Customization & Scalability"
-                          />
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {activeTab === "Overview" && (
-                          <OverviewTab overview={caseStudy.overview} />
-                        )}
-                        {activeTab === "Results" && (
-                          <ResultsTab results={caseStudy.results} />
-                        )}
-                        {activeTab === "Tech Stack" && (
-                          <TechStackTab techStack={caseStudy.techStack} />
-                        )}
-                        {activeTab === "Scalability & Flexibility" && (
-                          <ScalabilityTab items={caseStudy.scalability} />
-                        )}
-                        {activeTab === "Screenshots" && (
-                          <ScreenshotsTab screenshots={caseStudy.screenshots} />
-                        )}
-                        {activeTab === "Gallery" && (
-                          <ScreenshotsTab screenshots={caseStudy.gallery} />
-                        )}
-                        {activeTab === "Live Preview" && (
-                          <LivePreviewTab
-                            livePreview={caseStudy.livePreview}
-                            siteName={project.title}
-                          />
-                        )}
-                      </>
+            </div>
+            <m.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+              className={`${OUTER} mt-3 min-w-0 p-5 md:p-8 lg:p-10`}
+            >
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              <m.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                {isDesignCaseStudy ? (
+                  <>
+                    {activeTab === "Overview" && (
+                      <DesignOverviewTab overview={caseStudy.overview} />
                     )}
-                  </m.div>
-                </AnimatePresence>
-              </div>
+                    {activeTab === "Gallery" && (
+                      <DesignGalleryTab gallery={caseStudy.gallery} />
+                    )}
+                    {activeTab === "Design Process" && (
+                      <DesignProcessTab designProcess={caseStudy.designProcess} />
+                    )}
+                    {activeTab === "Key Features" && (
+                      <KeyFeaturesTab items={caseStudy.keyFeatures} />
+                    )}
+                    {activeTab === "Use Cases" && (
+                      <UseCasesTab items={caseStudy.useCases} />
+                    )}
+                    {activeTab === "Customization & Scalability" && (
+                      <ScalabilityTab
+                        items={caseStudy.scalability}
+                        heading="Customization & Scalability"
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {activeTab === "Overview" && (
+                      <OverviewTab overview={caseStudy.overview} />
+                    )}
+                    {activeTab === "Results" && (
+                      <ResultsTab results={caseStudy.results} />
+                    )}
+                    {activeTab === "Tech Stack" && (
+                      <TechStackTab techStack={caseStudy.techStack} />
+                    )}
+                    {activeTab === "Scalability & Flexibility" && (
+                      <ScalabilityTab items={caseStudy.scalability} />
+                    )}
+                    {activeTab === "Screenshots" && (
+                      <ScreenshotsTab screenshots={caseStudy.screenshots} />
+                    )}
+                    {activeTab === "Gallery" && (
+                      <ScreenshotsTab screenshots={caseStudy.gallery} />
+                    )}
+                    {activeTab === "Live Preview" && (
+                      <LivePreviewTab
+                        livePreview={caseStudy.livePreview}
+                        siteName={project.title}
+                      />
+                    )}
+                  </>
+                )}
+              </m.div>
+            </AnimatePresence>
+          </div>
             </m.div>
           </div>
+
+          <NextProject slug={project.slug} />
         </div>
 
         {/* Soft blend into the CTA section below, no dead gap before it */}

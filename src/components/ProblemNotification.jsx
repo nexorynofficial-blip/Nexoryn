@@ -1,22 +1,27 @@
+// One lock-screen notification, styled after iOS: app tile, sender, time,
+// two lines of message and an unread dot.
 export function ProblemNotification({ name, description, icon, color, time }) {
   return (
-    <figure className="glass-panel relative mx-auto min-h-fit w-full max-w-[420px] rounded-2xl p-4 shadow-[0_-20px_80px_-20px_#ffffff10_inset] transition-all duration-200 ease-in-out hover:scale-[1.02] hover:border-orange-400/30">
-      <div className="flex flex-row items-center gap-3">
+    <figure className="relative rounded-[1.1rem] border border-white/[0.06] bg-white/[0.09] p-3 backdrop-blur-md">
+      <div className="flex items-start gap-2.5">
         <div
-          className="flex size-10 shrink-0 items-center justify-center rounded-2xl"
+          className="flex size-9 shrink-0 items-center justify-center rounded-[0.6rem]"
           style={{ backgroundColor: color }}
         >
-          <span className="text-lg">{icon}</span>
+          <span className="text-base">{icon}</span>
         </div>
-        <div className="flex flex-col overflow-hidden">
-          <figcaption className="flex flex-row items-center gap-1 text-sm font-medium text-white">
-            {name}
-            <span className="mx-1 text-white/30">·</span>
-            <span className="text-xs text-white/40">{time}</span>
+        <div className="min-w-0 flex-1">
+          <figcaption className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-[13px] font-semibold text-white">{name}</span>
+            <span className="shrink-0 text-[10px] text-white/45">{time}</span>
           </figcaption>
-          <p className="text-sm font-normal text-white/60">{description}</p>
+          <p className="mt-0.5 pr-4 text-[12px] leading-snug text-white/70">{description}</p>
         </div>
       </div>
+      <span
+        aria-hidden="true"
+        className="absolute bottom-3 right-3 h-1.5 w-1.5 rounded-full bg-accent-from"
+      />
     </figure>
   );
 }

@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { m } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Workflow,
-  Code2,
-  Palette,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
-import { SERVICE_TABS, ServiceFilter } from "../components/ui/ServiceFilter";
+import { SERVICE_TABS } from "../components/ui/ServiceFilter";
 import { ShowMoreButton } from "../components/ui/ShowMoreButton";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
@@ -50,80 +43,103 @@ const SERVICE_VALUE = {
   "Graphic Design": "Brand & Graphic Design",
 };
 
-// Icon shown in each card's header tile, chosen by the project's service type
-const SERVICE_ICON = {
-  Automation: Workflow,
-  "Web Development": Code2,
-  "Brand & Graphic Design": Palette,
-};
+// Split a title so its last two words can carry the orange highlight.
+function splitTitle(title) {
+  const words = title.split(" ");
+  const cut = Math.max(1, words.length - 2);
+  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+}
 
-function ProjectCard({ project }) {
-  const Icon = SERVICE_ICON[project.service] ?? Workflow;
+const pad = (n) => String(n).padStart(2, "0");
+
+function ProjectCard({ project, index }) {
+  const [lead, highlight] = splitTitle(project.title);
   return (
-    <article className="glass-panel relative overflow-hidden rounded-3xl backdrop-blur-xl">
-      {/* Soft orange inner glow from the left edge (opposite the image),
-          reading as an ambient light behind the text content */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(circle at 0% 50%, rgba(255,122,26,0.15), transparent 60%)",
-        }}
-      />
-
-      <div className="relative z-10 flex h-full flex-col lg:flex-row lg:items-stretch">
-        {/* Content side (left on desktop, below the image on mobile) —
-            title/description are clamped and tags/button are fixed-size, so
-            every card lands at the same height regardless of copy length. */}
-        <div className="order-2 flex flex-1 flex-col p-6 md:p-8 lg:order-1 lg:min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-400/20 bg-orange-500/15">
-              <Icon className="h-5 w-5 text-orange-400" />
-            </div>
-            <h3 className="line-clamp-1 font-heading text-xl leading-tight text-white">
-              {project.title}
-            </h3>
-          </div>
-
-          <p className="mt-4 line-clamp-3 min-h-[68px] text-sm font-light leading-relaxed text-body-dim">
-            {project.description}
-          </p>
-
-          <div className="mt-5 flex h-[26px] flex-nowrap gap-2 overflow-hidden">
-            {project.tags.map((tag) => (
-              <span
-                key={tag}
-                className="shrink-0 whitespace-nowrap rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/70"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-auto pt-6">
-            <Link
-              to={`/portfolio/${project.slug}`}
-              className="inline-block rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition duration-300 hover:bg-orange-600"
-            >
-              Open Case Study
-            </Link>
-          </div>
-        </div>
-
-        {/* Image side (right on desktop, on top on mobile) */}
-        <div className="order-1 shrink-0 p-4 lg:order-2 lg:w-[45%]">
-          <img
-            src={project.photo}
-            alt={project.title}
-            width={800}
-            height={600}
-            loading="lazy"
-            className="h-52 w-full rounded-2xl object-cover lg:h-full"
-          />
-        </div>
+    <Link
+      to={`/portfolio/${project.slug}`}
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[linear-gradient(160deg,rgba(107,37,8,0.4)_0%,rgba(20,8,3,0.88)_35%,#050505_70%)] p-3 transition duration-500 hover:-translate-y-1.5 hover:border-accent-from/40 hover:shadow-[0_24px_60px_-18px_rgba(255,122,26,0.35)]"
+    >
+      {/* Image */}
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0d0d0d]">
+        <img
+          src={project.photo}
+          alt={project.title}
+          width={800}
+          height={500}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-3 py-1 font-mono-tech text-[11px] font-semibold tracking-[0.15em] text-accent-from backdrop-blur-md">
+          {pad(index + 1)}
+        </span>
+        <span className="absolute bottom-3 left-3 rounded-full border border-white/15 bg-black/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
+          {project.industry}
+        </span>
+        <span className="absolute bottom-3 right-3 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full bg-gradient-to-r from-accent-from to-accent-to text-black opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <ArrowUpRight className="h-4 w-4" />
+        </span>
       </div>
-    </article>
+
+      {/* Copy */}
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
+        <h3 className="font-heading text-lg font-extrabold uppercase leading-tight text-white md:text-xl">
+          {lead}{" "}
+          <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">{highlight}</span>
+        </h3>
+        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-body-dim">{project.description}</p>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {project.tags.slice(0, 3).map((tag) => (
+            <li
+              key={tag}
+              className="rounded-full border border-white/15 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/80"
+            >
+              {tag}
+            </li>
+          ))}
+        </ul>
+        <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-xs font-bold uppercase tracking-[0.12em] text-accent-from">
+          View Case Study
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+// Phone-width labels, so all three tabs fit on one line.
+const SHORT_TABS = { "Web Development": "Web Dev", "Graphic Design": "Design" };
+
+/** Service switcher: a pill bar with a sliding orange indicator. */
+function ServiceSwitcher({ active, onSelect }) {
+  return (
+    <div className="mx-auto flex w-fit max-w-full gap-1 overflow-x-auto rounded-full border border-white/10 bg-black/70 p-1 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl [scrollbar-width:none]">
+      {SERVICE_TABS.map((tab) => {
+        const on = tab === active;
+        return (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => onSelect(tab)}
+            aria-pressed={on}
+            className={`relative isolate shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors duration-300 sm:px-6 sm:text-xs ${
+              on ? "text-black" : "text-white/70 hover:text-white"
+            }`}
+          >
+            {on && (
+              <m.span
+                layoutId="pf-service-pill"
+                transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                className="absolute inset-0 -z-10 rounded-full bg-gradient-to-r from-accent-from to-accent-to"
+              />
+            )}
+            <span className="sm:hidden">{SHORT_TABS[tab] ?? tab}</span>
+            <span className="hidden sm:inline">{tab}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -183,7 +199,7 @@ function ChipScroller({ active, onSelect }) {
               className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition duration-300 ${
                 isActive
                   ? "border-transparent bg-gradient-to-r from-accent-from to-accent-to text-black"
-                  : "border-white/10 bg-white/[0.05] text-white/70 backdrop-blur-xl hover:border-orange-400/40 hover:text-white"
+                  : "border-white/10 bg-black/50 text-white/70 backdrop-blur-xl hover:border-accent-from/40 hover:text-white"
               }`}
             >
               {industry}
@@ -272,14 +288,14 @@ export default function PortfolioPage() {
       {/* Shared section backdrop overlays (shader is site-wide in SiteBackground) */}
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-20 w-full px-4 pb-12 pt-32 md:px-10 lg:px-[7.8vw] lg:pt-40">
           {/* Header */}
           <div className="mx-auto max-w-5xl text-center">
             <SplitText
               as="h1"
               animateOnMount
               delay={0.08}
-              className="mt-6 font-heading text-lg leading-tight tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl"
+              className="font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl"
             >
               Work that gets <span className="text-accent-from">results</span>.
             </SplitText>
@@ -288,7 +304,7 @@ export default function PortfolioPage() {
               y={24}
               delay={0.2}
               animateOnMount
-              className="mt-5 text-lg font-light leading-relaxed text-body-dim"
+              className="mx-auto mt-6 max-w-2xl text-lg font-light leading-relaxed text-body-dim"
             >
               A showcase of automation, web, and design projects we've delivered
               for clients across industries.
@@ -297,8 +313,8 @@ export default function PortfolioPage() {
 
           {/* Service tabs — same control as the Reviews page, defaults to
               Automation */}
-          <Reveal y={20} delay={0.26} animateOnMount className="mt-10">
-            <ServiceFilter active={service} onSelect={setService} />
+          <Reveal y={20} delay={0.26} animateOnMount className="mt-12">
+            <ServiceSwitcher active={service} onSelect={setService} />
           </Reveal>
 
           {/* Toolbar — filter chips and search share one row on desktop */}
@@ -317,7 +333,7 @@ export default function PortfolioPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search projects..."
-                className="w-full rounded-full border border-white/10 bg-white/[0.05] py-3 pl-11 pr-4 text-sm text-white placeholder-white/40 backdrop-blur-xl transition duration-300 focus:border-orange-400/40 focus:outline-none"
+                className="w-full rounded-full border border-white/10 bg-black/50 py-3 pl-11 pr-4 text-sm text-white placeholder-white/40 backdrop-blur-xl transition duration-300 focus:border-accent-from/50 focus:outline-none"
               />
             </div>
           </m.div>
@@ -325,18 +341,22 @@ export default function PortfolioPage() {
           {/* Grid — 2 wide split-layout cards per row on desktop */}
           {visible.length > 0 ? (
             <>
-              <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {visiblePage.map((project) => (
-                  <m.div
-                    key={`${service}-${project.slug}`}
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  >
-                    <ProjectCard project={project} />
-                  </m.div>
-                ))}
-              </div>
+              <m.div layout className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {visiblePage.map((project, i) => (
+                    <m.div
+                      key={`${service}-${project.slug}`}
+                      layout
+                      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ duration: 0.45, delay: Math.min(i, 5) * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <ProjectCard project={project} index={i} />
+                    </m.div>
+                  ))}
+                </AnimatePresence>
+              </m.div>
 
               <div className="mt-10 flex justify-center">
                 {allShown ? (

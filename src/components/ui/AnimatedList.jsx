@@ -1,6 +1,8 @@
 import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useState } from "react";
 
+const SOFT_SPRING = { type: "spring", stiffness: 110, damping: 20, mass: 1 };
+
 /**
  * Feed that cycles through `items` forever: a new item drops in at the top
  * every `delay` ms, older ones slide down and exit past `maxVisible`.
@@ -36,10 +38,17 @@ export function AnimatedList({
           <m.div
             key={id}
             layout
-            initial={{ opacity: 0, y: -30, scale: 0.9 }}
+            initial={{ opacity: 0, y: -24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.9 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.45, ease: "easeOut" } }}
+            // Soft springs for the slide and the reflow of the rows below, a
+            // slower fade in: each new row eases into place rather than snapping.
+            transition={{
+              layout: SOFT_SPRING,
+              y: SOFT_SPRING,
+              scale: SOFT_SPRING,
+              opacity: { duration: 0.6, ease: "easeOut" },
+            }}
           >
             {item}
           </m.div>

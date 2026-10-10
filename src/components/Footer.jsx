@@ -133,23 +133,26 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Same component, same spot, on every page — Call Us / WhatsApp Us
-            live in the footer instead of floating over page content. */}
-        <ContactShortcuts className="mt-8 sm:mt-12" />
       </div>
 
-      {/* Giant faint decorative wordmark, clipped so only the top of the
-          letters shows before it's cut off at the section's bottom edge */}
-      <div
-        aria-hidden="true"
-        className="relative mt-10 h-[70px] select-none overflow-hidden text-center sm:h-[110px] sm:mt-14 md:h-[150px] md:mt-16 lg:h-[190px]"
-      >
-        <span
-          className="pointer-events-none absolute inset-x-0 top-0 font-heading-hero leading-none text-white/[0.05]"
-          style={{ fontSize: "clamp(4rem, 16vw, 14rem)" }}
+      {/* Giant wordmark (white into orange, clipped so only the top of the
+          letters shows before the footer's bottom edge), with Call Us /
+          WhatsApp Us stacked beside it. Same spot on every page. */}
+      <div className="relative z-10 mt-10 flex flex-col gap-6 px-4 sm:mt-14 md:mt-16 md:flex-row md:items-start md:gap-10 md:px-10">
+        <div
+          aria-hidden="true"
+          className="relative h-[70px] w-full min-w-0 select-none overflow-hidden [container-type:inline-size] sm:h-[110px] md:h-[150px] md:flex-1 lg:h-[190px]"
         >
-          NEXORYN
-        </span>
+          <span
+            className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-r from-white via-white to-accent-from bg-clip-text text-center font-heading-hero leading-none text-transparent"
+            // Sized to the space it has (cqw = % of that width), so all seven
+            // letters always fit beside the buttons.
+            style={{ fontSize: "min(13.4cqw, 13rem)" }}
+          >
+            NEXORYN
+          </span>
+        </div>
+        <ContactShortcuts stacked className="shrink-0 md:w-48 md:pt-2 lg:pt-6" />
       </div>
     </footer>
   );

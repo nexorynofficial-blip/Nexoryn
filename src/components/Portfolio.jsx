@@ -1,18 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, m, useInView, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { m, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import SplitText from "./ui/SplitText";
-import { Eyebrow } from "./ui/Eyebrow";
-import laptopFrame from "../assets/laptop-frame.webp";
+import Reveal from "./ui/Reveal";
 import { PROJECTS } from "../data/projects";
 import { getProjects } from "../lib/content";
 import { useContent } from "../hooks/useContent";
-import { easeInOutStrong, easeOutExpo, easeOutStrong } from "../lib/easing";
 
-// Fixed home-page teaser: always exactly 3 automation projects + 2 web
-// development projects, regardless of how many more get added to PROJECTS
-// later. The full set is always available on the /portfolio grid page.
+// Fixed home-page teaser: 3 automation projects + 2 web development projects,
+// in this order whatever order the data arrives in. The full set is on the
+// /portfolio page.
 const FEATURED_SLUGS = [
   "ai-customer-support-chatbot",
   "personalized-cold-email-outreach",
@@ -21,91 +19,113 @@ const FEATURED_SLUGS = [
   "analytics-hub-saas-dashboard-platform",
 ];
 
-// Ordered by FEATURED_SLUGS rather than by the source list, so the teaser
-// keeps its deliberate automation/web-dev mix whatever order the data
-// arrives in.
 const pickFeatured = (projects) =>
   FEATURED_SLUGS.map((slug) => projects.find((p) => p.slug === slug)).filter(Boolean);
 
-const AUTOPLAY_MS = 6000;
-const SWIPE_PX = 40;
-
-// Transparent screen of laptop-frame.webp, found by flood-filling its alpha
-// channel from the screen's centre (10.70% / 2.13% / 78.60% / 86.32%), then
-// widened ~0.25% per side so the thumbnail tucks under the bezel and no
-// sub-pixel hairline can open at any width. The laptop is drawn over this box.
-const SCREEN_BOX = { left: "10.45%", top: "1.88%", width: "79.1%", height: "86.82%" };
-const FRAME_RATIO = "1600 / 929";
-// Vertical centre of the screen, for placing the side arrows.
-const SCREEN_MID = "45.3%";
-
 const pad = (n) => String(n).padStart(2, "0");
 
-// Every thumbnail spans the screen's full width, edge to edge, and is never
-// cropped. The featured thumbnails are all wider than the ~1.56:1 screen, so
-// that leaves a band above and below, filled with a blurred copy of the same
-// image rather than flat black.
-function ScreenImage({ project }) {
-  return (
-    <>
-      <img
-        src={project.photo}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        width={1600}
-        height={900}
-        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-xl"
-      />
-      <img
-        src={project.photo}
-        alt={project.title}
-        draggable={false}
-        width={1600}
-        height={900}
-        className="relative h-auto w-full"
-      />
-    </>
-  );
+// Split a title so its last two words can carry the orange highlight.
+function splitTitle(title) {
+  const words = title.split(" ");
+  const cut = Math.max(1, words.length - 2);
+  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
 }
 
-// Plain utilities rather than the shared .glass-panel/.pressable classes:
-// those live outside Tailwind's layers, so they'd override the hover border
-// and the colour transition here. Tailwind v4's translate/scale utilities use
-// the separate `translate`/`scale` properties, so the press-scale composes
-// with the side buttons' vertical centring instead of replacing it.
-function NavButton({ direction, onClick, className = "", style }) {
-  const Icon = direction < 0 ? ChevronLeft : ChevronRight;
+/**
+ * One case study in the stack. Its wrapper is a full-screen sticky slot, so
+ * each card pins as it arrives and the next one slides up over it. While a
+ * card is covered it eases back (scales down) so the stack reads as depth.
+ */
+function StackCard({ project, i, total, progress }) {
+  const reduce = useReducedMotion();
+  const ref = useRef(null);
+  // Its own entry: the image settles from a slight zoom as the card arrives.
+  const { scrollYProgress: entry } = useScroll({ target: ref, offset: ["start end", "start start"] });
+  const imageScale = useTransform(entry, [0, 1], reduce ? [1, 1] : [1.25, 1]);
+  // Covered by later cards: shrink a little more for each one stacked on top.
+  const targetScale = 1 - (total - 1 - i) * 0.05;
+  const scale = useTransform(progress, [i / total, 1], reduce ? [1, 1] : [1, targetScale]);
+
+  const [lead, highlight] = splitTitle(project.title);
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={style}
-      aria-label={direction < 0 ? "Previous project" : "Next project"}
-      className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white/80 backdrop-blur-xl transition-[color,border-color,scale] duration-300 hover:border-accent-from/60 hover:text-accent-to focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-from/70 active:scale-95 lg:h-11 lg:w-11 ${className}`}
+    <div
+      ref={ref}
+      // Slots overlap by a fifth of the screen, so less scrolling between cards
+      style={i > 0 ? { marginTop: "-20svh" } : undefined}
+      className="sticky top-0 flex h-[100svh] items-center justify-center px-4 lg:px-[100px]"
     >
-      <Icon className="h-5 w-5" strokeWidth={1.75} />
-    </button>
-  );
-}
+      <m.div
+        style={{ scale, top: `calc(-4vh + ${i * 22}px)` }}
+        className="relative w-full origin-top overflow-hidden rounded-3xl border border-white/[0.08] bg-[linear-gradient(150deg,#3a1406_0%,#140803_32%,#070707_65%)] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]"
+      >
+        <div className="grid gap-0 md:grid-cols-[1fr_1.25fr]">
+          {/* Copy */}
+          <div className="order-last flex flex-col p-5 pt-3 md:order-first md:p-10 lg:p-12">
+            <div className="flex items-center gap-3">
+              <span className="font-mono-tech text-sm font-semibold tracking-[0.2em] text-accent-from">
+                {pad(i + 1)}
+              </span>
+              <span className="h-px w-8 bg-white/20" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                {project.service} · {project.industry}
+              </span>
+            </div>
 
-function Counter({ index, total, running, className = "" }) {
-  return (
-    <div className={`flex items-center gap-3 font-mono-tech text-xs tracking-[0.2em] text-white/50 ${className}`}>
-      <span className="text-white/90">{pad(index + 1)}</span>
-      <span className="relative h-px w-16 overflow-hidden bg-white/15">
-        {running && (
-          // Remounts per slide, so it always tracks the live autoplay timer.
-          <m.span
-            key={index}
-            className="absolute inset-0 origin-left bg-gradient-to-r from-accent-from to-accent-to"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: AUTOPLAY_MS / 1000, ease: "linear" }}
-          />
-        )}
-      </span>
-      <span>{pad(total)}</span>
+            <h3 className="mt-5 font-heading text-2xl font-extrabold uppercase leading-[1.1] text-white md:mt-8 md:text-3xl lg:text-[1.9rem]">
+              {lead}{" "}
+              <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">
+                {highlight}
+              </span>
+            </h3>
+            <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-body-dim md:mt-4 md:line-clamp-3 md:text-base">
+              {project.description}
+            </p>
+
+            <ul className="mt-4 flex flex-wrap gap-2 md:mt-5">
+              {(project.tags ?? []).slice(0, 3).map((tag) => (
+                <li
+                  key={tag}
+                  className="rounded-full border border-white/15 bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/85"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              to={`/portfolio/${project.slug}`}
+              className="group/cta mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-accent-from to-accent-to px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-black transition duration-300 hover:brightness-110 md:mt-auto md:translate-y-0"
+            >
+              View Case Study
+              <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
+            </Link>
+          </div>
+
+          {/* Image */}
+          <Link
+            to={`/portfolio/${project.slug}`}
+            aria-label={`${project.title} case study`}
+            className="group/img relative m-2.5 block aspect-[16/9] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0d0d0d] md:m-4 md:aspect-auto md:min-h-[420px] lg:min-h-[480px]"
+          >
+            <m.img
+              src={project.photo?.url ?? project.photo}
+              alt={project.photo?.altText ?? project.title}
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              width={1600}
+              height={1000}
+              style={{ scale: imageScale }}
+              className="absolute inset-0 h-full w-full object-cover transition-[filter] duration-500 group-hover/img:brightness-110"
+            />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <span className="absolute bottom-4 left-4 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
+              {project.service}
+            </span>
+          </Link>
+        </div>
+      </m.div>
     </div>
   );
 }
@@ -113,236 +133,48 @@ function Counter({ index, total, running, className = "" }) {
 export default function Portfolio() {
   const projects = useContent(getProjects, PROJECTS);
   const featured = pickFeatured(projects);
-  const total = featured.length;
-
-  const reduceMotion = useReducedMotion();
-  const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { amount: 0.35 });
-
-  const [{ index, dir }, setSlide] = useState({ index: 0, dir: 1 });
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [tabVisible, setTabVisible] = useState(true);
-  const pointerStart = useRef(null);
-
-  const current = featured[Math.min(index, total - 1)];
-
-  const go = useCallback(
-    (delta) =>
-      setSlide(({ index: i }) => ({ index: (i + delta + total) % total, dir: delta })),
-    [total],
-  );
-
-  useEffect(() => {
-    const onVisibility = () => setTabVisible(document.visibilityState === "visible");
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, []);
-
-  // Autoplay only runs while the section is on screen and nobody is reading
-  // or interacting with it. Keyed on `index`, so any manual step restarts the
-  // full interval rather than jumping again moments later.
-  const autoplay = !reduceMotion && total > 1 && inView && tabVisible && !hovered && !focused;
-  useEffect(() => {
-    if (!autoplay) return undefined;
-    const t = setTimeout(() => go(1), AUTOPLAY_MS);
-    return () => clearTimeout(t);
-  }, [autoplay, index, go]);
-
-  // Preload every thumbnail up front so a slide never opens on a blank screen.
-  const photosKey = featured.map((p) => p.photo).join("|");
-  useEffect(() => {
-    photosKey.split("|").forEach((src) => {
-      new Image().src = src;
-    });
-  }, [photosKey]);
-
-  const onKeyDown = (e) => {
-    if (e.key === "ArrowLeft") go(-1);
-    else if (e.key === "ArrowRight") go(1);
-  };
-
-  const onPointerDown = (e) => {
-    pointerStart.current = e.clientX;
-    // Keeps pointerup coming here even if the swipe ends off the laptop.
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  };
-  const onPointerUp = (e) => {
-    if (pointerStart.current === null) return;
-    const dx = e.clientX - pointerStart.current;
-    pointerStart.current = null;
-    if (Math.abs(dx) >= SWIPE_PX) go(dx < 0 ? 1 : -1);
-  };
-
-  const slideVariants = reduceMotion
-    ? { enter: { opacity: 0 }, center: { opacity: 1 }, exit: { opacity: 0 } }
-    : {
-        enter: (d) => ({ x: `${d * 100}%` }),
-        center: { x: "0%" },
-        exit: (d) => ({ x: `${d * -100}%` }),
-      };
-
-  const textVariants = {
-    shown: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, delay: 0.2, ease: easeOutExpo },
-    },
-    hidden: {
-      opacity: 0,
-      y: reduceMotion ? 0 : -8,
-      transition: { duration: 0.22, ease: easeOutStrong },
-    },
-  };
-
-  if (!current) return null;
+  const stackRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
 
   return (
-    <section id="portfolio" ref={sectionRef} className="relative scroll-mt-24 pb-16 lg:pb-24">
-      <div className="px-4 pt-8 text-center md:px-10 lg:pt-12">
-        {/* One line at every width: nowrap, with the size scaling down with
-            the viewport instead of wrapping on narrow screens. */}
+    <section id="portfolio" className="relative scroll-mt-24 pt-24 lg:pt-32">
+      <div className="mx-auto max-w-5xl px-4 text-center md:px-10">
         <SplitText
           as="h2"
-          className="font-heading whitespace-nowrap text-[clamp(1.05rem,5.2vw,3.75rem)] leading-tight tracking-tight text-white"
+          className="font-heading text-[2rem] leading-tight tracking-tight text-white sm:text-4xl md:whitespace-nowrap md:text-6xl"
         >
-          Work that speaks for <span className="text-accent-from">itself</span>.
+          Work That <span className="text-accent-from">Delivers.</span>
         </SplitText>
+        <Reveal
+          as="p"
+          y={24}
+          delay={0.12}
+          className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+        >
+          Real systems, built for real businesses, and the results to show for it.
+        </Reveal>
       </div>
 
-      <div
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Featured projects"
-        onKeyDown={onKeyDown}
-        onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
-        onPointerLeave={(e) => e.pointerType === "mouse" && setHovered(false)}
-        // Only keyboard focus pauses autoplay. A mouse click also leaves the
-        // clicked arrow focused, and pausing on that would stop autoplay
-        // for good after the first click.
-        onFocus={(e) => e.target.matches?.(":focus-visible") && setFocused(true)}
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
-        }}
-        className="mx-auto mt-8 grid max-w-[1400px] items-center gap-8 px-4 md:mt-10 md:px-10 lg:mt-14 xl:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] xl:gap-12"
-      >
-        {/* Laptop — first on mobile, right column on desktop. */}
-        <div className="order-1 mx-auto w-full max-w-[680px] xl:order-2 xl:max-w-none">
-          <div className="relative xl:px-12">
-            <NavButton
-              direction={-1}
-              onClick={() => go(-1)}
-              style={{ top: SCREEN_MID }}
-              className="absolute left-0 z-20 hidden -translate-y-1/2 xl:flex"
-            />
-            <div
-              className="relative w-full select-none"
-              style={{ aspectRatio: FRAME_RATIO, touchAction: "pan-y" }}
-              onPointerDown={onPointerDown}
-              onPointerUp={onPointerUp}
-              onPointerCancel={() => (pointerStart.current = null)}
-            >
-              <div className="absolute overflow-hidden bg-[#0a0a0a]" style={SCREEN_BOX}>
-                <AnimatePresence initial={false} custom={dir}>
-                  <m.div
-                    key={current.slug}
-                    custom={dir}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    // In-out rather than the site's usual expo-out: expo
-                    // covers ~90% of the distance in the first fifth, which
-                    // reads as a cut, not a slide.
-                    transition={{ duration: reduceMotion ? 0.3 : 0.85, ease: easeInOutStrong }}
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <ScreenImage project={current} />
-                  </m.div>
-                </AnimatePresence>
-              </div>
-              {/* Drawn over the screen box: its opaque bezel is what frames
-                  and hides the thumbnail's edges. */}
-              <img
-                src={laptopFrame}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                width={1600}
-                height={929}
-                className="pointer-events-none absolute inset-0 z-10 h-full w-full"
-              />
-            </div>
-            <NavButton
-              direction={1}
-              onClick={() => go(1)}
-              style={{ top: SCREEN_MID }}
-              className="absolute right-0 z-20 hidden -translate-y-1/2 xl:flex"
-            />
-          </div>
-
-          <div className="mt-5 flex items-center justify-center gap-6 xl:hidden">
-            <NavButton direction={-1} onClick={() => go(-1)} />
-            <Counter index={index} total={total} running={autoplay} />
-            <NavButton direction={1} onClick={() => go(1)} />
-          </div>
-        </div>
-
-        {/* Text — all projects stacked in one grid cell, so the column is
-            always as tall as the longest entry and nothing shifts between
-            slides; only the active one is visible and reachable. */}
-        <div className="order-2 mx-auto w-full max-w-[680px] xl:order-1 xl:mx-0 xl:max-w-md">
-          <div className="grid">
-            {featured.map((project, i) => {
-              const active = i === index;
-              return (
-                <m.div
-                  key={project.slug}
-                  className={`col-start-1 row-start-1 ${active ? "" : "pointer-events-none"}`}
-                  initial={false}
-                  animate={active ? "shown" : "hidden"}
-                  variants={textVariants}
-                  aria-hidden={!active}
-                  inert={!active}
-                >
-                  <Eyebrow>{project.service}</Eyebrow>
-                  <h3 className="font-heading mt-5 text-2xl leading-tight tracking-tight text-accent-from md:text-3xl lg:text-4xl">
-                    {project.title}
-                  </h3>
-                  <p className="mt-4 text-sm leading-relaxed text-body-dim md:text-base">
-                    {project.description}
-                  </p>
-                  <Link
-                    to={`/portfolio/${project.slug}`}
-                    className="group/case mt-6 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-accent-from"
-                  >
-                    <span className="relative pb-1">
-                      View case study
-                      <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-accent-from to-accent-to transition-transform duration-300 ease-out group-hover/case:scale-x-100" />
-                    </span>
-                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/case:-translate-y-0.5 group-hover/case:translate-x-0.5" />
-                  </Link>
-                </m.div>
-              );
-            })}
-          </div>
-          <Counter index={index} total={total} running={autoplay} className="mt-10 hidden xl:flex" />
-          <span className="sr-only" aria-live={autoplay ? "off" : "polite"}>
-            Project {index + 1} of {total}: {current.title}
-          </span>
-        </div>
+      {/* The stack: one full-screen sticky slot per case study */}
+      <div ref={stackRef} className="relative -mt-10 md:-mt-24">
+        {featured.map((project, i) => (
+          <StackCard
+            key={project.slug}
+            project={project}
+            i={i}
+            total={featured.length}
+            progress={scrollYProgress}
+          />
+        ))}
       </div>
 
-      <div className="relative z-10 mt-12 flex justify-center lg:mt-16">
+      <div className="relative -mt-16 flex justify-center pb-24 md:-mt-28 lg:pb-32">
         <Link
           to="/portfolio"
-          className="group/link inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-accent-from"
+          className="group inline-flex items-center gap-2 rounded-full border border-accent-from px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-accent-from transition duration-300 hover:bg-accent-from hover:text-black"
         >
-          <span className="relative pb-1">
-            View All Projects
-            <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-accent-from to-accent-to transition-transform duration-300 ease-out group-hover/link:scale-x-100" />
-          </span>
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/link:translate-x-1" />
+          View All Projects
+          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
         </Link>
       </div>
     </section>

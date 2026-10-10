@@ -6,6 +6,11 @@ import {
   Rocket,
   CheckCircle2,
   Check,
+  Mail,
+  Phone,
+  MessageCircle,
+  Clock,
+  ArrowUpRight,
 } from "lucide-react";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
@@ -21,10 +26,14 @@ const GMAIL_COMPOSE_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL
 const PHONE_DISPLAY = "+92 302 3858945";
 const PHONE_E164 = "+923023858945";
 const PHONE_TEL = `tel:${PHONE_E164}`;
+const WHATSAPP_URL = "https://wa.me/923023858945";
+
+const PANEL = "rounded-[2rem] border border-white/[0.08] bg-[#111111]/95 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]";
+const CARD_BG = "bg-[linear-gradient(150deg,#3a1406_0%,#140803_35%,#070707_70%)]";
 
 // Phones dial straight through on tap. Desktop has no dialer, so a click
 // there copies the number instead and shows a brief "Copied" confirmation.
-function PhoneLink() {
+function PhoneLink({ className = "font-medium text-accent-to transition-colors duration-300 hover:text-accent-from" }) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = (e) => {
@@ -43,7 +52,7 @@ function PhoneLink() {
       <a
         href={PHONE_TEL}
         onClick={handleClick}
-        className="font-medium text-accent-to transition-colors duration-300 hover:text-accent-from"
+        className={className}
       >
         {PHONE_DISPLAY}
       </a>
@@ -132,18 +141,20 @@ function FormTab({ label, icon: Icon, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex flex-1 items-center justify-center gap-2 whitespace-nowrap pb-3 text-xs font-semibold transition-colors duration-300 sm:text-sm ${
-        active ? "text-accent-from" : "text-white/50 hover:text-white/80"
+      aria-pressed={active}
+      className={`relative isolate flex flex-1 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-300 lg:text-xs ${
+        active ? "text-black" : "text-white/65 hover:text-white"
       }`}
     >
+      {active && (
+        <m.span
+          layoutId="contact-form-pill"
+          transition={{ type: "spring", stiffness: 380, damping: 34 }}
+          className="absolute inset-0 -z-10 rounded-full bg-gradient-to-r from-accent-from to-accent-to"
+        />
+      )}
       <Icon className="h-4 w-4 shrink-0" />
-      <span className="font-heading tracking-tight">{label}</span>
-      <m.span
-        className="absolute bottom-0 left-0 h-0.5 w-full origin-left rounded-full bg-gradient-to-r from-accent-from to-accent-to"
-        initial={false}
-        animate={{ scaleX: active ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      />
+      {label}
     </button>
   );
 }
@@ -200,7 +211,7 @@ function ContactFormPanel() {
   return (
     <>
       {/* Mobile-only: replaces the tab bar with a compact form-type picker */}
-      <div className="glass-panel mb-4 rounded-2xl p-4 md:hidden">
+      <div className={`${PANEL} mb-4 p-4 md:hidden`}>
         <FloatingSelect
           label="Choose Form Type"
           name="formType"
@@ -210,8 +221,8 @@ function ContactFormPanel() {
         />
       </div>
 
-      <div className="glass-panel rounded-3xl p-6 md:p-8">
-        <div className="no-scrollbar hidden gap-1 overflow-x-auto border-b border-white/10 md:flex">
+      <div className={`${PANEL} p-5 md:p-8 lg:p-10`}>
+        <div className="no-scrollbar hidden gap-1 overflow-x-auto rounded-full border border-white/10 bg-black/60 p-1 md:flex">
           {FORMS.map((form) => (
             <FormTab
               key={form.id}
@@ -223,7 +234,7 @@ function ContactFormPanel() {
           ))}
         </div>
 
-        <div className="mt-6 min-h-[420px]">
+        <div className="min-h-[420px] md:mt-8">
           <AnimatePresence mode="wait" initial={false}>
             {submitted ? (
               <m.div
@@ -324,25 +335,34 @@ function ContactFormPanel() {
           </AnimatePresence>
         </div>
 
-        <p className="mt-6 text-center text-xs text-white/40">
-          We typically respond within a few hours.
-        </p>
-        <p className="mt-2 text-center text-xs text-white/40">
-          Prefer email?{" "}
-          <a
-            href={GMAIL_COMPOSE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-accent-to transition-colors duration-300 hover:text-accent-from"
-          >
-            {EMAIL}
-          </a>
-        </p>
-        <p className="mt-2 text-center text-xs text-white/40">
-          Prefer call? <PhoneLink />
-        </p>
       </div>
     </>
+  );
+}
+
+/** One way to reach us: icon tile, label, value and an arrow. */
+function ContactCard({ icon: Icon, label, children, href, external }) {
+  const body = (
+    <>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent-from/30 bg-gradient-to-b from-[#2a1608] to-[#0d0703] text-accent-from shadow-[0_0_24px_-6px_rgba(255,122,26,0.45)]">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">{label}</span>
+        <span className="mt-1 block truncate text-[15px] font-semibold text-white">{children}</span>
+      </span>
+      {href && (
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-white/40 transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-from" />
+      )}
+    </>
+  );
+  const cls = `group flex items-center gap-4 rounded-3xl border border-white/[0.08] p-4 transition duration-500 hover:-translate-y-0.5 hover:border-accent-from/40 ${CARD_BG}`;
+  return href ? (
+    <a href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className={cls}>
+      {body}
+    </a>
+  ) : (
+    <div className={cls}>{body}</div>
   );
 }
 
@@ -357,13 +377,14 @@ export default function ContactPage() {
     <>
       <div className="relative">
         <SectionsBackground />
-        <div className="relative z-10 w-full px-4 pb-24 pt-32 md:px-10 lg:pt-40">
+        <div className="relative z-10 w-full px-4 pb-24 pt-32 md:px-10 lg:px-[7.8vw] lg:pt-40">
+          {/* Hero */}
           <div className="mx-auto max-w-4xl text-center">
             <SplitText
               as="h1"
               animateOnMount
               delay={0.08}
-              className="mt-6 font-heading text-2xl leading-tight tracking-tight text-white sm:text-4xl md:text-6xl"
+              className="font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl"
             >
               Let's build <span className="text-accent-from">something</span>.
             </SplitText>
@@ -372,41 +393,61 @@ export default function ContactPage() {
               y={24}
               delay={0.2}
               animateOnMount
-              className="mt-5 text-lg font-light leading-relaxed text-body-dim"
+              className="mx-auto mt-6 max-w-2xl text-lg font-light leading-relaxed text-body-dim"
             >
               Ask a quick question, book a consultation, or tell us about your
               project, pick whichever fits.
             </Reveal>
           </div>
 
-          <div className="mx-auto mt-14 grid max-w-7xl grid-cols-1 items-start gap-10 lg:grid-cols-5 lg:gap-12">
-            {/* Form first on mobile (order-first), FAQ after — desktop keeps
-                its original FAQ-left/Form-right order via the lg: overrides,
-                which match the un-ordered default (FAQ is first in the DOM). */}
-            <Reveal
-              y={32}
-              delay={0.1}
-              animateOnMount
-              className="order-last lg:order-first lg:col-span-2"
-            >
-              <h2 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-                Frequently asked <span className="text-accent-from">questions</span>
-              </h2>
-              <p className="mt-3 text-sm font-light leading-relaxed text-body-dim md:text-base">
-                Quick answers before you reach out, tap a question to expand.
-              </p>
-              <FaqAccordion className="mt-8" />
-            </Reveal>
-
+          {/* Form + ways to reach us */}
+          <div className="mt-14 grid grid-cols-1 items-start gap-6 md:mt-16 lg:grid-cols-[1.5fr_1fr] lg:gap-8">
             <m.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-              className="order-first lg:order-last lg:col-span-3"
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
               <ContactFormPanel />
             </m.div>
+
+            <Reveal stagger={0.08} y={24} delay={0.3} animateOnMount className="flex flex-col gap-3 lg:sticky lg:top-28">
+              <div className={`${PANEL} p-6 md:p-7`}>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-from">Reach us directly</span>
+                <h2 className="mt-3 font-heading text-2xl font-extrabold uppercase leading-tight text-white">
+                  Prefer to <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">talk?</span>
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-body-dim">
+                  Skip the form and reach the team the way that suits you.
+                </p>
+              </div>
+              <ContactCard icon={Mail} label="Email" href={GMAIL_COMPOSE_URL} external>
+                {EMAIL}
+              </ContactCard>
+              <ContactCard icon={Phone} label="Call">
+                <PhoneLink className="text-white transition-colors duration-300 hover:text-accent-to" />
+              </ContactCard>
+              <ContactCard icon={MessageCircle} label="WhatsApp" href={WHATSAPP_URL} external>
+                Message us on WhatsApp
+              </ContactCard>
+              <ContactCard icon={Clock} label="Response time">
+                We typically respond within a few hours.
+              </ContactCard>
+            </Reveal>
           </div>
+
+          {/* FAQ */}
+          <section className={`${PANEL} mt-20 grid grid-cols-1 gap-8 p-6 md:mt-28 md:p-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16 lg:p-14`}>
+            <Reveal y={24}>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-from">FAQ</span>
+              <h2 className="mt-4 font-heading text-4xl leading-tight tracking-tight text-white md:text-5xl">
+                Frequently asked <span className="text-accent-from">questions</span>
+              </h2>
+              <p className="mt-5 text-base font-light leading-relaxed text-body-dim">
+                Quick answers before you reach out, tap a question to expand.
+              </p>
+            </Reveal>
+            <FaqAccordion />
+          </section>
         </div>
       </div>
 

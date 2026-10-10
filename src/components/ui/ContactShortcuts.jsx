@@ -4,12 +4,14 @@ const PHONE_DISPLAY = "+92 302 3858945";
 const PHONE_HREF = "tel:+923023858945";
 const WHATSAPP_HREF = "https://wa.me/923023858945";
 
-// Lives inline at the bottom-right of the footer (rendered once, from
-// Footer.jsx) rather than floating over page content on every route.
-export function ContactShortcuts({ className = "" }) {
+// Lives in the footer, beside the NEXORYN wordmark (rendered once, from
+// Footer.jsx), rather than floating over page content on every route.
+export function ContactShortcuts({ className = "", stacked = false }) {
   return (
     <div
-      className={`flex flex-wrap items-center justify-center gap-3 md:justify-end ${className}`}
+      className={`flex gap-3 ${
+        stacked ? "flex-col items-stretch" : "flex-wrap items-center justify-center md:justify-end"
+      } ${className}`}
     >
 
       <a
