@@ -122,7 +122,41 @@
       html {
         background: #150c05;
       }
+      /* The orange intro plate, painted with the HTML itself instead of
+         waiting for the JavaScript to download and run. It is the exact first
+         frame of the Preloader (same colour and scanlines; its film grain is
+         left to the Preloader, since rasterising that SVG noise filter held
+         up the first paint by 200-300 ms); the
+         Preloader removes it the moment its own identical plate mounts, so
+         the hand-over is invisible. If the app never mounts (script error,
+         blocked JS) it fades away on its own after 12 s rather than leaving an
+         orange screen that looks like a hung loader. */
+      #boot-plate {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        overflow: hidden;
+        pointer-events: none;
+        background: #ff7a1a;
+        animation: boot-plate-out 0.4s ease 12s forwards;
+      }
+      #boot-plate > span {
+        position: absolute;
+        inset: 0;
+        mix-blend-mode: multiply;
+      }
+      #boot-plate > .boot-scan {
+        opacity: 0.18;
+        background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0px, rgba(0, 0, 0, 0.9) 1px, transparent 1px, transparent 4px);
+      }
+      @keyframes boot-plate-out {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
     </style>
+    <noscript><style>#boot-plate { display: none; }</style></noscript>
 
     <!-- Analytics: init queues events immediately; the gtag.js library itself
          is injected on the first scroll/tap/click/key press, or after 6 s if
@@ -133,6 +167,7 @@
     <script src="/perf-monitor.js" defer></script>
   </head>
   <body>
+    <div id="boot-plate" aria-hidden="true"><span class="boot-scan"></span></div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

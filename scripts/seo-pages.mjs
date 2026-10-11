@@ -69,7 +69,11 @@ const projects = await loadProjects();
 const projectLinks = projects.map((p) => `<li><a href="/portfolio/${esc(p.slug)}">${esc(p.title)}</a>: ${esc(p.description)}</li>`).join("");
 const nav = PAGES.filter((p) => p.path).map((p) => `<a href="/${p.path}">${esc(p.h1)}</a>`).join(" ");
 
-const HIDDEN = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
+// Must match the hero intro paragraph in src/components/Hero.jsx.
+const HERO_INTRO =
+  "At Nexoryn, we build websites that convert and automation systems that eliminate the repetitive work slowing businesses down. We don't rely on templates or one-size-fits-all solutions.";
+
+const HIDDEN ="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
 
 function render(page) {
   const url = `${SITE}/${page.path}`;
@@ -87,6 +91,19 @@ function render(page) {
   // reader skips them) while still real <a> tags (so Tab still lands on
   // them) — hidden-but-focusable, which is its own accessibility bug.
   const block = `<div data-seo-fallback="true" aria-hidden="true" style="${HIDDEN}">${extra}</div>\n    `;
+
+  // Home only: the hero's intro paragraph (the page's largest text, so its
+  // "largest contentful paint"), rendered in the HTML beneath the static intro
+  // plate. It is painted with the first frame instead of after the app has
+  // downloaded and run; the Preloader removes it as the real hero mounts.
+  // Inline styles, because the stylesheet may not have arrived when it first
+  // paints. Set at 18px (the hero's desktop size) so it is never smaller than
+  // the real paragraph that replaces it.
+  const bootHero =
+    page.path === ""
+      ? `<div id="boot-hero" aria-hidden="true" style="position:absolute;top:0;left:0;right:0;padding:128px 16px 0;pointer-events:none"><p style="max-width:28rem;margin:0 auto;font:300 18px/1.625 Manrope,ui-sans-serif,system-ui,sans-serif;color:#cfcfcf;text-align:center">${esc(HERO_INTRO)}</p></div>\n    `
+      : "";
+
   return html
     .replace(/<title>[^<]*<\/title>/, `<title>${esc(page.title)}</title>`)
     .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/, `$1${esc(page.desc)}$2`)
@@ -96,7 +113,7 @@ function render(page) {
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`)
     .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${esc(page.title)}$2`)
     .replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${esc(page.desc)}$2`)
-    .replace('<div id="root"></div>', `<div id="root"></div>\n    ${block}`);
+    .replace('<div id="root"></div>', `${bootHero}<div id="root"></div>\n    ${block}`);
 }
 
 function write(path, content) {

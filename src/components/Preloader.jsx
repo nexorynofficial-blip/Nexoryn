@@ -49,6 +49,19 @@ export default function Preloader({ onComplete }) {
     (_context, contextSafe) => {
       const reduced = prefersReducedMotion();
 
+      // index.html paints a static copy of this plate (and, on the home page,
+      // a copy of the hero's intro text beneath it) before any JavaScript
+      // runs, so the first paint doesn't wait for the app. This plate is now
+      // mounted on top of it, identical, so the static plate can go — in the
+      // same frame, before anything is painted. The static text is hidden
+      // rather than removed: taking an already-painted element out of the
+      // page makes Chrome discard it as the "largest contentful paint" and
+      // re-credit that to the real hero text, which only paints after the
+      // app has loaded.
+      document.getElementById("boot-plate")?.remove();
+      const bootHero = document.getElementById("boot-hero");
+      if (bootHero) bootHero.style.visibility = "hidden";
+
       let finished = false;
       const finish = () => {
         if (finished) return;

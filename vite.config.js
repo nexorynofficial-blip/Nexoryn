@@ -24,9 +24,32 @@ const adminTrailingSlash = {
   },
 }
 
+// The app's stylesheet no longer blocks the first paint. Everything visible
+// before the app mounts (the intro plate, and the home page's intro text under
+// it) is styled inline in index.html, so the browser can paint as soon as the
+// HTML arrives instead of waiting ~0.5 s for the CSS on a phone. The sheet is
+// still fetched at high priority (preload) and only applied once loaded
+// (media="print" until then); main.jsx switches it on and holds the app's
+// first render until it has loaded, so nothing ever renders unstyled.
+// (A media/onload swap in the HTML would need an inline script, which the
+// site's Content-Security-Policy forbids.)
+const nonBlockingCss = {
+  name: 'non-blocking-css',
+  apply: 'build',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html) =>
+      html.replace(
+        /<link rel="stylesheet" crossorigin href="([^"]+\.css)">/,
+        (_m, href) =>
+          `<link rel="preload" as="style" crossorigin href="${href}">\n    <link rel="stylesheet" crossorigin href="${href}" media="print" id="app-css">`,
+      ),
+  },
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [preact(), tailwindcss(), adminTrailingSlash],
+  plugins: [preact(), tailwindcss(), adminTrailingSlash, nonBlockingCss],
   build: {
     rollupOptions: {
       output: {
