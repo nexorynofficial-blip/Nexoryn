@@ -27,6 +27,34 @@ const adminTrailingSlash = {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [preact(), tailwindcss(), adminTrailingSlash],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // gsap/ScrollTrigger, Reveal and SplitText are needed synchronously
+          // by Preloader/ScrollToTop/ScrollProgress — every route mounts them
+          // before first paint, not just Home. Left to automatic chunking,
+          // the bundler groups them into a chunk shared with the *lazy*
+          // route chunks (since those also import Reveal/SplitText), which
+          // then has to be fetched and executed before anything can paint
+          // anyway, just via an extra chunk hop. Pinning it into the main
+          // entry avoids that hop and keeps gsap from drifting into whatever
+          // next lazy page happens to share the most code with it.
+          if (
+            id.includes("/node_modules/gsap/") ||
+            id.includes("/node_modules/@gsap/") ||
+            id.endsWith("/src/lib/gsap.js") ||
+            id.endsWith("/src/components/ui/Reveal.jsx") ||
+            id.endsWith("/src/components/ui/SplitText.jsx") ||
+            id.endsWith("/src/lib/inView.js")
+          ) {
+            return "index";
+          }
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

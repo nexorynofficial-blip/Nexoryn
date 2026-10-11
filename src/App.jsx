@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LazyMotion } from "framer-motion";
 import Navbar from "./components/Navbar";
@@ -57,6 +57,17 @@ export default function App() {
   // than finishing behind the plate while nobody can see it.
   const [introDone, setIntroDone] = useState(false);
 
+  // The static HTML shell (scripts/seo-pages.mjs) carries a visually-hidden
+  // block of real links for crawlers that don't run JavaScript. It lives
+  // outside #root, so React never touches it — once we're here, JS is
+  // running, the real app has mounted, and that block is redundant. It's
+  // marked aria-hidden (so a screen reader skips it) but its links are real
+  // <a> tags a keyboard can still Tab to, which is a hidden-but-focusable
+  // trap for a JS-capable visitor. Removing it outright fixes that.
+  useEffect(() => {
+    document.querySelectorAll("[data-seo-fallback]").forEach((el) => el.remove());
+  }, []);
+
   return (
     <BrowserRouter>
       <LazyMotion features={loadMotionFeatures} strict>
@@ -68,11 +79,13 @@ export default function App() {
             <SiteBackground />
             {/* Fixed navbar is shared across every route */}
             <Navbar />
-            <div className="relative z-10">
+            {/* The page's one <main> landmark — every route renders inside it,
+                so assistive tech and crawlers always have exactly one. */}
+            <main className="relative z-10">
               <PageTransition>
                 <AppRoutes />
               </PageTransition>
-            </div>
+            </main>
           </div>
         </IntroProvider>
         {/* Film grain lives on the section backdrops, not here. A fixed

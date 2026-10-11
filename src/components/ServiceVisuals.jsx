@@ -54,7 +54,7 @@ export function AutomationVisual() {
       {node(24, 70, 40, "New lead",
         <path d="M46,78 l-7,13 h6 l-2,11 l9,-15 h-6 z" fill={ORANGE} />)}
       {/* AI agent, glowing while it thinks */}
-      <rect x="122" y="66" width="76" height="48" rx="13" fill="none" stroke={ORANGE} strokeOpacity="0.5" strokeWidth="3" className="svc-glow" />
+      <rect x="122" y="66" width="76" height="48" rx="13" fill="none" stroke={ORANGE} strokeWidth="3" className="svc-glow" />
       {node(126, 70, 68, "AI agent",
         <g>
           <rect x="146" y="80" width="28" height="20" rx="6" fill="none" stroke="#e5e5e5" strokeWidth="1.6" />

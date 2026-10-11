@@ -152,8 +152,8 @@ export default function Navbar() {
             <m.img
               src={nexorynLogo}
               alt="Nexoryn"
-              width={256}
-              height={256}
+              width={128}
+              height={128}
               animate={{ rotate: expanded ? 0 : -360 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="h-9 w-9 transition-transform duration-300 group-hover:scale-110 lg:h-11 lg:w-11"

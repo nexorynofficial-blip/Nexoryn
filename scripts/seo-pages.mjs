@@ -81,7 +81,12 @@ function render(page) {
   if (page.path === "contact") extra += `<p>Email: team@nexoryn.tech. Phone: +92 302 3858945.</p>`;
   extra += `<nav>${nav}</nav>`;
 
-  const block = `<div aria-hidden="true" style="${HIDDEN}">${extra}</div>\n    `;
+  // data-seo-fallback: the real React app strips this on mount (see App.jsx)
+  // — it exists only for crawlers that don't run JavaScript. Left in place
+  // for a JS-capable visitor, its links would be aria-hidden (so a screen
+  // reader skips them) while still real <a> tags (so Tab still lands on
+  // them) — hidden-but-focusable, which is its own accessibility bug.
+  const block = `<div data-seo-fallback="true" aria-hidden="true" style="${HIDDEN}">${extra}</div>\n    `;
   return html
     .replace(/<title>[^<]*<\/title>/, `<title>${esc(page.title)}</title>`)
     .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/, `$1${esc(page.desc)}$2`)

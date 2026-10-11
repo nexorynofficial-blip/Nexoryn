@@ -348,7 +348,7 @@ select:-webkit-autofill:focus {
 
 /* ── Live n8n workflow demo (components/n8n/WorkflowDemo.jsx) ───────────── */
 @keyframes n8n-flow { to { stroke-dashoffset: -36; } }
-@keyframes n8n-pulse { 0%, 100% { stroke-opacity: 0.15; } 50% { stroke-opacity: 0.5; } }
+@keyframes n8n-pulse { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.5; } }
 @keyframes n8n-spin { to { transform: rotate(360deg); } }
 @keyframes n8n-pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes n8n-dot { 0%, 80%, 100% { opacity: 0.3; transform: none; } 40% { opacity: 1; transform: translateY(-2px); } }
@@ -363,7 +363,7 @@ select:-webkit-autofill:focus {
 
 /* ── Service card illustrations (components/ServiceVisuals.jsx) ─────────── */
 @keyframes svc-flow { to { stroke-dashoffset: -28; } }
-@keyframes svc-glow { 0%, 100% { stroke-opacity: 0.15; } 50% { stroke-opacity: 0.7; } }
+@keyframes svc-glow { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.7; } }
 @keyframes svc-blink { 0%, 90%, 100% { opacity: 1; } 95% { opacity: 0.1; } }
 /* pop in, hold, fade out — one 4.5s cycle */
 @keyframes svc-pop {

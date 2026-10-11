@@ -95,6 +95,7 @@ function StackCard({ project, i, total, progress }) {
 
             <Link
               to={`/portfolio/${project.slug}`}
+              aria-label={`View case study: ${project.title}`}
               className="group/cta mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-accent-from to-accent-to px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-black transition duration-300 hover:brightness-110 md:mt-auto md:translate-y-0"
             >
               View Case Study

@@ -206,7 +206,6 @@ function Node({ id, state }) {
           rx={14}
           fill="none"
           stroke="#ff7a1a"
-          strokeOpacity="0.35"
           strokeWidth="6"
           className="n8n-pulse"
         />
