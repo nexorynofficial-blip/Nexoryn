@@ -204,7 +204,7 @@ export default function AboutPage() {
               >
                 What <span className="text-accent-from">Nexoryn</span> is about
               </SplitText>
-              <p className="mt-6 max-w-2xl text-lg font-light leading-relaxed text-body-dim">{INTRO_PARAGRAPH}</p>
+              <p className="mt-6 max-w-2xl text-lg font-light leading-relaxed text-body-dim max-md:text-base">{INTRO_PARAGRAPH}</p>
               <ul className="mt-8 flex flex-wrap gap-2">
                 {DISCIPLINES.map((d) => (
                   <li
@@ -219,7 +219,7 @@ export default function AboutPage() {
 
             <m.div variants={blurFadeIn} className="mx-auto w-full max-w-[460px] lg:max-w-none">
               <div className={`relative rounded-[2.25rem] border border-white/[0.08] p-3 shadow-[0_30px_100px_-30px_rgba(255,122,26,0.45)] ${CARD_BG}`}>
-                <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/[0.06] bg-[radial-gradient(circle_at_50%_45%,rgba(255,122,26,0.18),#0b0b0b_65%)]">
+                <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[1.75rem] max-md:aspect-[4/3] border border-white/[0.06] bg-[radial-gradient(circle_at_50%_45%,rgba(255,122,26,0.18),#0b0b0b_65%)]">
                   <div
                     aria-hidden="true"
                     className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:22px_22px]"
@@ -236,7 +236,7 @@ export default function AboutPage() {
             initial="hidden"
             whileInView="show"
             viewport={viewportOnce}
-            className="mt-28 lg:mt-40"
+            className="mt-28 max-md:mt-20 lg:mt-40"
           >
             <div className="text-center">
               <SplitText className="font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl">
@@ -257,7 +257,7 @@ export default function AboutPage() {
             initial="hidden"
             whileInView="show"
             viewport={viewportOnce}
-            className="mt-28 lg:mt-40"
+            className="mt-28 max-md:mt-20 lg:mt-40"
           >
             <div className="text-center">
               <SectionHeading lead="Our" highlight="Team" />
@@ -270,7 +270,7 @@ export default function AboutPage() {
           </m.section>
 
           {/* ── Global reach ─────────────────────────────────────── */}
-          <section className="mt-28 lg:mt-40">
+          <section className="mt-28 max-md:mt-20 lg:mt-40">
             <div className="grid grid-cols-1 items-center gap-10 rounded-[2rem] border border-white/[0.08] bg-[#111111]/95 p-6 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)] md:p-10 lg:grid-cols-2 lg:gap-16 lg:p-14">
               <m.div
                 variants={staggerContainer}

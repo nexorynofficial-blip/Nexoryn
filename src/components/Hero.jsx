@@ -1,8 +1,10 @@
 import { useRef } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import heroBg from "../assets/hero-bg.webp";
 import nexorynLogo from "../assets/nexoryn-logo-sm.webp";
 import heroVideo from "../assets/hero-bg.mp4";
-import StatsColumn from "./StatsColumn";
+import StatsColumn, { STATS } from "./StatsColumn";
 import InfoCard from "./InfoCard";
 import SplitText from "./ui/SplitText";
 import { gsap, useGSAP } from "../lib/gsap";
@@ -85,7 +87,7 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-0 overflow-hidden bg-black/50 md:min-h-screen md:bg-night"
+      className="relative min-h-[100svh] overflow-hidden bg-black/50 md:min-h-screen md:bg-night"
     >
       {/* Background video — same framing/crop the static photo used, now looping.
           Oversized so the parallax drift never exposes an edge. Hidden below
@@ -147,11 +149,11 @@ export default function Hero() {
         className="grain-overlay pointer-events-none absolute inset-x-0 bottom-0 hidden h-[380px] opacity-[0.04] md:block md:h-[520px]"
       />
 
-      {/* Content — min-h-0 (not min-h-screen) below md: no video/InfoCard/
-          stats there anymore, so forcing full viewport height just left a
-          large dead gap under the copy. pt-32 clears the fixed navbar with
-          real breathing room instead of pt-24's tighter desktop spacing. */}
-      <div className="hero-content relative z-10 flex min-h-0 w-full flex-col px-4 pb-8 pt-32 text-center short:pb-6 short:pt-20 md:min-h-screen md:px-10 md:pt-24 lg:pt-28 lg:text-left short:lg:pt-20">
+      {/* Content. Phones get a full first screen of their own: the copy,
+          two calls to action and a compact stats strip, centred in the
+          viewport (the desktop-only video/InfoCard/stats column don't show
+          there). md and up are unchanged. */}
+      <div className="hero-content relative z-10 flex min-h-[100svh] w-full flex-col px-4 pb-8 pt-32 text-center max-md:justify-center max-md:pb-20 max-md:pt-20 short:pb-6 short:pt-20 md:min-h-screen md:px-10 md:pt-24 lg:pt-28 lg:text-left short:lg:pt-20">
         <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between">
           {/* Left: headline block. No items-center on the row above: with
               flex-direction:column, align-items:center switches this child
@@ -167,14 +169,14 @@ export default function Hero() {
               delay={0.1}
               stagger={0.08}
               duration={1.3}
-              className="font-heading-hero text-5xl leading-none tracking-tight text-accent-from sm:text-7xl md:text-8xl md:text-white xl:text-[clamp(6rem,13vh,9rem)]"
+              className="font-heading-hero text-5xl leading-none tracking-tight text-accent-from max-[380px]:text-[2.65rem] sm:text-7xl md:text-8xl md:text-white xl:text-[clamp(6rem,13vh,9rem)]"
             >
               NEXORYN
             </SplitText>
             <p className="hero-sub mt-3 text-xl font-light text-body-light sm:text-2xl md:text-3xl">
               Where Automation Meets Ambition.
             </p>
-            <p className="hero-body mx-auto mt-10 max-w-md text-lg font-light leading-relaxed text-body-dim short:mt-5 lg:mx-0 lg:mt-[6vh] short:lg:mt-5">
+            <p className="hero-body mx-auto mt-10 max-w-md text-lg font-light leading-relaxed text-body-dim max-md:mt-6 max-md:text-base short:mt-5 lg:mx-0 lg:mt-[6vh] short:lg:mt-5">
               At Nexoryn, we build websites that convert and automation
               systems that eliminate the repetitive work slowing businesses
               down. We don't rely on templates or one-size-fits-all
@@ -187,9 +189,41 @@ export default function Hero() {
           <StatsColumn className="hero-stats hidden lg:mt-2 lg:block lg:shrink-0" />
         </div>
 
+        {/* Phones only: the two next steps, then the same three stats the
+            desktop column shows, as one compact strip */}
+        <div className="hero-sub mx-auto mt-8 flex w-full max-w-sm gap-3 md:hidden">
+          <Link
+            to="/contact"
+            className="pressable flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-[13px] font-bold uppercase tracking-wide text-black shadow-[0_10px_30px_-10px_rgba(255,122,26,0.6)]"
+          >
+            Book a Call
+          </Link>
+          <Link
+            to="/portfolio"
+            className="pressable flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.05] py-3.5 text-[13px] font-bold uppercase tracking-wide text-white backdrop-blur-md"
+          >
+            Our Work
+            <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </Link>
+        </div>
+        <dl className="hero-stats mx-auto mt-6 grid w-full max-w-sm grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/45 py-4 backdrop-blur-md md:hidden">
+          {STATS.map((stat) => (
+            <div key={stat.value} className="flex flex-col-reverse items-center gap-1.5 px-1">
+              <dt className="text-[9px] font-semibold uppercase leading-tight tracking-[0.16em] text-white/55">
+                {stat.label[0]}
+                <br />
+                {stat.label[1]}
+              </dt>
+              <dd className="font-heading-hero text-2xl leading-none tracking-wider text-white max-[380px]:text-xl">
+                {stat.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
         {/* Bottom row: corner mark + info card — both desktop-only now, the
             "System Optimization Active" card is dropped from mobile entirely */}
-        <div className="mt-10 flex flex-1 flex-col justify-end gap-10 short:mt-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mt-10 flex flex-1 flex-col justify-end gap-10 max-md:hidden short:mt-6 lg:flex-row lg:items-end lg:justify-between">
           <img
             src={nexorynLogo}
             alt="Nexoryn"
@@ -207,7 +241,7 @@ export default function Hero() {
           has scroll-driven content worth reaching. */}
       <div
         aria-hidden="true"
-        className="hero-card pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex"
+        className="hero-card pointer-events-none absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 max-md:short:hidden md:hidden lg:flex"
       >
         <span className="font-mono-tech text-[10px] font-semibold uppercase tracking-[0.4em] text-white/50">
           Scroll

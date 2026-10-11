@@ -13,11 +13,11 @@ export default function AutomationShowcase() {
     <section id="automation" className="relative overflow-hidden">
       <ContainerScroll
         titleComponent={
-          <div className="mb-16 md:mb-20">
-            <h2 className="font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl">
+          <div className="mb-8 md:mb-20">
+            <h2 className="font-heading text-[2rem] leading-tight tracking-tight text-white sm:text-4xl md:text-6xl">
               Your Business, <span className="text-accent-from">On Autopilot.</span>
             </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim">
+            <p className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim max-md:mt-4 max-md:text-base">
               A live AI support workflow: every message read, routed and
               resolved in seconds, around the clock.
             </p>

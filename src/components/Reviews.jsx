@@ -23,10 +23,10 @@ export default function Reviews() {
   return (
     <section
       id="reviews"
-      className="relative scroll-mt-24 pb-12 pt-24 lg:pb-16 lg:pt-32"
+      className="relative scroll-mt-24 pb-12 pt-24 max-md:pt-16 lg:pb-16 lg:pt-32"
     >
       <div className="relative z-20 flex w-full flex-col items-center px-4 text-center md:px-10">
-        <SplitText className="mt-6 max-w-2xl font-heading text-4xl leading-tight tracking-tight text-white md:text-5xl">
+        <SplitText className="mt-6 max-w-2xl font-heading text-4xl leading-tight tracking-tight text-white max-md:mt-0 max-md:text-[1.75rem] md:text-5xl">
           Loved by <span className="text-accent-from">businesses</span> we've
           automated.
         </SplitText>
@@ -34,7 +34,7 @@ export default function Reviews() {
           as="p"
           y={24}
           delay={0.12}
-          className="mt-5 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+          className="mt-5 max-w-xl text-lg font-light leading-relaxed text-body-dim max-md:mt-4 max-md:text-base"
         >
           Real feedback from teams who no longer do the busywork.
         </Reveal>

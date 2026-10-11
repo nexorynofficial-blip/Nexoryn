@@ -35,10 +35,10 @@ const SOLUTION_POINTS = [
 
 export default function Solutions() {
   return (
-    <section id="solutions" className="relative scroll-mt-24 py-24 lg:py-32">
+    <section id="solutions" className="relative scroll-mt-24 py-24 max-md:py-16 lg:py-32">
       {/* Mirrors the Problems section: there the copy sits left with 200px
           before it, here it sits right with 200px after it. */}
-      <div className="relative mx-auto grid w-full items-center gap-16 px-4 md:px-8 lg:grid-cols-2 lg:gap-10 lg:px-5 wide:grid-cols-[1fr_1.1fr] xl:pr-[200px]">
+      <div className="relative mx-auto grid w-full items-center gap-16 px-4 max-md:gap-12 md:px-8 lg:grid-cols-2 lg:gap-10 lg:px-5 wide:grid-cols-[1fr_1.1fr] xl:pr-[200px]">
         {/* Before/After card — left on desktop, after the copy on mobile (the
             copy reads first, the card illustrates it second). The gentle
             parallax drift is what keeps the two columns from reading as one
@@ -58,12 +58,12 @@ export default function Solutions() {
             as="p"
             y={24}
             delay={0.12}
-            className="mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+            className="mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim max-md:mt-4 max-md:text-base"
           >
             Automations that plug into the tools you already use, so your team
             gets its week back.
           </Reveal>
-          <Reveal stagger={0.09} y={28} className="mt-20 grid gap-4 sm:grid-cols-2">
+          <Reveal stagger={0.09} y={28} className="mt-20 grid gap-4 max-md:mt-8 max-md:gap-3 sm:grid-cols-2">
             {SOLUTION_POINTS.map((point) => (
               <div key={point.title}>
                 <HighlightCard {...point} />

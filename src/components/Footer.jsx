@@ -64,8 +64,9 @@ export default function Footer() {
     <footer className="relative overflow-hidden border-t border-white/10 bg-black pb-8 pt-10 sm:pt-16">
       <div className="relative z-10 w-full px-4 md:px-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-12">
-          {/* Left: logo + copyright */}
-          <div>
+          {/* Left: logo + copyright. Phones skip it: the giant wordmark below
+              already carries the brand, and the copyright moves to the end. */}
+          <div className="max-md:hidden">
             <Link to="/" className="flex items-center" aria-label="Nexoryn home">
               {/* Grayscale + brightened on mobile only — the full-color mark
                   reads too dark/low-contrast against the black footer on
@@ -152,8 +153,12 @@ export default function Footer() {
             NEXORYN
           </span>
         </div>
-        <ContactShortcuts stacked className="shrink-0 md:w-48 md:pt-2 lg:pt-6" />
+        <ContactShortcuts stacked className="shrink-0 max-md:grid max-md:grid-cols-2 md:w-48 md:pt-2 lg:pt-6" />
       </div>
+
+      <p className="relative z-10 mt-8 px-4 text-center text-xs text-white/50 md:hidden">
+        © Nexoryn 2026. All rights reserved.
+      </p>
     </footer>
   );
 }

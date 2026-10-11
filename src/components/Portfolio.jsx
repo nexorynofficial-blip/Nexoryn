@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import { Link } from "react-router-dom";
 import { m, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
@@ -7,6 +7,7 @@ import Reveal from "./ui/Reveal";
 import { PROJECTS } from "../data/projects";
 import { getProjects } from "../lib/content";
 import { useContent } from "../hooks/useContent";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 // Fixed home-page teaser: 3 automation projects + 2 web development projects,
 // in this order whatever order the data arrives in. The full set is on the
@@ -19,8 +20,16 @@ const FEATURED_SLUGS = [
   "analytics-hub-saas-dashboard-platform",
 ];
 
-const pickFeatured = (projects) =>
-  FEATURED_SLUGS.map((slug) => projects.find((p) => p.slug === slug)).filter(Boolean);
+// Phones get a shorter stack: three cards, one from each kind of work shown
+// above, so the section doesn't run to four screens of scrolling.
+const FEATURED_SLUGS_MOBILE = [
+  "ai-customer-support-chatbot",
+  "personalized-cold-email-outreach",
+  "aurum-luxury-ecommerce-platform",
+];
+
+const pickFeatured = (projects, slugs) =>
+  slugs.map((slug) => projects.find((p) => p.slug === slug)).filter(Boolean);
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -36,7 +45,7 @@ function splitTitle(title) {
  * each card pins as it arrives and the next one slides up over it. While a
  * card is covered it eases back (scales down) so the stack reads as depth.
  */
-function StackCard({ project, i, total, progress }) {
+function StackCard({ project, i, total, progress, isMobile }) {
   const reduce = useReducedMotion();
   const ref = useRef(null);
   // Its own entry: the image settles from a slight zoom as the card arrives.
@@ -52,8 +61,8 @@ function StackCard({ project, i, total, progress }) {
     <div
       ref={ref}
       // Slots overlap by a fifth of the screen, so less scrolling between cards
-      style={i > 0 ? { marginTop: "-20svh" } : undefined}
-      className="sticky top-0 flex h-[100svh] items-center justify-center px-4 lg:px-[100px]"
+      style={i > 0 ? { marginTop: isMobile ? "-16svh" : "-20svh" } : undefined}
+      className="sticky top-0 flex h-[100svh] items-center justify-center px-4 max-md:h-[80svh] lg:px-[100px]"
     >
       <m.div
         style={{ scale, top: `calc(-4vh + ${i * 22}px)` }}
@@ -67,7 +76,7 @@ function StackCard({ project, i, total, progress }) {
                 {pad(i + 1)}
               </span>
               <span className="h-px w-8 bg-white/20" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+              <span className="min-w-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60 max-md:truncate">
                 {project.service} · {project.industry}
               </span>
             </div>
@@ -75,14 +84,20 @@ function StackCard({ project, i, total, progress }) {
             <h3 className="mt-5 font-heading text-2xl font-extrabold uppercase leading-[1.1] text-white md:mt-8 md:text-3xl lg:text-[1.9rem]">
               {lead}{" "}
               <span className="bg-gradient-to-r from-accent-from to-accent-to bg-clip-text text-transparent">
-                {highlight}
+                {/* Phones: never split a hyphenated word ("E-" / "Commerce") across lines */}
+                {highlight.split(" ").map((word, w) => (
+                  <Fragment key={w}>
+                    {w > 0 && " "}
+                    <span className="max-md:whitespace-nowrap">{word}</span>
+                  </Fragment>
+                ))}
               </span>
             </h3>
             <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-body-dim md:mt-4 md:line-clamp-3 md:text-base">
               {project.description}
             </p>
 
-            <ul className="mt-4 flex flex-wrap gap-2 md:mt-5">
+            <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden md:mt-5">
               {(project.tags ?? []).slice(0, 3).map((tag) => (
                 <li
                   key={tag}
@@ -133,12 +148,13 @@ function StackCard({ project, i, total, progress }) {
 
 export default function Portfolio() {
   const projects = useContent(getProjects, PROJECTS);
-  const featured = pickFeatured(projects);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const featured = pickFeatured(projects, isMobile ? FEATURED_SLUGS_MOBILE : FEATURED_SLUGS);
   const stackRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: stackRef, offset: ["start start", "end end"] });
 
   return (
-    <section id="portfolio" className="relative scroll-mt-24 pt-24 lg:pt-32">
+    <section id="portfolio" className="relative scroll-mt-24 pt-24 max-md:pt-16 lg:pt-32">
       <div className="mx-auto max-w-5xl px-4 text-center md:px-10">
         <SplitText
           as="h2"
@@ -150,7 +166,7 @@ export default function Portfolio() {
           as="p"
           y={24}
           delay={0.12}
-          className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+          className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim max-md:mt-4 max-md:text-base"
         >
           Real systems, built for real businesses, and the results to show for it.
         </Reveal>
@@ -165,11 +181,12 @@ export default function Portfolio() {
             i={i}
             total={featured.length}
             progress={scrollYProgress}
+            isMobile={isMobile}
           />
         ))}
       </div>
 
-      <div className="relative -mt-16 flex justify-center pb-24 md:-mt-28 lg:pb-32">
+      <div className="relative -mt-16 flex justify-center pb-24 max-md:-mt-12 max-md:pb-16 md:-mt-28 lg:pb-32">
         <Link
           to="/portfolio"
           className="group inline-flex items-center gap-2 rounded-full border border-accent-from px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-accent-from transition duration-300 hover:bg-accent-from hover:text-black"

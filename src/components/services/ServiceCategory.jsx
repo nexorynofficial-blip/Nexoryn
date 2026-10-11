@@ -213,7 +213,11 @@ function Explorer({ category }) {
 
 /** Phones and tablets: the same sub-services as an accordion. */
 function Accordion({ category }) {
-  const [open, setOpen] = useState(0);
+  // Tablets open the first sub-service; phones start with all of them closed,
+  // so each discipline reads as a short menu instead of a wall of text.
+  const [open, setOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches ? -1 : 0
+  );
   const subs = category.subServices ?? [];
   return (
     <ul className="flex flex-col gap-3 lg:hidden">

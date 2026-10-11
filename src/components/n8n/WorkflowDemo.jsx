@@ -288,6 +288,39 @@ function SubNode({ id, active }) {
   );
 }
 
+/** The test-chat panel: floats over the canvas on wider screens, and sits
+ *  under it (in the normal flow) on phones, where it would cover the nodes. */
+function ChatPanel({ chat, className, bodyClassName }) {
+  return (
+    <div className={`overflow-hidden bg-[#1e1e1e]/95 ${className}`}>
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2 text-[11px]">
+        <span className="font-semibold text-white/85">Chat</span>
+        <span className="text-white/50">session #a91f</span>
+      </div>
+      <div className={`flex flex-col justify-end gap-2 p-3 text-[11.5px] leading-snug ${bodyClassName}`}>
+        {chat.length === 0 && <p className="text-center text-white/30">Waiting for a message…</p>}
+        {chat.map((c, i) =>
+          c.from === "user" ? (
+            <p key={i} className="n8n-pop ml-auto max-w-[85%] shrink-0 rounded-lg rounded-br-sm bg-accent-from px-2.5 py-1.5 font-medium text-black">
+              {c.text}
+            </p>
+          ) : c.typing ? (
+            <p key={i} className="n8n-pop flex w-12 shrink-0 gap-1 rounded-lg rounded-bl-sm bg-white/10 px-2.5 py-2">
+              <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60" />
+              <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60 [animation-delay:150ms]" />
+              <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60 [animation-delay:300ms]" />
+            </p>
+          ) : (
+            <p key={i} className="n8n-pop max-w-[90%] shrink-0 rounded-lg rounded-bl-sm bg-white/10 px-2.5 py-1.5 text-white/90">
+              {c.text}
+            </p>
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function WorkflowDemo() {
   const rootRef = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -379,35 +412,14 @@ export default function WorkflowDemo() {
         </svg>
 
         {/* Chat panel */}
-        <div className="absolute bottom-3 left-3 hidden w-64 overflow-hidden rounded-xl border border-white/[0.08] bg-[#1e1e1e]/95 shadow-2xl sm:block">
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2 text-[11px]">
-            <span className="font-semibold text-white/85">Chat</span>
-            <span className="text-white/50">session #a91f</span>
-          </div>
-          <div className="flex min-h-[112px] flex-col justify-end gap-2 p-3 text-[11.5px] leading-snug">
-            {state.chat.length === 0 && <p className="text-center text-white/30">Waiting for a message…</p>}
-            {state.chat.map((c, i) =>
-              c.from === "user" ? (
-                <p key={i} className="n8n-pop ml-auto max-w-[85%] rounded-lg rounded-br-sm bg-accent-from px-2.5 py-1.5 font-medium text-black">
-                  {c.text}
-                </p>
-              ) : c.typing ? (
-                <p key={i} className="n8n-pop flex w-12 gap-1 rounded-lg rounded-bl-sm bg-white/10 px-2.5 py-2">
-                  <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60" />
-                  <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60 [animation-delay:150ms]" />
-                  <span className="n8n-dot h-1.5 w-1.5 rounded-full bg-white/60 [animation-delay:300ms]" />
-                </p>
-              ) : (
-                <p key={i} className="n8n-pop max-w-[90%] rounded-lg rounded-bl-sm bg-white/10 px-2.5 py-1.5 text-white/90">
-                  {c.text}
-                </p>
-              ),
-            )}
-          </div>
-        </div>
+        <ChatPanel
+          chat={state.chat}
+          className="absolute bottom-3 left-3 hidden w-64 rounded-xl border border-white/[0.08] shadow-2xl sm:block"
+          bodyClassName="min-h-[112px]"
+        />
 
-        {/* Execution status */}
-        <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#1e1e1e]/95 px-3 py-2 text-[11px] shadow-xl">
+        {/* Execution status — top-right on phones, so the chat below can't crowd it */}
+        <div className="absolute right-3 top-3 flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#1e1e1e]/95 px-3 py-2 text-[11px] shadow-xl sm:bottom-3 sm:top-auto">
           {state.status === "running" && (
             <>
               <span className="h-2 w-2 animate-pulse rounded-full bg-accent-from" />
@@ -432,6 +444,13 @@ export default function WorkflowDemo() {
           )}
         </div>
       </div>
+
+      {/* Phones: the conversation under the canvas, latest messages kept in view */}
+      <ChatPanel
+        chat={state.chat}
+        className="shrink-0 border-t border-white/[0.06] sm:hidden"
+        bodyClassName="h-[136px] overflow-hidden"
+      />
     </div>
   );
 }

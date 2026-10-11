@@ -171,7 +171,7 @@ export default function ReviewsPage() {
               as="h1"
               animateOnMount
               delay={0.08}
-              className="font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl"
+              className="font-heading text-4xl leading-tight tracking-tight text-white max-md:text-[1.75rem] md:text-6xl"
             >
               Loved by <span className="text-accent-from">businesses</span>
               <br />

@@ -145,12 +145,12 @@
 footer {
   content-visibility: auto;
 }
-#problems { contain-intrinsic-size: auto 1550px; }
-#solutions { contain-intrinsic-size: auto 1290px; }
-#services { contain-intrinsic-size: auto 1730px; }
-#reviews { contain-intrinsic-size: auto 615px; }
-#cta { contain-intrinsic-size: auto 410px; }
-footer { contain-intrinsic-size: auto 745px; }
+#problems { contain-intrinsic-size: auto 1245px; }
+#solutions { contain-intrinsic-size: auto 1110px; }
+#services { contain-intrinsic-size: auto 830px; }
+#reviews { contain-intrinsic-size: auto 485px; }
+#cta { contain-intrinsic-size: auto 420px; }
+footer { contain-intrinsic-size: auto 670px; }
 @media (min-width: 768px) {
   #problems { contain-intrinsic-size: auto 1430px; }
   #solutions { contain-intrinsic-size: auto 1385px; }

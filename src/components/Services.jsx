@@ -37,7 +37,7 @@ function ServiceCard({ service }) {
   return (
     <Link
       to={`/services?category=${service.id}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[linear-gradient(160deg,rgba(107,37,8,0.4)_0%,rgba(20,8,3,0.85)_35%,#000_70%)] p-3 transition duration-500 hover:-translate-y-1.5 hover:border-accent-from/40 hover:shadow-[0_20px_60px_-15px_rgba(255,122,26,0.35)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border max-md:h-auto max-md:w-[84%] max-md:shrink-0 max-md:snap-start border-white/[0.07] bg-[linear-gradient(160deg,rgba(107,37,8,0.4)_0%,rgba(20,8,3,0.85)_35%,#000_70%)] p-3 transition duration-500 hover:-translate-y-1.5 hover:border-accent-from/40 hover:shadow-[0_20px_60px_-15px_rgba(255,122,26,0.35)]"
     >
       {/* Live illustration */}
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0d0d0d]">
@@ -86,8 +86,27 @@ export default function Services() {
     return () => io.disconnect();
   }, []);
 
+  // Phones: the cards are a swipeable row; track which one is in view for the dots.
+  const [slide, setSlide] = useState(0);
+  const track = () => ref.current?.querySelector(".svc-track");
+  const step = (el) => (el.children[0]?.offsetWidth ?? 0) + 16;
+  useEffect(() => {
+    const el = track();
+    if (!el) return undefined;
+    const onScroll = () => {
+      const s = step(el);
+      if (s > 16) setSlide(Math.round(el.scrollLeft / s));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  const goTo = (i) => {
+    const el = track();
+    if (el) el.scrollTo({ left: i * step(el), behavior: "smooth" });
+  };
+
   return (
-    <section ref={ref} id="services" className="relative scroll-mt-24 py-24 lg:py-32">
+    <section ref={ref} id="services" className="relative scroll-mt-24 py-24 max-md:py-16 lg:py-32">
       <div className="mx-auto max-w-5xl px-4 text-center md:px-10">
         <SplitText
           as="h2"
@@ -99,7 +118,7 @@ export default function Services() {
           as="p"
           y={24}
           delay={0.12}
-          className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim"
+          className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-body-dim max-md:mt-4 max-md:text-base"
         >
           Automation that saves time. Web experiences that convert. Designs
           that leave a lasting impression.
@@ -110,7 +129,7 @@ export default function Services() {
         stagger={0.12}
         y={40}
         blur={8}
-        className={`mx-auto mt-16 grid max-w-[1400px] grid-cols-1 gap-6 px-4 md:mt-20 md:grid-cols-3 md:px-10 ${
+        className={`svc-track mx-auto mt-16 grid max-w-[1400px] grid-cols-1 gap-6 px-4 max-md:mt-10 max-md:flex max-md:snap-x max-md:snap-mandatory max-md:gap-4 max-md:overflow-x-auto max-md:scroll-px-4 max-md:py-2 max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden md:mt-20 md:grid-cols-3 md:px-10 ${
           onScreen ? "" : "svc-paused"
         }`}
       >
@@ -118,6 +137,26 @@ export default function Services() {
           <ServiceCard key={service.id} service={service} />
         ))}
       </Reveal>
+
+      {/* Phones: which card is showing, and a tap target to jump between them */}
+      <div className="mt-5 flex justify-center gap-2 md:hidden">
+        {SERVICES.map((service, i) => (
+          <button
+            key={service.id}
+            type="button"
+            onClick={() => goTo(i)}
+            aria-label={`Show ${service.title} ${service.highlight}`}
+            aria-current={slide === i}
+            className="flex h-6 min-w-6 cursor-pointer items-center justify-center"
+          >
+            <span
+              className={`block h-1.5 rounded-full transition-all duration-300 ${
+                slide === i ? "w-6 bg-accent-from" : "w-1.5 bg-white/25"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

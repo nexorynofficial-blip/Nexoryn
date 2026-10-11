@@ -199,7 +199,7 @@ export default function Navbar() {
               exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
               aria-hidden="true"
-              className="pointer-events-auto fixed inset-0 -z-10 bg-black/60 lg:hidden"
+              className="pointer-events-auto fixed inset-0 -z-10 bg-black/60 backdrop-blur-sm lg:hidden"
             />
             <m.div
               key="panel"
@@ -208,13 +208,13 @@ export default function Navbar() {
               exit={{ opacity: 0, y: -12, scaleY: 0.9 }}
               transition={spring}
               style={{ originY: 0 }}
-              className="pointer-events-auto absolute left-1/2 top-11 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 rounded-b-2xl bg-black px-3 pb-4 pt-2 shadow-[0_20px_40px_rgba(0,0,0,0.5)] lg:hidden"
+              className="pointer-events-auto absolute inset-x-4 top-14 mx-auto max-w-sm rounded-3xl border border-white/10 bg-[#0b0b0b]/95 p-3 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl lg:hidden"
             >
               <m.div
                 initial="hidden"
                 animate="shown"
                 variants={{ shown: { transition: { staggerChildren: 0.05 } } }}
-                className="grid grid-cols-2 gap-1"
+                className="grid grid-cols-2 gap-2"
               >
                 {ALL_LINKS.map((label) => (
                   <m.div
@@ -225,11 +225,18 @@ export default function Navbar() {
                       label={label}
                       active={active === label}
                       onClick={() => go(label)}
-                      className="w-full py-2.5 text-center"
+                      className="w-full rounded-xl border border-white/[0.06] bg-white/[0.04] py-3.5 text-center"
                     />
                   </m.div>
                 ))}
               </m.div>
+              <Link
+                to="/contact"
+                onClick={() => setMenuOpen(false)}
+                className="pressable mt-3 flex w-full items-center justify-center rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-[13px] font-bold uppercase tracking-wide text-black"
+              >
+                Book a Call
+              </Link>
             </m.div>
           </>
         )}

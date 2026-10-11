@@ -1,6 +1,6 @@
 import { EncryptedText } from "./ui/EncryptedText";
 
-const STATS = [
+export const STATS = [
   { label: ["Project", "Delivered"], value: "200+" },
   { label: ["Client", "Retention"], value: "87%" },
   { label: ["Country", "Served"], value: "25+" },

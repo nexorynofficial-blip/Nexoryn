@@ -62,7 +62,7 @@ function useActiveCategory(ids) {
 /** Pill bar that sticks under the navbar and follows the reader down the page. */
 function DisciplineNav({ categories, active }) {
   return (
-    <div className="pointer-events-none sticky top-20 z-30 flex justify-center px-4 py-3">
+    <div className="pointer-events-none sticky top-20 z-30 flex justify-center px-4 py-3 max-md:top-11">
       <div className="pointer-events-auto flex max-w-full gap-1 overflow-x-auto rounded-full border border-white/10 bg-black/75 p-1 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl [scrollbar-width:none]">
         {categories.map((c) => {
           const on = c.id === active;
