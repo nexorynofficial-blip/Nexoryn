@@ -156,12 +156,19 @@ export default function Preloader({ onComplete }) {
         const coverScale = () =>
           Math.hypot(window.innerWidth, window.innerHeight) / 100 + 0.4;
 
+        // This phase is a transition, not the showcase — the letter-decode
+        // above is the part worth lingering on. Tightened independently of
+        // INTRO_SPEED so the zoom-handoff reads as a quick, punchy whoosh
+        // rather than a second slow beat; a fast zoom still sells the move
+        // (faster, if anything), it just stops holding the screen after the
+        // word has already resolved. This also visibly shortens how long the
+        // page keeps "changing" post-load (Speed Index).
         gsap
           .timeline()
           .timeScale(INTRO_SPEED)
           .to(".pl-meta, .pl-rule-wrap", {
             autoAlpha: 0,
-            duration: 0.3,
+            duration: 0.22,
             ease: "power2.out",
           })
           // power2.in is right here despite the usual "never ease-in" rule:
@@ -169,20 +176,20 @@ export default function Preloader({ onComplete }) {
           // acceleration is exactly what sells the move.
           .to(
             wordRef.current,
-            { scale: 9, autoAlpha: 0, duration: 1, ease: "power2.in" },
+            { scale: 9, autoAlpha: 0, duration: 0.7, ease: "power2.in" },
             "<"
           )
           .fromTo(
             irisRef.current,
             { scale: 0, autoAlpha: 1 },
-            { scale: coverScale, duration: 0.9, ease: "power2.inOut" },
-            "<0.15"
+            { scale: coverScale, duration: 0.6, ease: "power2.inOut" },
+            "<0.1"
           )
           // The page underneath is already black, so the plate just fades —
           // any wipe here would show a seam against itself.
           .to(rootRef.current, {
             autoAlpha: 0,
-            duration: 0.5,
+            duration: 0.35,
             ease: "power2.inOut",
             onComplete: finish,
           });

@@ -35,12 +35,16 @@ export default function Hero() {
           y: 24,
         });
       } else {
+        // Tightened from the original 1.1s/0.35-0.8s spread: this plays right
+        // as the preloader hands off, so a shorter settle keeps the page from
+        // visibly "still arriving" post-load (Speed Index) without losing the
+        // staggered feel — same choreography, just quicker to resolve.
         gsap
-          .timeline({ defaults: { ease: "expo.out", duration: 1.1 } })
-          .to(".hero-sub", { autoAlpha: 1, y: 0 }, 0.35)
-          .to(".hero-stats", { autoAlpha: 1, y: 0 }, 0.6)
-          .to(".hero-card", { autoAlpha: 1, y: 0 }, 0.72)
-          .to(".hero-mark", { autoAlpha: 1, y: 0 }, 0.8);
+          .timeline({ defaults: { ease: "expo.out", duration: 0.85 } })
+          .to(".hero-sub", { autoAlpha: 1, y: 0 }, 0.25)
+          .to(".hero-stats", { autoAlpha: 1, y: 0 }, 0.42)
+          .to(".hero-card", { autoAlpha: 1, y: 0 }, 0.5)
+          .to(".hero-mark", { autoAlpha: 1, y: 0 }, 0.56);
       }
 
       if (reduced) return;

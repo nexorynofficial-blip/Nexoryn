@@ -6,18 +6,17 @@
   },
   "entries": [
     {
-      "identifier": "urn:ai:nexoryn.tech:knowledge:llms",
+      "identifier": "urn:air:nexoryn.tech:knowledge:llms",
       "displayName": "Nexoryn site guide",
-      "type": "text/plain",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
       "url": "https://www.nexoryn.tech/llms.txt",
-      "description": "Curated index of Nexoryn's pages (services, portfolio, about, reviews, contact) for AI agents and assistants."
-    },
-    {
-      "identifier": "urn:ai:nexoryn.tech:knowledge:sitemap",
-      "displayName": "Nexoryn sitemap",
-      "type": "application/xml",
-      "url": "https://www.nexoryn.tech/sitemap.xml",
-      "description": "Full list of indexable pages on nexoryn.tech, including every published case study."
+      "description": "Curated index of Nexoryn's pages (services, portfolio, about, reviews, contact) for AI agents and assistants.",
+      "representativeQueries": [
+        "What services does Nexoryn offer?",
+        "Does Nexoryn build AI automation or workflow automation?",
+        "How do I contact Nexoryn or book a consultation?",
+        "Show me examples of Nexoryn's past projects."
+      ]
     }
   ]
 }
