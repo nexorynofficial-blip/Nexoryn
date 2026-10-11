@@ -257,7 +257,10 @@ export default function Preloader({ onComplete }) {
 
         <div className="pl-meta mt-5 flex w-[min(70vw,420px)] items-center justify-between font-mono-tech text-[11px] font-semibold uppercase tracking-[0.35em] text-black/70">
           <span>Initialising</span>
-          <span ref={counterRef} className="tabular-nums">
+          {/* min-w + text-right: the digits go from "0" to "100" as the
+              counter runs, and without a reserved width the span's own width
+              change (1 digit vs 3) reads as a small layout shift. */}
+          <span ref={counterRef} className="inline-block min-w-[3ch] text-right tabular-nums">
             000
           </span>
         </div>

@@ -1,0 +1,23 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Nexoryn",
+    "identifier": "nexoryn.tech"
+  },
+  "entries": [
+    {
+      "identifier": "urn:ai:nexoryn.tech:knowledge:llms",
+      "displayName": "Nexoryn site guide",
+      "type": "text/plain",
+      "url": "https://www.nexoryn.tech/llms.txt",
+      "description": "Curated index of Nexoryn's pages (services, portfolio, about, reviews, contact) for AI agents and assistants."
+    },
+    {
+      "identifier": "urn:ai:nexoryn.tech:knowledge:sitemap",
+      "displayName": "Nexoryn sitemap",
+      "type": "application/xml",
+      "url": "https://www.nexoryn.tech/sitemap.xml",
+      "description": "Full list of indexable pages on nexoryn.tech, including every published case study."
+    }
+  ]
+}

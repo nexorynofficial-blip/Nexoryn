@@ -1,0 +1,32 @@
+# Nexoryn
+
+> Nexoryn builds workflow automation, AI agents, websites and web apps, and
+> brand/graphic design for growing businesses, replacing manual, repetitive
+> work with systems that run on their own.
+
+Nexoryn is an automation, web development and design agency. Every system is
+built around how a client's business actually operates rather than a generic
+template, and is designed to plug into the tools the client already uses.
+
+## Site
+
+- [Home](https://www.nexoryn.tech/): Overview of Nexoryn's automation, web
+  and design work.
+- [Services](https://www.nexoryn.tech/services): AI automation (workflow
+  automation, voice AI agents, LLM agents), web development, and graphic
+  design, broken down by specialty.
+- [Portfolio](https://www.nexoryn.tech/portfolio): Case studies of delivered
+  automation, web and design projects, filterable by discipline and
+  industry.
+- [About](https://www.nexoryn.tech/about): Who Nexoryn is, its mission and
+  vision, and the founding team.
+- [Reviews](https://www.nexoryn.tech/reviews): Client reviews, organized by
+  the discipline each client hired Nexoryn for.
+- [Contact](https://www.nexoryn.tech/contact): Ways to reach Nexoryn
+  (contact form, email team@nexoryn.tech, phone, WhatsApp) and frequently
+  asked questions.
+
+## Data
+
+- [Sitemap](https://www.nexoryn.tech/sitemap.xml): Full list of indexable
+  pages, generated from the live project catalogue.

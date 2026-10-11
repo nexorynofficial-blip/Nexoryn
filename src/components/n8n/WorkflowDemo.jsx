@@ -315,7 +315,7 @@ export default function WorkflowDemo() {
       {/* Editor top bar */}
       <div className="flex h-11 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#1b1b1b] px-3 md:px-4">
         <div className="flex min-w-0 items-center gap-2 text-[11px] md:text-xs">
-          <span className="text-white/40">Nexoryn</span>
+          <span className="text-white/55">Nexoryn</span>
           <span className="text-white/25">/</span>
           <span className="truncate font-semibold text-white/90">AI Support Agent</span>
           <span className="hidden rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-white/50 sm:inline">production</span>
@@ -325,7 +325,7 @@ export default function WorkflowDemo() {
           <span className="px-3 py-1 text-white/45">Executions</span>
         </div>
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="hidden text-white/40 sm:inline">Saved</span>
+          <span className="hidden text-white/55 sm:inline">Saved</span>
           <span className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2 py-1">
             <span className="h-3 w-6 rounded-full bg-status-green/80 p-[2px]">
               <span className="block h-2 w-2 translate-x-3 rounded-full bg-white" />
@@ -382,7 +382,7 @@ export default function WorkflowDemo() {
         <div className="absolute bottom-3 left-3 hidden w-64 overflow-hidden rounded-xl border border-white/[0.08] bg-[#1e1e1e]/95 shadow-2xl sm:block">
           <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2 text-[11px]">
             <span className="font-semibold text-white/85">Chat</span>
-            <span className="text-white/35">session #a91f</span>
+            <span className="text-white/50">session #a91f</span>
           </div>
           <div className="flex min-h-[112px] flex-col justify-end gap-2 p-3 text-[11.5px] leading-snug">
             {state.chat.length === 0 && <p className="text-center text-white/30">Waiting for a message…</p>}
