@@ -67,12 +67,24 @@ export function Field({ label, children, error }: { label: string; children: Rea
 const fieldClass =
   "rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition focus:border-accent-from/60";
 
+// Every text field in the dashboard routes through Input/Textarea, so
+// defaulting autoComplete to "off" here turns it off everywhere (login
+// included) without touching each field individually. A caller can still
+// pass its own `autoComplete` to opt back in for a specific field — none do
+// today. This doesn't touch Select below: dropdown options aren't a browser
+// autofill surface, and must stay exactly as they are.
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${fieldClass} ${props.className ?? ""}`} />;
+  return <input autoComplete="off" {...props} className={`${fieldClass} ${props.className ?? ""}`} />;
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`${fieldClass} min-h-[100px] resize-y font-mono text-xs ${props.className ?? ""}`} />;
+  return (
+    <textarea
+      autoComplete="off"
+      {...props}
+      className={`${fieldClass} min-h-[100px] resize-y font-mono text-xs ${props.className ?? ""}`}
+    />
+  );
 }
 
 export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {

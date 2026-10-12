@@ -11,7 +11,10 @@ router.use(authMiddleware);
 const internalProjectSchema = z.object({
   name: z.string().min(1),
   note: z.string().max(2000).optional(),
-  serviceType: z.enum(["Automation", "Web Development", "Brand & Graphic Design"]),
+  // Was a fixed enum of 3 values. The admin UI now also offers "Agent" and a
+  // "Custom" option where the admin types their own label, so this accepts
+  // any short string rather than re-enumerating every value the UI can send.
+  serviceType: z.string().min(1).max(60),
   googleDriveLink: z.string().url(),
   status: z.enum(["active", "archived", "completed"]).default("active"),
 });

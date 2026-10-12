@@ -388,7 +388,7 @@ model InternalProject {
   id          String @id @default(cuid())
   name        String
   note        String? // optional free-text note (was "description")
-  serviceType String // "Automation" | "Web Development" | "Brand & Graphic Design"
+  serviceType String // free text; admin UI offers "Automation" | "Web Development" | "Brand & Graphic Design" | "Agent" as quick picks, plus "Custom" for any other label
 
   googleDriveLink String
 

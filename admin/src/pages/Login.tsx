@@ -40,7 +40,11 @@ export default function Login() {
 
         <ErrorBanner message={error} />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* autoComplete="off" on the form itself, on top of the same default
+            on Input, is the belt-and-braces version — some browsers only
+            honor the form-level attribute for a login form's saved-credential
+            suggestions, not the per-field one. */}
+        <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4">
           <Field label="Email">
             <Input
               type="email"

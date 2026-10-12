@@ -4,25 +4,32 @@ import { api, ApiRequestError } from "../lib/api";
 import type { InternalProject } from "../types";
 import { Badge, Button, Card, ConfirmDialog, ErrorBanner, Field, Input, PageHeader, Select, Spinner } from "../components/ui";
 
-const SERVICE_TYPES = ["Automation", "Web Development", "Brand & Graphic Design"] as const;
+const SERVICE_TYPES = ["Automation", "Web Development", "Brand & Graphic Design", "Agent"] as const;
+// Not a real service type, just the dropdown value that reveals the free-text
+// field below it — the actual saved serviceType is whatever gets typed there.
+const CUSTOM_OPTION = "Custom";
 
 function ProjectEditor({ onSaved, onCancel }: { onSaved: () => void; onCancel: () => void }) {
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
-  const [serviceType, setServiceType] = useState<(typeof SERVICE_TYPES)[number]>("Automation");
+  const [serviceType, setServiceType] = useState<string>(SERVICE_TYPES[0]);
+  const [customServiceType, setCustomServiceType] = useState("");
+  const isCustom = serviceType === CUSTOM_OPTION;
   const [googleDriveLink, setGoogleDriveLink] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const handleSave = async () => {
+    const resolvedServiceType = isCustom ? customServiceType.trim() : serviceType;
     if (!name || !googleDriveLink) return setError("Name and Google Drive link are required.");
+    if (!resolvedServiceType) return setError("Enter a custom service type.");
     setSaving(true);
     setError("");
     try {
       await api.post("/api/v1/admin/internal-projects", {
         name,
         note: note || undefined,
-        serviceType,
+        serviceType: resolvedServiceType,
         googleDriveLink,
       });
       onSaved();
@@ -39,9 +46,19 @@ function ProjectEditor({ onSaved, onCancel }: { onSaved: () => void; onCancel: (
       <div className="grid grid-cols-2 gap-3">
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Service Type">
-          <Select value={serviceType} onChange={(e) => setServiceType(e.target.value as typeof serviceType)}>
+          <Select value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
             {SERVICE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value={CUSTOM_OPTION}>Custom</option>
           </Select>
+          {isCustom && (
+            <Input
+              className="mt-2"
+              value={customServiceType}
+              onChange={(e) => setCustomServiceType(e.target.value)}
+              placeholder="Type a service type"
+              autoFocus
+            />
+          )}
         </Field>
         <Field label="Google Drive link"><Input value={googleDriveLink} onChange={(e) => setGoogleDriveLink(e.target.value)} placeholder="https://drive.google.com/..." /></Field>
       </div>
