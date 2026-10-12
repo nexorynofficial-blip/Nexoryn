@@ -30,13 +30,13 @@ const COLUMNS = [
         external: true,
       },
       {
-        label: "Threads",
-        href: "https://www.threads.com/@nexoryn.ai",
+        label: "Twitter",
+        href: "https://x.com/nexoryn_ai",
         external: true,
       },
       {
         label: "LinkedIn",
-        href: "https://www.linkedin.com/company/nexoryn-ai/",
+        href: "https://www.linkedin.com/company/https-www.nexoryn.tech-/",
         external: true,
       },
     ],

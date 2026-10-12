@@ -122,7 +122,7 @@ export default function PrivacyPolicyPage() {
         <LegalList
           items={[
             "Case study pages may embed a live preview of a client project's deployed website (for example, a project hosted on Vercel) directly inside the page. Once loaded, that embedded site operates under its own privacy and cookie practices, not ours.",
-            "Footer and contact links point to our social profiles (Facebook, Instagram, Threads, LinkedIn) and to WhatsApp, each governed by that platform's own privacy policy.",
+            "Footer and contact links point to our social profiles (Facebook, Instagram, Twitter, LinkedIn) and to WhatsApp, each governed by that platform's own privacy policy.",
             "The \"Prefer email?\" link opens Gmail's compose window with our address pre-filled, that interaction happens on Google's site, not ours.",
           ]}
         />
