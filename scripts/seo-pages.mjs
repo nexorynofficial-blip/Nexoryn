@@ -9,6 +9,17 @@
 // The block sits outside #root, so the app mounts exactly as before and nothing
 // moves on screen. Case studies come from the live API at build time, falling
 // back to the bundled project list if it can't be reached.
+//
+// It also writes dist/sitemap.xml from that same project data. This used to be
+// a vercel.json rewrite proxying live to the backend's /api/v1/sitemap.xml —
+// that backend lives on a *.vercel.app domain, which Vercel gives a platform-
+// level X-Robots-Tag: noindex on every response, added at the edge after the
+// function runs. The backend route tried to remove that header itself
+// (res.removeHeader), but since the injection happens after the function,
+// nothing in application code can undo it — so the one file whose entire job
+// is "please index these pages" was itself telling crawlers not to. Writing it
+// here instead puts it on the custom domain (nexoryn.tech), which never gets
+// that default, same as every other static page in this file.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -53,7 +64,12 @@ async function loadProjects() {
     try {
       const res = await fetch(`${api}/api/v1/projects?pageSize=50`, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
-      if (data?.items?.length) return data.items.map(({ slug, title, description }) => ({ slug, title, description }));
+      // updatedAt feeds the sitemap's <lastmod> below; the bundled fallback
+      // list has no such field (there's no build/deploy timestamp worth
+      // using as a stand-in), so those entries just omit <lastmod> — optional
+      // per the sitemap spec.
+      if (data?.items?.length)
+        return data.items.map(({ slug, title, description, updatedAt }) => ({ slug, title, description, updatedAt }));
     } catch {
       /* fall through to the bundled list */
     }
@@ -122,6 +138,20 @@ function write(path, content) {
   writeFileSync(join(dir, "index.html"), content);
 }
 
+function sitemap() {
+  const urls = [
+    ...PAGES.map((p) => `  <url><loc>${SITE}/${p.path}</loc></url>`),
+    ...projects.map((p) => {
+      const lastmod = p.updatedAt ? `<lastmod>${new Date(p.updatedAt).toISOString()}</lastmod>` : "";
+      return `  <url><loc>${SITE}/portfolio/${esc(p.slug)}</loc>${lastmod}</url>`;
+    }),
+  ];
+  return (
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`
+  );
+}
+
 for (const page of PAGES) write(page.path, render(page));
 for (const p of projects) {
   write(`portfolio/${p.slug}`, render({
@@ -131,4 +161,5 @@ for (const p of projects) {
     desc: p.description,
   }));
 }
-console.log(`seo-pages: wrote ${PAGES.length} pages + ${projects.length} case studies`);
+writeFileSync(join(DIST, "sitemap.xml"), sitemap());
+console.log(`seo-pages: wrote ${PAGES.length} pages + ${projects.length} case studies + sitemap.xml (${PAGES.length + projects.length} urls)`);
