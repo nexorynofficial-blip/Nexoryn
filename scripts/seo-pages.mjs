@@ -48,15 +48,20 @@ function fail(message) {
 const PAGES = [
   { path: "", title: "Nexoryn - Where Automation Meets Ambition", h1: "Nexoryn: Where Automation Meets Ambition",
     desc: "Nexoryn builds workflow automation, AI agents, websites and brand design for growing businesses." },
-  { path: "about", title: "About - Nexoryn", h1: "About Nexoryn",
+  // h1 here is the static fallback's actual <h1> text, and must match what
+  // AboutPage.jsx/ReviewsPage.jsx/ContactPage.jsx render as their own <h1> —
+  // verified in headless Chrome below. navLabel is the short label this page
+  // gets as a link in every other page's nav list; kept separate so the nav
+  // doesn't read "What Nexoryn is about" as a link.
+  { path: "about", title: "About - Nexoryn", h1: "What Nexoryn is about", navLabel: "About Nexoryn",
     desc: "Meet the team behind Nexoryn and how we build automation, AI, web and design work for our clients." },
   { path: "services", title: "Services - Nexoryn", h1: "Nexoryn Services",
     desc: "Automation and AI (workflow automation, voice AI agents, LLM agents), web development, and brand and design services." },
   { path: "portfolio", title: "Portfolio - Nexoryn", h1: "Nexoryn Portfolio",
     desc: "Case studies of the automation, AI, web and design projects Nexoryn has delivered." },
-  { path: "reviews", title: "Reviews - Nexoryn", h1: "Client Reviews",
+  { path: "reviews", title: "Reviews - Nexoryn", h1: "Loved by businesses we've automated.", navLabel: "Client Reviews",
     desc: "What Nexoryn's clients say about working with us." },
-  { path: "contact", title: "Contact - Nexoryn", h1: "Contact Nexoryn",
+  { path: "contact", title: "Contact - Nexoryn", h1: "Let's build something.", navLabel: "Contact Nexoryn",
     desc: "Get in touch with Nexoryn: team@nexoryn.tech or +92 302 3858945." },
   { path: "privacy-policy", title: "Privacy Policy - Nexoryn", h1: "Privacy Policy",
     desc: "How Nexoryn collects, uses and protects your information." },
@@ -139,6 +144,73 @@ try {
   });
 } catch (err) {
   fail(`could not load case-study detail: ${err.message}`);
+}
+
+// Team, reviews and FAQs for /about, /reviews and /contact — same always-live,
+// no-fallback, fail-loudly policy as the project data above.
+let team, reviews, faqs;
+try {
+  const data = await fetchJsonWithRetry(`${API}/api/v1/team`);
+  team = data?.items;
+  if (!Array.isArray(team) || team.length === 0) throw new Error("response had no items[]");
+} catch (err) {
+  fail(`could not load team: ${err.message}`);
+}
+try {
+  const data = await fetchJsonWithRetry(`${API}/api/v1/reviews`);
+  reviews = data?.items;
+  if (!Array.isArray(reviews) || reviews.length === 0) throw new Error("response had no items[]");
+} catch (err) {
+  fail(`could not load reviews: ${err.message}`);
+}
+try {
+  const data = await fetchJsonWithRetry(`${API}/api/v1/faqs`);
+  faqs = data?.items;
+  if (!Array.isArray(faqs) || faqs.length === 0) throw new Error("response had no items[]");
+} catch (err) {
+  fail(`could not load faqs: ${err.message}`);
+}
+
+/* ── Admin-authored content check ────────────────────────────────────────
+ * team/reviews/faqs are edited through the admin panel, unlike every other
+ * string in this file — a stray leftover from testing ("...templates. test")
+ * has shipped to this content before. Scanned and fails the build before
+ * anything is written, rather than silently publishing it. */
+// "lorem"/"todo"/"undefined" essentially never appear in legitimate review or
+// FAQ English, so any occurrence anywhere is flagged. "test" is an ordinary
+// word ("willing to test new ideas", "build and test the system") — real
+// client content uses it mid-sentence often enough that flagging every
+// occurrence produced false positives in practice (verified against the live
+// data below). The one real failure mode seen so far is a stray word tacked
+// onto the end of an answer, so "test" is only flagged there: a trailing,
+// orphaned occurrence with nothing (or just closing punctuation) after it.
+const PLACEHOLDER_ANYWHERE = /\b(lorem|todo|undefined)\b/i;
+const PLACEHOLDER_TRAILING = /\btest\s*[.!?]?\s*$/i;
+const placeholderErrors = [];
+function checkPlaceholder(label, value) {
+  if (typeof value !== "string") return;
+  if (PLACEHOLDER_ANYWHERE.test(value) || PLACEHOLDER_TRAILING.test(value)) {
+    placeholderErrors.push(`${label}: "${value}"`);
+  }
+}
+for (const m of team) {
+  checkPlaceholder(`team/${m.name ?? m.id}/name`, m.name);
+  checkPlaceholder(`team/${m.name ?? m.id}/role`, m.role);
+}
+for (const r of reviews) {
+  checkPlaceholder(`review/${r.id ?? r.name}/name`, r.name);
+  checkPlaceholder(`review/${r.id ?? r.name}/location`, r.location);
+  checkPlaceholder(`review/${r.id ?? r.name}/service`, r.service);
+  checkPlaceholder(`review/${r.id ?? r.name}/text`, r.text);
+}
+for (const f of faqs) {
+  checkPlaceholder(`faq/${f.id}/question`, f.question);
+  checkPlaceholder(`faq/${f.id}/answer`, f.answer);
+}
+if (placeholderErrors.length) {
+  fail(
+    `${placeholderErrors.length} field(s) contain a leftover placeholder word (test/lorem/todo/undefined):\n  ${placeholderErrors.join("\n  ")}`
+  );
 }
 
 /* ── Image resolution ────────────────────────────────────────────────── *
@@ -301,12 +373,134 @@ function caseStudyJsonLd(project) {
   return JSON.stringify(obj);
 }
 
+/* ── About / Reviews / Contact bodies ────────────────────────────────────
+ * Same principle as the case-study body: every tab/accordion a JS visitor
+ * can reach is rendered as a plain visible section, nothing invented. Text
+ * that exists only in the React components (not the API — mission/vision
+ * copy, team quotes/LinkedIn links, the disciplines list) is duplicated here
+ * verbatim from AboutPage.jsx, same as PAGES/SERVICES above already
+ * duplicate other page copy independently of the app. */
+
+// Shared by About's hero tags and Reviews' service grouping — both are this
+// exact three-item list, in this order, in the real UI (DISCIPLINES in
+// AboutPage.jsx, SERVICE_TABS in components/ui/ServiceFilter.jsx).
+const DISCIPLINES = ["Automation", "Web Development", "Graphic Design"];
+
+const MISSION =
+  "Our mission is to eliminate the manual, repetitive work that slows businesses down. We build automation, AI, and digital systems tailored to how each client actually operates, not generic, off-the-shelf software forced into place. Every system we ship is designed to run quietly in the background, handling the busywork so your team can focus on what actually needs a human. Technology should feel like a dependable operator on your team, not another tool you have to manage.";
+const VISION =
+  "We envision a future where every business, regardless of size, has access to the kind of intelligent automation and design once reserved for large enterprises. Nexoryn is building toward that future by acting as a long-term technology partner, not a one-off vendor, for every client we take on. As your business grows, our systems grow with it, so you can scale revenue and reach without scaling headcount or overhead. Our goal is to become the quiet infrastructure behind ambitious, lean-running businesses everywhere.";
+
+// The API's /team only returns {id, name, role, photo} — quotes and LinkedIn
+// URLs aren't admin-editable fields, so AboutPage.jsx overlays them from this
+// same local list by name match (see withExtras() there). Mirrored here.
+const TEAM_EXTRAS = [
+  {
+    name: "Waseem Farooq",
+    linkedin: "https://www.linkedin.com/in/waseem-farooq-758a74251/",
+    quote: "Don't measure your day by how busy you were. Measure it by the one thing that moved you closer to where you want to be.",
+  },
+  {
+    name: "Abdul Ahad",
+    linkedin: "https://www.linkedin.com/in/abdul-ahad-khan-a63002432/",
+    quote: "Vision takes shape when ideas are willing to adapt, grow, and lead the way.",
+  },
+  {
+    name: "Akbar Khan",
+    linkedin: "https://www.linkedin.com/in/akbar-khan-37ba43360/",
+    quote: "Our first client was us. We were drowning in the same busywork you are, until we automated our way out. Now we do it for you.",
+  },
+];
+
+// AboutPage.jsx computes its "Global Reach" country list from the bundled
+// static review data (src/data/reviews.js), not the live /api/v1/reviews
+// fetched above — read the same file here so this block matches exactly
+// what a JS visitor's browser actually renders, not a live total that could
+// drift from it until the next deploy.
+const bundledReviewsSrc = readFileSync("src/data/reviews.js", "utf8");
+const bundledCountries = [];
+for (const m of bundledReviewsSrc.matchAll(/location:\s*"([^"]+)"/g)) {
+  if (!bundledCountries.includes(m[1])) bundledCountries.push(m[1]);
+}
+
+function aboutBody() {
+  let body = `<p>${esc(HERO_INTRO)}</p>`;
+  body += `<ul>${DISCIPLINES.map((d) => `<li>${esc(d)}</li>`).join("")}</ul>`;
+  body += `<h2>Our Mission</h2><p>${esc(MISSION)}</p>`;
+  body += `<h2>Our Vision</h2><p>${esc(VISION)}</p>`;
+  body += `<h2>Our Team</h2>`;
+  for (const member of team) {
+    const extra = TEAM_EXTRAS.find((t) => t.name.toLowerCase() === member.name?.toLowerCase());
+    const quote = member.quote ?? extra?.quote;
+    const linkedin = member.linkedin ?? extra?.linkedin;
+    body += `<h3>${esc(member.name)}</h3><p>${esc(member.role)}</p>`;
+    if (quote) body += `<blockquote>${esc(quote)}</blockquote>`;
+    if (linkedin) body += `<p><a href="${esc(linkedin)}">Follow ${esc(member.name)} on LinkedIn</a></p>`;
+  }
+  body += `<h2>Global Reach</h2>`;
+  body += `<p>Nexoryn works with clients across multiple countries and time zones, automation and design don't stop at a border.</p>`;
+  body += `<ul>${bundledCountries.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>`;
+  return body;
+}
+
+// All 20 reviews, grouped by discipline — a visitor sees every one of these
+// by switching the real page's three service tabs; this just lays them out
+// linearly instead. Plain text only: no Review/AggregateRating/rating markup.
+function reviewsBody() {
+  const countryCount = new Set(reviews.map((r) => r.location).filter(Boolean)).size;
+  let body = `<p>Real feedback from the teams who no longer do the busywork, open any review to read the full story.</p>`;
+  body += `<p>${reviews.length} Client Reviews · ${countryCount} Countries · ${DISCIPLINES.length} Disciplines</p>`;
+  for (const service of DISCIPLINES) {
+    const group = reviews.filter((r) => r.service === service);
+    body += `<h2>${esc(service)}</h2><ul>${group
+      .map((r) => `<li>"${esc(r.text)}" — ${esc(r.name)}${r.location ? `, ${esc(r.location)}` : ""}</li>`)
+      .join("")}</ul>`;
+  }
+  return body;
+}
+
+const GMAIL_COMPOSE_URL = "https://mail.google.com/mail/?view=cm&fs=1&to=team@nexoryn.tech";
+
+// The FAQ accordion is closed by default — only the question is in the DOM
+// until a visitor clicks it (confirmed by reading FaqAccordion.jsx: the
+// answer <p> is conditionally rendered, `{isOpen && <p>...}`). Same
+// "same content a JS visitor can reach, just not paginated behind a click"
+// treatment as the case-study Technical Breakdown accordion: rendered open.
+function contactBody() {
+  let body = `<p>Ask a quick question, book a consultation, or tell us about your project, pick whichever fits.</p>`;
+  body += `<h2>Reach Us Directly</h2><dl>`;
+  body += `<dt>Email</dt><dd><a href="${esc(GMAIL_COMPOSE_URL)}">team@nexoryn.tech</a></dd>`;
+  body += `<dt>Call</dt><dd><a href="tel:+923023858945">+92 302 3858945</a></dd>`;
+  body += `<dt>WhatsApp</dt><dd><a href="https://wa.me/923023858945">Message us on WhatsApp</a></dd>`;
+  body += `<dt>Response time</dt><dd>We typically respond within a few hours.</dd>`;
+  body += `</dl>`;
+  body += `<h2>Frequently Asked Questions</h2>`;
+  for (const f of faqs) body += `<h3>${esc(f.question)}</h3><p>${esc(f.answer)}</p>`;
+  return body;
+}
+
+// Added only because the Q&A text above is rendered as real visible text in
+// this same block, not left behind a click — matches the condition for
+// FAQPage JSON-LD rather than claiming visibility that isn't real.
+function contactFaqJsonLd() {
+  const obj = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  };
+  return JSON.stringify(obj);
+}
+
 /* ── Page shell ───────────────────────────────────────────────────────── */
 
 const projectLinks = projects
   .map((p) => `<li><a href="/portfolio/${esc(p.slug)}">${esc(p.title)}</a>: ${esc(p.description)}</li>`)
   .join("");
-const nav = PAGES.filter((p) => p.path).map((p) => `<a href="/${p.path}">${esc(p.h1)}</a>`).join(" ");
+const nav = PAGES.filter((p) => p.path).map((p) => `<a href="/${p.path}">${esc(p.navLabel ?? p.h1)}</a>`).join(" ");
 
 // Must match the hero intro paragraph in src/components/Hero.jsx.
 const HERO_INTRO =
@@ -324,7 +518,6 @@ function render({ path, title, h1, desc, bodyHtml, jsonLd }) {
     if (path === "" || path === "services")
       extra += `<h2>Services</h2><ul>${SERVICES.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
     if (path === "" || path === "portfolio") extra += `<h2>Case studies</h2><ul>${projectLinks}</ul>`;
-    if (path === "contact") extra += `<p>Email: team@nexoryn.tech. Phone: +92 302 3858945.</p>`;
   }
   extra += `<nav>${nav}</nav>`;
 
@@ -412,7 +605,65 @@ function assertCaseStudyPage(project, writtenHtml) {
   }
 }
 
-for (const page of PAGES) write(page.path, render(page));
+function assertAboutPage(writtenHtml) {
+  for (const needle of ["<h2>Our Mission</h2>", "<h2>Our Vision</h2>", "<h2>Our Team</h2>", "<h2>Global Reach</h2>"]) {
+    if (!writtenHtml.includes(needle)) pageErrors.push(`about: missing expected heading ${needle}`);
+  }
+  const h3Count = (writtenHtml.match(/<h3>/g) ?? []).length;
+  if (h3Count !== team.length) pageErrors.push(`about: rendered ${h3Count} team entries, expected ${team.length}`);
+  const liCount = (writtenHtml.match(/<li>/g) ?? []).length;
+  const expectedLi = DISCIPLINES.length + bundledCountries.length;
+  if (liCount !== expectedLi)
+    pageErrors.push(
+      `about: rendered ${liCount} <li> items, expected ${expectedLi} (${DISCIPLINES.length} disciplines + ${bundledCountries.length} countries)`
+    );
+}
+
+function assertReviewsPage(writtenHtml) {
+  for (const service of DISCIPLINES) {
+    if (!writtenHtml.includes(`<h2>${esc(service)}</h2>`)) pageErrors.push(`reviews: missing expected heading <h2>${service}</h2>`);
+  }
+  const liCount = (writtenHtml.match(/<li>/g) ?? []).length;
+  if (liCount !== reviews.length) pageErrors.push(`reviews: rendered ${liCount} review <li> items, expected ${reviews.length}`);
+}
+
+function assertContactPage(writtenHtml) {
+  for (const needle of ["<h2>Reach Us Directly</h2>", "<h2>Frequently Asked Questions</h2>", "<dt>Email</dt>"]) {
+    if (!writtenHtml.includes(needle)) pageErrors.push(`contact: missing expected content ${needle}`);
+  }
+  const h3Count = (writtenHtml.match(/<h3>/g) ?? []).length;
+  if (h3Count !== faqs.length) pageErrors.push(`contact: rendered ${h3Count} FAQ entries, expected ${faqs.length}`);
+
+  const ldMatch = writtenHtml.match(/<script type="application\/ld\+json" id="contact-faq-jsonld">([\s\S]*?)<\/script>/);
+  if (!ldMatch) {
+    pageErrors.push("contact: FAQPage JSON-LD script not found");
+  } else {
+    try {
+      const parsed = JSON.parse(ldMatch[1]);
+      if (parsed.mainEntity?.length !== faqs.length)
+        pageErrors.push(`contact: FAQPage JSON-LD has ${parsed.mainEntity?.length} entries, expected ${faqs.length}`);
+    } catch (err) {
+      pageErrors.push(`contact: FAQPage JSON-LD does not parse: ${err.message}`);
+    }
+  }
+}
+
+const PAGE_EXTRAS = {
+  about: { bodyHtml: aboutBody() },
+  reviews: { bodyHtml: reviewsBody() },
+  contact: {
+    bodyHtml: contactBody(),
+    jsonLd: `<script type="application/ld+json" id="contact-faq-jsonld">${contactFaqJsonLd()}</script>`,
+  },
+};
+
+for (const page of PAGES) {
+  const out = render({ ...page, ...PAGE_EXTRAS[page.path] });
+  write(page.path, out);
+  if (page.path === "about") assertAboutPage(out);
+  if (page.path === "reviews") assertReviewsPage(out);
+  if (page.path === "contact") assertContactPage(out);
+}
 
 for (const project of projects) {
   const bodyHtml = caseStudyBody(project);

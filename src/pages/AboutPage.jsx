@@ -198,6 +198,7 @@ export default function AboutPage() {
                 <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-from">About Nexoryn</span>
               </div>
               <SplitText
+                as="h1"
                 animateOnMount
                 delay={0.15}
                 className="mt-6 font-heading text-4xl leading-tight tracking-tight text-white md:text-6xl"
