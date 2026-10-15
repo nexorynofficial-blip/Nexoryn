@@ -3,6 +3,7 @@ import { prisma } from "../../config/database";
 import { checkHoneypot } from "../../middleware/honeypot";
 import { contactRateLimiter } from "../../middleware/rateLimiter";
 import { sendContactNotification } from "../../services/email";
+import { buildLeadPayload, sendLeadWebhook } from "../../services/leadWebhook";
 import { isContactFormId, validateContactForm } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
@@ -45,6 +46,14 @@ router.post(
         data: { emailError: String(emailError) },
       });
     }
+
+    // n8n lead webhook. Unlike the email above, a failure here is thrown —
+    // the global error handler turns it into a 500, and the frontend's
+    // existing error handling shows its normal "something went wrong" state
+    // for that. The submission itself is already saved by this point either
+    // way, so nothing is lost; the visitor just sees it as unsuccessful and
+    // knows to retry or reach out directly.
+    await sendLeadWebhook(buildLeadPayload(formId, validatedFields));
 
     res.status(201).json({ id: submission.id, status: "received" });
   }),

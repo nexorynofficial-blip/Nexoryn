@@ -37,6 +37,12 @@ export const env = {
   resendFromAddress: optional("RESEND_FROM_ADDRESS", "Nexoryn <noreply@nexoryn.ai>"),
   adminNotificationEmail: optional("ADMIN_NOTIFICATION_EMAIL", "team@nexoryn.tech"),
 
+  // n8n lead-capture webhook (see services/leadWebhook.ts). One place so a
+  // temporary URL (e.g. an ngrok tunnel) is one env var to swap, not several
+  // hardcoded strings. Empty means "not configured" — the contact form still
+  // works (submission + email), the webhook forward is just skipped.
+  leadWebhookUrl: process.env.LEAD_WEBHOOK_URL ?? "",
+
   // Shared secret the Social Agent CLI sends as a Bearer token when pushing a
   // summary. Unset means ingest is disabled (503), never open.
   socialIngestToken: process.env.SOCIAL_INGEST_TOKEN ?? "",
