@@ -1,0 +1,19 @@
+{
+  "name": "Nexoryn Admin",
+  "short_name": "Nexoryn Admin",
+  "description": "Internal admin portal — finance, projects, requests and leads.",
+  "start_url": "/cfokp/",
+  "scope": "/cfokp/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/cfokp/nexoryn-logo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

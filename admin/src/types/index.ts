@@ -229,3 +229,32 @@ export interface AdminUser {
   partnerName: string | null;
   role: string;
 }
+
+/** One row in the bell's feed — see backend/src/services/notify.ts for the
+ *  full set of eventType values and backend/src/routes/admin/notifications.ts
+ *  for how this is fetched. */
+export interface AppNotification {
+  id: string;
+  eventType: string;
+  title: string;
+  body: string;
+  linkUrl: string | null;
+  actorAdminId: string | null;
+  actorName: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  items: AppNotification[];
+  unreadCount: number;
+}
+
+/** One browser/device subscribed to push — see backend/src/routes/admin/push.ts. */
+export interface PushDevice {
+  id: string;
+  endpoint: string;
+  deviceLabel: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+}

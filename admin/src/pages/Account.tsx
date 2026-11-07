@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, Fingerprint, UserCog } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { KeyRound, ShieldCheck, Fingerprint, UserCog, BellRing, Smartphone, Trash2 } from "lucide-react";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import type { AdminAccount, PasskeyResult } from "../types";
+import { usePush } from "../hooks/usePush";
+import type { AdminAccount, PasskeyResult, PushDevice } from "../types";
 import { Button, Card, ErrorBanner, Field, Input, PageHeader, Spinner } from "../components/ui";
 
 /** Zod field errors come back keyed by field name; surface them inline. */
@@ -331,6 +332,119 @@ function PasskeyCard({ account, onChanged }: { account: AdminAccount; onChanged:
   );
 }
 
+/**
+ * Turns push on/off for *this* browser, and lists every device subscribed
+ * for this account so one that's no longer around (an old phone) can be
+ * removed without needing to be physically present to click "disable"
+ * itself.
+ */
+function NotificationsCard() {
+  const { supported, permission, subscribed, busy, error, subscribe, unsubscribe } = usePush();
+  const [devices, setDevices] = useState<PushDevice[] | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const loadDevices = useCallback(() => {
+    api
+      .get<{ items: PushDevice[] }>("/api/v1/admin/push/devices")
+      .then((r) => setDevices(r.items))
+      .catch(() => setDevices([]));
+  }, []);
+
+  useEffect(() => {
+    loadDevices();
+  }, [loadDevices, subscribed]);
+
+  const removeDevice = async (id: string) => {
+    setRemovingId(id);
+    try {
+      await api.delete(`/api/v1/admin/push/devices/${id}`);
+      loadDevices();
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  return (
+    <Card className="p-6 lg:col-span-2">
+      <div className="mb-1 flex items-center gap-2">
+        <BellRing className="h-4 w-4 text-accent-from" />
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Notifications</h2>
+      </div>
+      <p className="mb-5 text-xs leading-relaxed text-white/40">
+        Get a push notification when another admin logs a finance entry, adds a request, or a new lead comes in
+        from the website. You still see everything in the bell at the top of the sidebar either way — this just
+        controls whether this device also gets a push.
+      </p>
+
+      <ErrorBanner message={error} />
+
+      {!supported ? (
+        <p className="text-xs text-white/40">This browser doesn't support push notifications.</p>
+      ) : (
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          {subscribed ? (
+            <>
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-emerald-400">
+                On for this device
+              </span>
+              <Button variant="secondary" onClick={unsubscribe} loading={busy}>
+                Turn off
+              </Button>
+            </>
+          ) : (
+            <Button onClick={subscribe} loading={busy}>
+              Enable notifications on this device
+            </Button>
+          )}
+          {permission === "denied" && (
+            <span className="text-xs text-white/40">
+              Blocked in your browser — enable notifications for this site in your browser's settings, then try
+              again.
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="border-t border-border-subtle pt-4">
+        <p className="mb-3 text-[11px] uppercase tracking-wide text-white/40">Devices subscribed on your account</p>
+        {devices === null ? (
+          <Spinner />
+        ) : devices.length === 0 ? (
+          <p className="text-xs text-white/40">No devices yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {devices.map((d) => (
+              <li
+                key={d.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-white/[0.02] px-3 py-2"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <Smartphone className="h-3.5 w-3.5 shrink-0 text-white/40" />
+                  <div className="min-w-0">
+                    <p className="truncate text-xs text-white/80">{d.deviceLabel ?? "Unknown device"}</p>
+                    <p className="text-[10px] text-white/30">
+                      Last active {new Date(d.lastSeenAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeDevice(d.id)}
+                  disabled={removingId === d.id}
+                  aria-label="Remove device"
+                  className="shrink-0 text-white/30 transition hover:text-red-400 disabled:opacity-40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export default function Account() {
   const { refresh } = useAuth();
   const [account, setAccount] = useState<AdminAccount | null>(null);
@@ -373,6 +487,8 @@ export default function Account() {
           <PasswordCard account={account} />
 
           <PasskeyCard account={account} onChanged={() => load(true)} />
+
+          <NotificationsCard />
 
           <Card className="p-6 lg:col-span-2">
             <div className="mb-1 flex items-center gap-2">

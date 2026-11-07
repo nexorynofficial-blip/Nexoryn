@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { notify } from "../../services/notify";
 import { projectInputSchema } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
@@ -51,6 +52,15 @@ router.post(
     });
 
     await pingIndexNow([`/portfolio/${project.slug}`, "/portfolio", "/sitemap.xml"]);
+
+    await notify({
+      eventType: "project.created",
+      title: "New project added",
+      body: project.title,
+      linkUrl: `/projects/${project.id}`,
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(project);
   }),
 );
@@ -79,6 +89,15 @@ router.put(
       `/portfolio/${project.slug}`,
       ...(project.slug !== existing.slug ? [`/portfolio/${existing.slug}`] : []),
     ]);
+
+    await notify({
+      eventType: "project.updated",
+      title: "Project updated",
+      body: project.title,
+      linkUrl: `/projects/${project.id}`,
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(project);
   }),
 );

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { notify } from "../../services/notify";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
 
@@ -41,6 +42,14 @@ router.post(
       return tx.teamMember.create({ data: input });
     });
 
+    await notify({
+      eventType: "team_member.created",
+      title: "New team member added",
+      body: `${member.name} — ${member.role}`,
+      linkUrl: "/team",
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(member);
   }),
 );
@@ -53,6 +62,15 @@ router.put(
       .update({ where: { id: req.params.id }, data: input })
       .catch(() => null);
     if (!member) throw ApiError.notFound("Team member not found");
+
+    await notify({
+      eventType: "team_member.updated",
+      title: "Team member updated",
+      body: `${member.name} — ${member.role}`,
+      linkUrl: "/team",
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(member);
   }),
 );

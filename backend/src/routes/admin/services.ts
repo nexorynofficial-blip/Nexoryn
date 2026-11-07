@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
 import { isValidIconName } from "../../utils/icons";
+import { notify } from "../../services/notify";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
 
@@ -53,6 +54,15 @@ router.post(
   asyncHandler(async (req, res) => {
     const input = categorySchema.parse(req.body);
     const category = await prisma.serviceCategory.create({ data: input });
+
+    await notify({
+      eventType: "service.created",
+      title: "New service category added",
+      body: category.serviceName,
+      linkUrl: "/services",
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(category);
   }),
 );
@@ -66,6 +76,15 @@ router.put(
       .update({ where: { id: req.params.id }, data: input })
       .catch(() => null);
     if (!category) throw ApiError.notFound("Service category not found");
+
+    await notify({
+      eventType: "service.updated",
+      title: "Service category updated",
+      body: category.serviceName,
+      linkUrl: "/services",
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(category);
   }),
 );
@@ -92,6 +111,15 @@ router.post(
     const subService = await prisma.subService.create({
       data: { ...input, categoryId: req.params.categoryId },
     });
+
+    await notify({
+      eventType: "service.created",
+      title: "New sub-service added",
+      body: `${subService.name} (${category.serviceName})`,
+      linkUrl: "/services",
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(subService);
   }),
 );
@@ -108,6 +136,15 @@ subServiceRouter.put(
       .update({ where: { id: req.params.id }, data: input })
       .catch(() => null);
     if (!subService) throw ApiError.notFound("Sub-service not found");
+
+    await notify({
+      eventType: "service.updated",
+      title: "Sub-service updated",
+      body: subService.name,
+      linkUrl: "/services",
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(subService);
   }),
 );

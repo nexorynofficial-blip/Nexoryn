@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { notify } from "../../services/notify";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
 
@@ -43,6 +44,14 @@ router.post(
       return tx.fAQ.create({ data: input });
     });
 
+    await notify({
+      eventType: "faq.created",
+      title: "New FAQ added",
+      body: faq.question,
+      linkUrl: "/faqs",
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(faq);
   }),
 );
@@ -53,6 +62,15 @@ router.put(
     const input = faqSchema.partial().parse(req.body);
     const faq = await prisma.fAQ.update({ where: { id: req.params.id }, data: input }).catch(() => null);
     if (!faq) throw ApiError.notFound("FAQ not found");
+
+    await notify({
+      eventType: "faq.updated",
+      title: "FAQ updated",
+      body: faq.question,
+      linkUrl: "/faqs",
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(faq);
   }),
 );

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../config/database";
 import { authMiddleware } from "../../middleware/auth";
+import { notify } from "../../services/notify";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
 
@@ -42,6 +43,15 @@ router.post(
     const project = await prisma.internalProject.create({
       data: { ...input, uploadedBy: req.admin!.id },
     });
+
+    await notify({
+      eventType: "internal_project.created",
+      title: "New internal project added",
+      body: `${project.name} (${project.serviceType})`,
+      linkUrl: "/internal-projects",
+      actingAdminId: req.admin!.id,
+    });
+
     res.status(201).json(project);
   }),
 );
@@ -54,6 +64,15 @@ router.put(
       .update({ where: { id: req.params.id }, data: input })
       .catch(() => null);
     if (!project) throw ApiError.notFound("Internal project not found");
+
+    await notify({
+      eventType: "internal_project.updated",
+      title: "Internal project updated",
+      body: `${project.name} (${project.serviceType})`,
+      linkUrl: "/internal-projects",
+      actingAdminId: req.admin!.id,
+    });
+
     res.json(project);
   }),
 );

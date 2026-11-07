@@ -23,6 +23,8 @@ import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import type { DebtRequests } from "../types";
 import { AmbientBackground } from "./AmbientBackground";
+import { NotificationBell } from "./NotificationBell";
+import { IosInstallBanner } from "./IosInstallBanner";
 
 // `ownerOnly` mirrors requireRole("owner") on the API (backend
 // src/middleware/auth.ts). The server is what actually enforces this — hiding
@@ -164,11 +166,14 @@ export default function Layout() {
       <AmbientBackground />
 
       <aside className="relative z-10 flex w-60 shrink-0 flex-col border-r border-border-subtle bg-panel/50 p-4 backdrop-blur-sm">
-        <div className="mb-6 px-2">
-          <span className="font-heading text-lg font-bold tracking-tight text-white">
-            NEX<span className="text-accent-from">ORYN</span>
-          </span>
-          <p className="text-[11px] uppercase tracking-wide text-white/30">Admin</p>
+        <div className="mb-6 flex items-start justify-between px-2">
+          <div>
+            <span className="font-heading text-lg font-bold tracking-tight text-white">
+              NEX<span className="text-accent-from">ORYN</span>
+            </span>
+            <p className="text-[11px] uppercase tracking-wide text-white/30">Admin</p>
+          </div>
+          <NotificationBell />
         </div>
 
         {/* overflow-y-auto here (not just flex-1) means a nav list too long
@@ -222,6 +227,7 @@ export default function Layout() {
       </aside>
 
       <main className="relative z-10 flex-1 overflow-y-auto p-8">
+        <IosInstallBanner />
         <Outlet />
       </main>
     </div>

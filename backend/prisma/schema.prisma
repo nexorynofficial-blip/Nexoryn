@@ -77,6 +77,8 @@ model AdminUser {
   internalProjects    InternalProject[]
   investments         Investment[]
   auditLogs           AuditLog[]
+  pushSubscriptions   PushSubscription[]
+  notifications       Notification[]
 
   @@index([email])
 }
@@ -448,4 +450,74 @@ model SocialAction {
   createdAt  DateTime @default(now())
 
   @@index([platform, itemId])
+}
+
+// ============================================================================
+// PUSH NOTIFICATIONS (PWA)
+// ============================================================================
+
+/// One browser/device's Web Push subscription for one admin. An admin signed
+/// in on 3 devices has 3 rows — `endpoint` is what the push service (Apple's,
+/// Google's, Mozilla's...) uses to route a message, and it is unique per
+/// browser install, so it is also this table's natural dedupe key: a device
+/// that unsubscribes and resubscribes keeps the same endpoint as long as the
+/// browser's own push registration didn't change.
+model PushSubscription {
+  id       String @id @default(cuid())
+  adminId  String
+  admin    AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  endpoint String @unique
+  /// The subscription's two keys (p256dh, auth), as pushManager.subscribe()
+  /// returns them — both required by the Web Push protocol to encrypt a
+  /// message so only this specific browser can read it.
+  p256dh   String
+  auth     String
+
+  /// Free text so the admin can tell devices apart in Account settings —
+  /// not parsed, just whatever the browser's UA roughly says ("iPhone —
+  /// Safari", "Windows — Chrome").
+  deviceLabel String?
+
+  createdAt DateTime @default(now())
+  /// Bumped on every push attempt that got a non-404/410 response (success or
+  /// a transient failure) — not on dead-subscription cleanup, since the row
+  /// is deleted then instead. Mostly useful for spotting a subscription that
+  /// looks alive but hasn't actually been pushed to in a long time.
+  lastSeenAt DateTime @default(now())
+
+  @@index([adminId])
+}
+
+/// One in-app notification, written for every admin except whoever caused
+/// the event (see services/notify.ts) — this is the feed's source of truth
+/// and exists independent of whether push succeeded, failed, or was never
+/// granted permission at all.
+model Notification {
+  id      String    @id @default(cuid())
+  adminId String
+  admin   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  /// "contact.submitted" | "finance.created" | "finance.approved" | ... —
+  /// see NotifyEventType in services/notify.ts for the exact set. Free text
+  /// here (not a DB enum) so adding a new event type is a one-line code
+  /// change, not a migration.
+  eventType String
+  title     String
+  body      String
+  /// Where clicking the notification (in-app or from the push itself) should
+  /// go — a path relative to the admin app, e.g. "/finance" or "/requests".
+  linkUrl   String?
+
+  /// Who caused the event, kept even though this row is never shown to that
+  /// same admin — useful context in the feed ("Akbar approved...") without a
+  /// join, and harmless to keep if the actor's account is later removed.
+  actorAdminId   String?
+  actorName      String?
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([adminId, isRead])
+  @@index([adminId, createdAt])
 }

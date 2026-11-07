@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { useServiceWorker } from "./hooks/usePush";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import Login from "./pages/Login";
@@ -32,6 +33,13 @@ function RedirectIfAuthed({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Registered unconditionally, not just once the admin opts into push — a
+  // subscription can only be created against an already-registered worker,
+  // so this has to be in place before Account settings' "Enable
+  // notifications" button can do anything, and registering costs nothing
+  // for an admin who never clicks it.
+  useServiceWorker();
+
   // Served under <site>/cfokp — see the `base` in vite.config.ts. Reusing
   // Vite's BASE_URL as the router basename keeps dev (/cfokp/ on :5174) and
   // production on identical paths.

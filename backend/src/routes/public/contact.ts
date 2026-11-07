@@ -4,6 +4,7 @@ import { checkHoneypot } from "../../middleware/honeypot";
 import { contactRateLimiter } from "../../middleware/rateLimiter";
 import { sendContactNotification } from "../../services/email";
 import { buildLeadPayload, sendLeadWebhook } from "../../services/leadWebhook";
+import { notify } from "../../services/notify";
 import { isContactFormId, validateContactForm } from "../../services/validation";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiError } from "../../utils/errors";
@@ -54,6 +55,19 @@ router.post(
     // way, so nothing is lost; the visitor just sees it as unsuccessful and
     // knows to retry or reach out directly.
     await sendLeadWebhook(buildLeadPayload(formId, validatedFields));
+
+    // Every admin — no actor to exclude, this came from the public site.
+    await notify({
+      eventType: "contact.submitted",
+      title: "New contact form submission",
+      body: `${validatedFields.name} (${formId}): ${String(
+        (validatedFields as Record<string, unknown>).message ??
+          (validatedFields as Record<string, unknown>).details ??
+          "",
+      ).slice(0, 140)}`,
+      linkUrl: "/contact-submissions",
+      actingAdminId: null,
+    });
 
     res.status(201).json({ id: submission.id, status: "received" });
   }),

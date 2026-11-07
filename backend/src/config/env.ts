@@ -43,6 +43,21 @@ export const env = {
   // works (submission + email), the webhook forward is just skipped.
   leadWebhookUrl: process.env.LEAD_WEBHOOK_URL ?? "",
 
+  // Web Push (see services/push.ts). Generate once with:
+  //   node -e "console.log(require('web-push').generateVAPIDKeys())"
+  // The public key is also handed to the browser (GET /api/v1/push/vapid-
+  // public-key, see routes/public/push.ts) — it's public by design, safe to
+  // expose. The private key signs every push and must never leave the
+  // backend. Empty means push is disabled: subscribing still no-ops safely
+  // and every write that would otherwise push just logs a notification row
+  // instead (see services/notify.ts) — nothing breaks, push is just off.
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? "",
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
+  // Required by the Web Push protocol as a contact point push services may
+  // use to reach you about this application (e.g. if it's misbehaving) — not
+  // shown to admins anywhere. A mailto: link, per the spec.
+  vapidSubject: optional("VAPID_SUBJECT", "mailto:team@nexoryn.tech"),
+
   // Shared secret the Social Agent CLI sends as a Bearer token when pushing a
   // summary. Unset means ingest is disabled (503), never open.
   socialIngestToken: process.env.SOCIAL_INGEST_TOKEN ?? "",

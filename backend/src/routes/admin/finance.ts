@@ -4,6 +4,7 @@ import { authMiddleware, requireRole } from "../../middleware/auth";
 import { passkeyRateLimiter } from "../../middleware/rateLimiter";
 import { recordAudit } from "../../services/audit";
 import { calculateFinanceDashboard } from "../../services/financeCalculations";
+import { notify } from "../../services/notify";
 import { verifyActionPasskey } from "../../services/passkey";
 import {
   COMPANY_ACTOR,
@@ -266,6 +267,16 @@ router.post(
       req,
     });
 
+    await notify({
+      eventType: "finance.created",
+      title: `${me.actor} logged a finance entry`,
+      body: `${input.type.replace("_", " ")} — $${input.amount.toLocaleString()} (${input.actionBy})${
+        needsApproval ? ", awaiting approval" : ""
+      }`,
+      linkUrl: needsApproval ? "/requests" : "/finance",
+      actingAdminId: me.id,
+    });
+
     res.status(201).json({ ...investment, amount: Number(investment.amount), eligibleApprovers: approvers });
   }),
 );
@@ -327,6 +338,14 @@ router.post(
       req,
     });
 
+    await notify({
+      eventType: "finance.approved",
+      title: `${me.actor} approved a finance entry`,
+      body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.actionBy})`,
+      linkUrl: "/finance",
+      actingAdminId: me.id,
+    });
+
     res.json({ ...updated, amount: Number(updated.amount) });
   }),
 );
@@ -359,6 +378,14 @@ router.post(
       target: `investment:${row.id}`,
       metadata: { type: row.type, amount: Number(row.amount), actionBy: row.actionBy },
       req,
+    });
+
+    await notify({
+      eventType: "finance.rejected",
+      title: `${me.actor} rejected a finance entry`,
+      body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.actionBy})`,
+      linkUrl: "/finance",
+      actingAdminId: me.id,
     });
 
     res.json({ ...updated, amount: Number(updated.amount) });
@@ -410,6 +437,14 @@ router.post(
       req,
     });
 
+    await notify({
+      eventType: "finance.change_requested",
+      title: `${me.actor} proposed a description change`,
+      body: `"${row.description}" → "${description}"`,
+      linkUrl: "/requests",
+      actingAdminId: me.id,
+    });
+
     res.json({
       ...updated,
       amount: Number(updated.amount),
@@ -444,6 +479,14 @@ router.post(
       target: `investment:${row.id}`,
       metadata: { changeType: "delete", description: row.description, amount: Number(row.amount) },
       req,
+    });
+
+    await notify({
+      eventType: "finance.change_requested",
+      title: `${me.actor} proposed deleting a finance entry`,
+      body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.description})`,
+      linkUrl: "/requests",
+      actingAdminId: me.id,
     });
 
     res.json({
@@ -501,6 +544,14 @@ router.post(
         req,
       });
 
+      await notify({
+        eventType: "finance.change_approved",
+        title: `${me.actor} approved deleting a finance entry`,
+        body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.description})`,
+        linkUrl: "/finance",
+        actingAdminId: me.id,
+      });
+
       res.status(204).send();
       return;
     }
@@ -524,6 +575,14 @@ router.post(
       target: `investment:${row.id}`,
       metadata: { changeType: "edit_description", from: row.description, to: row.pendingDescription },
       req,
+    });
+
+    await notify({
+      eventType: "finance.change_approved",
+      title: `${me.actor} approved a description change`,
+      body: `"${row.description}" → "${row.pendingDescription}"`,
+      linkUrl: "/finance",
+      actingAdminId: me.id,
     });
 
     res.json({ ...updated, amount: Number(updated.amount) });
@@ -559,6 +618,14 @@ router.post(
       target: `investment:${row.id}`,
       metadata: { changeType: row.pendingChangeType, note },
       req,
+    });
+
+    await notify({
+      eventType: "finance.change_rejected",
+      title: `${me.actor} rejected a proposed change`,
+      body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.description})`,
+      linkUrl: "/finance",
+      actingAdminId: me.id,
     });
 
     res.json({ ...updated, amount: Number(updated.amount) });
@@ -615,6 +682,14 @@ router.delete(
         description: row.description,
       },
       req,
+    });
+
+    await notify({
+      eventType: "finance.rejected",
+      title: `${me.actor} removed a finance entry`,
+      body: `${row.type.replace("_", " ")} — $${Number(row.amount).toLocaleString()} (${row.description})`,
+      linkUrl: "/finance",
+      actingAdminId: me.id,
     });
 
     res.status(204).send();
