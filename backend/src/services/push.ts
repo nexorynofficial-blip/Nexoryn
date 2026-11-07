@@ -1,16 +1,18 @@
-// web-push is a real ESM module (package.json: "type": "module") with no
-// default export — only named exports. A default import compiles under
-// tsc's esModuleInterop but throws at runtime wherever the module is
-// actually loaded as ESM (Vercel's function runtime, Bun), crashing the
-// entire app on cold start since every route file transitively imports this.
-import { setVapidDetails, sendNotification } from "web-push";
+// Pinned below 4.0.0 deliberately: web-push@4 ships as a real ESM-only
+// package ("type": "module"), which a CommonJS backend can't require() on
+// Vercel's actual Node runtime (ERR_REQUIRE_ESM) even though tsc's
+// esModuleInterop compiles the import without complaint and it even runs
+// under Bun locally — both are misleading signals. 3.6.x is genuine
+// CommonJS (module.exports = {...}), so the default import below is real,
+// not an interop shim.
+import webpush from "web-push";
 import { prisma } from "../config/database";
 import { env } from "../config/env";
 
 let configured = false;
 function ensureConfigured() {
   if (configured || !env.vapidPublicKey || !env.vapidPrivateKey) return;
-  setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
+  webpush.setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
   configured = true;
 }
 
@@ -46,7 +48,7 @@ export async function sendPush(
   if (!pushEnabled()) return;
 
   try {
-    await sendNotification(
+    await webpush.sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: { p256dh: subscription.p256dh, auth: subscription.auth },
