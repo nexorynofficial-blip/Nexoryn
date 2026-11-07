@@ -1,11 +1,16 @@
-import webpush from "web-push";
+// web-push is a real ESM module (package.json: "type": "module") with no
+// default export — only named exports. A default import compiles under
+// tsc's esModuleInterop but throws at runtime wherever the module is
+// actually loaded as ESM (Vercel's function runtime, Bun), crashing the
+// entire app on cold start since every route file transitively imports this.
+import { setVapidDetails, sendNotification } from "web-push";
 import { prisma } from "../config/database";
 import { env } from "../config/env";
 
 let configured = false;
 function ensureConfigured() {
   if (configured || !env.vapidPublicKey || !env.vapidPrivateKey) return;
-  webpush.setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
+  setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
   configured = true;
 }
 
@@ -41,7 +46,7 @@ export async function sendPush(
   if (!pushEnabled()) return;
 
   try {
-    await webpush.sendNotification(
+    await sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: { p256dh: subscription.p256dh, auth: subscription.auth },
