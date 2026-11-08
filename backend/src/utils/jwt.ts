@@ -38,25 +38,27 @@ export const SESSION_COOKIE_NAME = "nexoryn_admin_session";
 
 /** Shared cookie options for setting/clearing the admin session cookie.
  *
- * sameSite must be "none" in production: the admin panel and API are
- * deployed as two separate Vercel projects on different domains
- * (nexoryn-delta.vercel.app vs. nexoryn-*.vercel.app), which makes every
- * request genuinely cross-site. "strict" (or "lax") tells the browser to
- * never send the cookie on a cross-site request at all — login would
- * succeed and set the cookie, but every following request would look
- * logged-out. "none" requires secure:true, which is already true in
- * production (both sides are HTTPS). Locally, frontend and backend share
- * the "localhost" registrable domain regardless of port, so "lax" is both
- * sufficient and safer than "none" (which requires HTTPS to work at all,
- * and localhost dev is plain HTTP).
+ * In production the browser never talks to the backend's own domain
+ * directly — the admin app (nexoryn.tech/cfokp) calls same-origin paths
+ * under /cfokp/api/*, which the root vercel.json rewrites (proxies)
+ * server-side to the real backend. From the browser's point of view this
+ * cookie is first-party, so "lax" works and is safer than "none": iOS
+ * Safari (and specifically standalone Home-Screen web apps, which apply
+ * cross-site cookie restrictions even more aggressively than a normal
+ * Safari tab) was silently dropping a genuinely cross-site "none" cookie,
+ * which made login appear to succeed while every following request looked
+ * logged-out. Locally there's no proxy — the admin app calls
+ * http://localhost:3001 directly — but that's still same-site (shared
+ * "localhost" registrable domain), so "lax" has always been correct there
+ * too.
  *
- * Because "none" means the browser attaches this cookie to cross-site
- * requests, it is `requireTrustedOrigin` (src/middleware/csrf.ts) — not the
- * cookie's own SameSite setting — that stops another site from driving the
- * API with it. The two go together; don't remove one without the other. */
+ * The cookie's Path must match the URL the *browser* sees, not the path
+ * the backend receives after Vercel strips the /cfokp/api prefix — a
+ * narrower Path here would mean the cookie never gets reattached to the
+ * admin app's own requests. */
 export const sessionCookieOptions = {
   httpOnly: true,
   secure: env.isProduction,
-  sameSite: env.isProduction ? ("none" as const) : ("lax" as const),
-  path: "/api/v1/admin",
+  sameSite: "lax" as const,
+  path: env.isProduction ? "/cfokp/api/v1/admin" : "/api/v1/admin",
 };

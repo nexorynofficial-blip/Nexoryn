@@ -6,6 +6,7 @@
     { "source": "/cfokp", "destination": "/cfokp/", "permanent": true }
   ],
   "rewrites": [
+    { "source": "/cfokp/api/:path*", "destination": "https://nexoryn-zimw-nexoryn.vercel.app/api/:path*" },
     { "source": "/cfokp/", "destination": "/cfokp/index.html" },
     { "source": "/cfokp/:path*", "destination": "/cfokp/index.html" },
     { "source": "/:path*", "destination": "/index.html" }

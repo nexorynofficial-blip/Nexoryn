@@ -1,4 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+// Production always goes through the same-origin proxy (root vercel.json
+// rewrites /cfokp/api/* to the backend) so the session cookie is first-party
+// — a genuinely cross-site cookie gets dropped by iOS Safari's cross-site
+// tracking protections, especially inside a standalone Home-Screen web app.
+// Local dev has no such proxy, so it still talks to the backend directly.
+const BASE_URL = import.meta.env.PROD ? "/cfokp" : (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001");
 
 export class ApiRequestError extends Error {
   status: number;
