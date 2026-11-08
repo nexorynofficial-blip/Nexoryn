@@ -58,9 +58,9 @@ function SubServiceEditor({
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+    <div className="rounded-lg border border-white/10 bg-black/20 p-4 max-md:p-3">
       <ErrorBanner message={error} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Slug"><Input value={slug} onChange={(e) => setSlug(e.target.value)} /></Field>
         <Field label="Icon (lucide name)"><Input value={icon} onChange={(e) => setIcon(e.target.value)} /></Field>
@@ -69,7 +69,7 @@ function SubServiceEditor({
       <div className="mt-3">
         <Field label="Description"><Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[70px] font-sans text-sm" /></Field>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-3 max-md:grid-cols-1">
         <Field label="How We Work (one per line)"><Textarea value={howWeWork} onChange={(e) => setHowWeWork(e.target.value)} className="font-sans text-xs" /></Field>
         <Field label="What You Get (one per line)"><Textarea value={whatYouGet} onChange={(e) => setWhatYouGet(e.target.value)} className="font-sans text-xs" /></Field>
       </div>
@@ -77,8 +77,8 @@ function SubServiceEditor({
         <Field label="Platforms (comma-separated)"><Input value={platforms} onChange={(e) => setPlatforms(e.target.value)} /></Field>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} loading={saving}>Save</Button>
+        <Button variant="secondary" onClick={onCancel} className="max-md:flex-1">Cancel</Button>
+        <Button onClick={handleSave} loading={saving} className="max-md:flex-1">Save</Button>
       </div>
     </div>
   );
@@ -102,13 +102,13 @@ function CategoryCard({ category, onChanged }: { category: ServiceCategory; onCh
   };
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
+    <Card className="p-6 max-md:p-4">
+      <div className="mb-4 flex items-center justify-between max-md:items-start max-md:gap-3">
+        <div className="max-md:min-w-0">
           <h2 className="text-lg font-semibold text-white">{category.serviceName}</h2>
           <p className="text-xs text-white/40">{category.overview.heading}</p>
         </div>
-        <Badge>{category.subServices.length} sub-services</Badge>
+        <Badge className="max-md:shrink-0 max-md:whitespace-nowrap">{category.subServices.length} sub-services</Badge>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -125,15 +125,15 @@ function CategoryCard({ category, onChanged }: { category: ServiceCategory; onCh
               onCancel={() => setEditingSub(null)}
             />
           ) : (
-            <div key={sub.id} className="flex items-center justify-between rounded-lg border border-white/5 px-4 py-2.5 hover:bg-white/[0.02]">
-              <div>
-                <p className="text-sm text-white">{sub.name}</p>
+            <div key={sub.id} className="flex items-center justify-between rounded-lg border border-white/5 px-4 py-2.5 hover:bg-white/[0.02] max-md:gap-2 max-md:px-3">
+              <div className="max-md:min-w-0">
+                <p className="text-sm text-white max-md:truncate">{sub.name}</p>
                 <p className="text-xs text-white/40">{sub.icon} · order {sub.order}</p>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => setEditingSub(sub)} className="text-xs text-accent-to hover:underline">Edit</button>
-                <button onClick={() => setPendingDelete(sub)} className="text-white/30 hover:text-red-400">
-                  <Trash2 className="h-3.5 w-3.5" />
+              <div className="flex gap-2 max-md:shrink-0 max-md:items-center max-md:gap-1">
+                <button onClick={() => setEditingSub(sub)} className="text-xs text-accent-to hover:underline max-md:px-2 max-md:py-2">Edit</button>
+                <button onClick={() => setPendingDelete(sub)} aria-label={`Delete ${sub.name}`} className="text-white/30 hover:text-red-400 max-md:p-2">
+                  <Trash2 className="h-3.5 w-3.5 max-md:h-4 max-md:w-4" />
                 </button>
               </div>
             </div>

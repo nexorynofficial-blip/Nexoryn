@@ -66,7 +66,7 @@ export default function ProjectsList() {
 
       <div className="relative mb-4 max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by title, slug, industry, service, tag…" className="pl-9" />
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by title, slug, industry, service, tag…" className="pl-9 max-md:w-full" />
       </div>
 
       {projects.length === 0 ? (
@@ -74,7 +74,33 @@ export default function ProjectsList() {
       ) : filtered.length === 0 ? (
         <EmptyState message="No projects match your search." />
       ) : (
-        <Card className="overflow-hidden">
+        <>
+        {/* Phones: one tappable card per project instead of a 5-column table. */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {filtered.map((p) => (
+            <Card key={p.id} className="flex items-start gap-3 p-4">
+              <Link to={`/projects/${p.id}`} className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate font-medium text-white">{p.title}</p>
+                  {p.isFeatured && <Star className="h-3.5 w-3.5 shrink-0 fill-accent-from text-accent-from" />}
+                </div>
+                <p className="truncate text-xs text-white/40">/{p.slug}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge>{p.service}</Badge>
+                  <span className="text-xs text-white/50">{p.industry}</span>
+                </div>
+              </Link>
+              <button
+                onClick={() => setPendingDelete(p)}
+                aria-label={`Delete ${p.title}`}
+                className="-m-1 shrink-0 p-2 text-white/30 active:text-red-400"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </Card>
+          ))}
+        </div>
+        <Card className="overflow-hidden max-md:hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/5 text-left text-xs uppercase tracking-wide text-white/40">
@@ -109,6 +135,7 @@ export default function ProjectsList() {
             </tbody>
           </table>
         </Card>
+        </>
       )}
 
       <ConfirmDialog

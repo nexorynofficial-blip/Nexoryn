@@ -28,9 +28,9 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-night px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-night px-4 max-md:min-h-dvh max-md:pb-[env(safe-area-inset-bottom)] max-md:pt-[env(safe-area-inset-top)]">
       <AmbientBackground />
-      <Card className="relative z-10 w-full max-w-sm p-8">
+      <Card className="relative z-10 w-full max-w-sm p-8 max-md:p-6">
         <div className="mb-6 text-center">
           <span className="font-heading text-xl font-bold tracking-tight text-white">
             NEX<span className="text-accent-from">ORYN</span>

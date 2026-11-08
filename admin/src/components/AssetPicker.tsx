@@ -131,9 +131,9 @@ export function AssetPicker(props: PickerProps) {
   const uploadLabel = pending.length > 1 ? `Upload ${pending.length} photos` : "Upload";
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 max-md:p-3" onClick={onClose}>
       <Card
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col p-6"
+        className="flex max-h-[85vh] w-full max-w-2xl flex-col p-6 max-md:max-h-[calc(100dvh-1.5rem)] max-md:p-4"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -141,7 +141,7 @@ export function AssetPicker(props: PickerProps) {
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-white">{multiple ? "Add photos" : "Choose an image"}</h3>
-          <button type="button" onClick={onClose} className="text-white/40 hover:text-white" aria-label="Close">
+          <button type="button" onClick={onClose} className="text-white/40 hover:text-white max-md:-mr-2 max-md:p-2" aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -191,7 +191,7 @@ export function AssetPicker(props: PickerProps) {
                       type="button"
                       onClick={() => removePending(p.key)}
                       disabled={uploading}
-                      className="shrink-0 text-white/30 hover:text-red-400 disabled:opacity-40"
+                      className="shrink-0 text-white/30 hover:text-red-400 disabled:opacity-40 max-md:-m-1 max-md:p-2"
                       aria-label={`Remove ${p.file.name}`}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -244,10 +244,10 @@ export function AssetPicker(props: PickerProps) {
 
         {multiple && (
           <div className="mt-4 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={uploading}>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={uploading} className="max-md:flex-1">
               Cancel
             </Button>
-            <Button type="button" onClick={() => finish(selectedAssets())} disabled={uploading || !selectedIds.length}>
+            <Button type="button" onClick={() => finish(selectedAssets())} disabled={uploading || !selectedIds.length} className="max-md:flex-1">
               Add {selectedIds.length || ""} selected
             </Button>
           </div>

@@ -30,20 +30,20 @@ function FaqEditor({ faq, onSaved, onCancel }: { faq: FAQ | null; onSaved: () =>
   };
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <ErrorBanner message={error} />
       <Field label="Question"><Input value={question} onChange={(e) => setQuestion(e.target.value)} /></Field>
       <div className="mt-3"><Field label="Answer"><Textarea value={answer} onChange={(e) => setAnswer(e.target.value)} className="min-h-[90px] font-sans text-sm" /></Field></div>
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-3 gap-3 max-md:grid-cols-2">
         <Field label="Category"><Input value={category} onChange={(e) => setCategory(e.target.value)} /></Field>
         <Field label="Order"><Input type="number" value={order} onChange={(e) => setOrder(e.target.value)} /></Field>
-        <label className="flex items-center gap-2 self-end pb-2 text-sm text-white/70">
-          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Active
+        <label className="flex items-center gap-2 self-end pb-2 text-sm text-white/70 max-md:col-span-2 max-md:py-1">
+          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="max-md:h-4 max-md:w-4" /> Active
         </label>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} loading={saving}>Save</Button>
+        <Button variant="secondary" onClick={onCancel} className="max-md:flex-1">Cancel</Button>
+        <Button onClick={handleSave} loading={saving} className="max-md:flex-1">Save</Button>
       </div>
     </Card>
   );
@@ -113,7 +113,7 @@ export default function Faqs() {
         title="FAQs"
         description="Frequently asked questions on the Contact page."
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 max-md:flex-wrap">
             {missingFromSite.length > 0 && (
               <Button variant="secondary" onClick={handleImport} loading={importing}>
                 <Download className="h-4 w-4" /> Import {missingFromSite.length} from website
@@ -133,17 +133,17 @@ export default function Faqs() {
             <FaqEditor key={f.id} faq={f} onSaved={() => { setEditing(null); load(); }} onCancel={() => setEditing(null)} />
           ) : (
             <Card key={f.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 max-md:gap-2">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 max-md:flex-wrap max-md:gap-1.5">
                     <p className="font-medium text-white">{f.question}</p>
                     {!f.isActive && <Badge tone="warning">Inactive</Badge>}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-white/60">{f.answer}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-white/60 max-md:line-clamp-3">{f.answer}</p>
                 </div>
-                <div className="flex shrink-0 gap-3">
-                  <button onClick={() => setEditing(f)} className="text-xs text-accent-to hover:underline">Edit</button>
-                  <button onClick={() => setPendingDelete(f)} className="text-white/30 hover:text-red-400">
+                <div className="flex shrink-0 gap-3 max-md:-mr-2 max-md:-mt-2 max-md:items-center max-md:gap-0">
+                  <button onClick={() => setEditing(f)} className="text-xs text-accent-to hover:underline max-md:p-2">Edit</button>
+                  <button onClick={() => setPendingDelete(f)} aria-label="Delete FAQ" className="text-white/30 hover:text-red-400 max-md:p-2">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

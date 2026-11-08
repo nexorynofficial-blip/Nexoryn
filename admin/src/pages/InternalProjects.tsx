@@ -41,9 +41,9 @@ function ProjectEditor({ onSaved, onCancel }: { onSaved: () => void; onCancel: (
   };
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <ErrorBanner message={error} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Service Type">
           <Select value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
@@ -64,8 +64,8 @@ function ProjectEditor({ onSaved, onCancel }: { onSaved: () => void; onCancel: (
       </div>
       <div className="mt-3"><Field label="Note (optional)"><Input value={note} onChange={(e) => setNote(e.target.value)} /></Field></div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} loading={saving}>Save</Button>
+        <Button variant="secondary" onClick={onCancel} className="max-md:flex-1">Cancel</Button>
+        <Button onClick={handleSave} loading={saving} className="max-md:flex-1">Save</Button>
       </div>
     </Card>
   );
@@ -122,16 +122,16 @@ export default function InternalProjects() {
                 <p className="truncate font-medium text-white">{p.name}</p>
                 <p className="text-xs text-white/40">by {p.uploader?.name ?? "Unknown"}</p>
               </div>
-              <button onClick={() => setPendingDelete(p)} className="shrink-0 text-white/30 hover:text-red-400">
-                <Trash2 className="h-3.5 w-3.5" />
+              <button onClick={() => setPendingDelete(p)} aria-label={`Delete ${p.name}`} className="shrink-0 text-white/30 hover:text-red-400 max-md:-m-2 max-md:p-2">
+                <Trash2 className="h-3.5 w-3.5 max-md:h-4 max-md:w-4" />
               </button>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Badge>{p.serviceType}</Badge>
               <Badge tone={p.status === "active" ? "success" : "neutral"}>{p.status}</Badge>
             </div>
-            {p.note && <p className="mt-2 text-sm text-white/60">{p.note}</p>}
-            <a href={p.googleDriveLink} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs text-accent-to hover:underline">
+            {p.note && <p className="mt-2 text-sm text-white/60 max-md:break-words">{p.note}</p>}
+            <a href={p.googleDriveLink} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs text-accent-to hover:underline max-md:py-1">
               Open in Google Drive <ExternalLink className="h-3 w-3" />
             </a>
           </Card>

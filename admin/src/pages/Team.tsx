@@ -31,7 +31,7 @@ function MemberEditor({ member, onSaved, onCancel }: { member: TeamMember | null
   };
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <ErrorBanner message={error} />
       <div className="flex items-center gap-4">
         {photo ? (
@@ -43,7 +43,7 @@ function MemberEditor({ member, onSaved, onCancel }: { member: TeamMember | null
         )}
         <Button type="button" variant="secondary" onClick={() => setPickerOpen(true)}>Choose photo</Button>
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-3 gap-3 max-md:grid-cols-1">
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Role">
           <Input value={role} onChange={(e) => setRole(e.target.value)} list="team-role-presets" placeholder="e.g. Co-Founder/Admin" />
@@ -54,8 +54,8 @@ function MemberEditor({ member, onSaved, onCancel }: { member: TeamMember | null
         <Field label="Order"><Input type="number" value={order} onChange={(e) => setOrder(e.target.value)} /></Field>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} loading={saving}>Save</Button>
+        <Button variant="secondary" onClick={onCancel} className="max-md:flex-1">Cancel</Button>
+        <Button onClick={handleSave} loading={saving} className="max-md:flex-1">Save</Button>
       </div>
       {pickerOpen && <AssetPicker onSelect={(a) => { setPhoto(a); setPickerOpen(false); }} onClose={() => setPickerOpen(false)} />}
     </Card>
@@ -120,9 +120,9 @@ export default function Team() {
                 <p className="truncate font-medium text-white">{m.name}</p>
                 <p className="text-xs text-white/40">{m.role}</p>
               </div>
-              <div className="flex shrink-0 gap-3">
-                <button onClick={() => setEditing(m)} className="text-xs text-accent-to hover:underline">Edit</button>
-                <button onClick={() => setPendingDelete(m)} className="text-white/30 hover:text-red-400">
+              <div className="flex shrink-0 gap-3 max-md:-mr-2 max-md:items-center max-md:gap-0">
+                <button onClick={() => setEditing(m)} className="text-xs text-accent-to hover:underline max-md:p-2">Edit</button>
+                <button onClick={() => setPendingDelete(m)} aria-label={`Remove ${m.name}`} className="text-white/30 hover:text-red-400 max-md:p-2">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>

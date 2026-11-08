@@ -3,6 +3,7 @@ import { ArrowRight, Building2, Check, Download, Mail, Pencil, Plus, Trash2, X }
 import { Link } from "react-router-dom";
 import { api, ApiRequestError } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import { useIsMobile } from "../hooks/useIsMobile";
 import type { FinanceDashboardData, Investment, LedgerActor, LedgerType, PartnerFinance } from "../types";
 import {
   COMPANY_ACTOR,
@@ -103,7 +104,7 @@ function PartnerCard({ partner, highlight }: { partner: PartnerFinance; highligh
  * counted) or rejected entry is untouched by any of this: it keeps working
  * exactly as before, deletable directly by whoever entered it.
  */
-function LedgerRow({ inv, onChanged }: { inv: Investment; onChanged: () => void }) {
+function LedgerRow({ inv, onChanged, variant = "row" }: { inv: Investment; onChanged: () => void; variant?: "row" | "card" }) {
   const counted = inv.approvalStatus === "approved";
   const hasPendingChange = inv.pendingChangeType !== null;
 
@@ -144,6 +145,96 @@ function LedgerRow({ inv, onChanged }: { inv: Investment; onChanged: () => void 
       await api.delete(`/api/v1/admin/finance/investments/${inv.id}`);
     });
 
+  const statusBadge =
+    inv.approvalStatus === "approved" ? (
+      hasPendingChange ? (
+        <Badge tone="warning">{inv.pendingChangeType === "delete" ? "delete requested" : "edit requested"}</Badge>
+      ) : (
+        <span className="text-xs text-white/30">counted</span>
+      )
+    ) : (
+      <Badge tone={inv.approvalStatus === "pending" ? "warning" : "danger"}>{inv.approvalStatus}</Badge>
+    );
+
+  if (variant === "card") {
+    return (
+      <div className={`border-b border-white/5 p-4 last:border-0 ${counted ? "" : "opacity-60"}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-white/40">
+              {new Date(inv.date).toLocaleDateString()} · {LEDGER_TYPE_LABELS[inv.type]}
+            </p>
+            {editing ? (
+              <Input
+                value={draftDescription}
+                onChange={(e) => setDraftDescription(e.target.value)}
+                className="mt-1.5 w-full"
+                autoFocus
+              />
+            ) : (
+              <>
+                <p className="mt-0.5 break-words text-sm text-white/80">{inv.description}</p>
+                {inv.pendingChangeType === "edit_description" && (
+                  <p className="mt-1 break-words text-xs text-amber-300">→ {inv.pendingDescription}</p>
+                )}
+              </>
+            )}
+          </div>
+          <p className={`shrink-0 text-sm font-semibold ${counted ? "text-white" : "text-white/50 line-through"}`}>
+            {money(Number(inv.amount))}
+          </p>
+        </div>
+
+        <p className="mt-2 text-xs text-white/40">
+          {inv.actionBy}
+          {inv.paidTo ? ` → ${inv.paidTo}` : ""} · entered by {inv.enteredBy}
+        </p>
+
+        <div className="mt-2 flex items-center justify-between gap-3">
+          {statusBadge}
+          <div className="flex items-center gap-1">
+            {editing ? (
+              <>
+                <Button variant="ghost" onClick={submitEdit} disabled={busy} className="text-emerald-400">
+                  <Check className="h-4 w-4" /> Submit
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setEditing(false);
+                    setDraftDescription(inv.description);
+                  }}
+                  disabled={busy}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : hasPendingChange ? (
+              <Link to="/requests" className="py-2 text-xs text-accent-to">
+                Decide in Requests →
+              </Link>
+            ) : counted ? (
+              <>
+                <button onClick={() => setEditing(true)} aria-label="Edit description" className="p-2 text-white/40 active:text-white">
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button onClick={requestDelete} disabled={busy} aria-label="Request delete" className="-mr-2 p-2 text-white/40 active:text-red-400">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <button onClick={instantDelete} disabled={busy} aria-label="Delete" className="-mr-2 p-2 text-white/40 active:text-red-400">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+      </div>
+    );
+  }
+
   return (
     <>
       <tr className={`border-b border-white/5 last:border-0 hover:bg-white/[0.02] ${counted ? "" : "opacity-50"}`}>
@@ -169,17 +260,7 @@ function LedgerRow({ inv, onChanged }: { inv: Investment; onChanged: () => void 
         <td className="whitespace-nowrap p-4 text-white/60">{inv.actionBy}</td>
         <td className="whitespace-nowrap p-4 text-white/60">{inv.paidTo ?? "—"}</td>
         <td className="whitespace-nowrap p-4 text-white/40">{inv.enteredBy}</td>
-        <td className="whitespace-nowrap p-4">
-          {inv.approvalStatus === "approved" ? (
-            hasPendingChange ? (
-              <Badge tone="warning">{inv.pendingChangeType === "delete" ? "delete requested" : "edit requested"}</Badge>
-            ) : (
-              <span className="text-xs text-white/30">counted</span>
-            )
-          ) : (
-            <Badge tone={inv.approvalStatus === "pending" ? "warning" : "danger"}>{inv.approvalStatus}</Badge>
-          )}
-        </td>
+        <td className="whitespace-nowrap p-4">{statusBadge}</td>
         <td className={`whitespace-nowrap p-4 text-right ${counted ? "text-white" : "text-white/50 line-through"}`}>
           {money(Number(inv.amount))}
         </td>
@@ -236,6 +317,7 @@ function LedgerRow({ inv, onChanged }: { inv: Investment; onChanged: () => void 
 
 export default function Finance() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [dashboard, setDashboard] = useState<FinanceDashboardData | null>(null);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -345,7 +427,7 @@ export default function Finance() {
       <ErrorBanner message={error} />
 
       {/* Company-level totals */}
-      <Card className="mb-6 p-6">
+      <Card className="mb-6 p-6 max-md:mb-4 max-md:p-4">
         <div className="mb-4 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-accent-from" />
           <h2 className="text-sm font-semibold text-white">Company</h2>
@@ -365,7 +447,7 @@ export default function Finance() {
       </Card>
 
       {/* Settlement plan */}
-      <Card className="mb-6 p-6">
+      <Card className="mb-6 p-6 max-md:mb-4 max-md:p-4">
         <h2 className="mb-3 text-sm font-semibold text-white">To settle up</h2>
         {settlements.length === 0 ? (
           <p className="text-sm text-emerald-400/80">Everyone has put in their equal share. Nothing to settle.</p>
@@ -400,8 +482,8 @@ export default function Finance() {
         ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="p-6">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2 max-md:mt-6 max-md:gap-4">
+        <Card className="p-6 max-md:p-4">
           <h2 className="mb-4 text-sm font-semibold text-white">Add ledger entry</h2>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Amount">
@@ -489,9 +571,9 @@ export default function Finance() {
           </Button>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 max-md:p-4">
           <h2 className="mb-4 text-sm font-semibold text-white">Monthly report</h2>
-          <div className="flex gap-3">
+          <div className="flex gap-3 max-md:grid max-md:grid-cols-2">
             <Field label="Year">
               <Input type="number" value={reportYear} onChange={(e) => setReportYear(Number(e.target.value))} />
             </Field>
@@ -500,10 +582,10 @@ export default function Finance() {
             </Field>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={handleDownload}>
+            <Button variant="secondary" onClick={handleDownload} className="max-md:flex-1">
               <Download className="h-4 w-4" /> Download PDF
             </Button>
-            <Button variant="secondary" onClick={handleEmail} loading={emailing}>
+            <Button variant="secondary" onClick={handleEmail} loading={emailing} className="max-md:flex-1">
               <Mail className="h-4 w-4" /> Email report
             </Button>
           </div>
@@ -514,8 +596,17 @@ export default function Finance() {
         </Card>
       </div>
 
-      <Card className="mt-6 overflow-hidden">
+      <Card className="mt-6 overflow-hidden max-md:mt-4">
         <h2 className="p-4 pb-0 text-sm font-semibold text-white">Ledger</h2>
+        {isMobile ? (
+          <div className="mt-2">
+            {investments.length === 0 ? (
+              <p className="p-6 text-center text-sm text-white/40">No entries yet.</p>
+            ) : (
+              investments.map((inv) => <LedgerRow key={inv.id} inv={inv} onChanged={load} variant="card" />)
+            )}
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="mt-2 w-full text-sm">
             <thead>
@@ -546,6 +637,7 @@ export default function Finance() {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
     </div>
   );

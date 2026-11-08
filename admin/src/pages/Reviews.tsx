@@ -33,9 +33,9 @@ function ReviewEditor({ review, onSaved, onCancel }: { review: Review | null; on
   };
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <ErrorBanner message={error} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="Display ID (unique handle)"><Input value={displayId} onChange={(e) => setDisplayId(e.target.value)} disabled={!!review} /></Field>
         <Field label="Location"><Input value={location} onChange={(e) => setLocation(e.target.value)} /></Field>
@@ -45,8 +45,8 @@ function ReviewEditor({ review, onSaved, onCancel }: { review: Review | null; on
           </Select>
         </Field>
         <Field label="Order"><Input type="number" value={order} onChange={(e) => setOrder(e.target.value)} /></Field>
-        <label className="flex items-center gap-2 self-end pb-2 text-sm text-white/70">
-          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+        <label className="flex items-center gap-2 self-end pb-2 text-sm text-white/70 max-md:py-1">
+          <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="max-md:h-4 max-md:w-4" />
           Featured on homepage
         </label>
       </div>
@@ -54,8 +54,8 @@ function ReviewEditor({ review, onSaved, onCancel }: { review: Review | null; on
         <Field label="Review text"><Textarea value={text} onChange={(e) => setText(e.target.value)} className="min-h-[100px] font-sans text-sm" /></Field>
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} loading={saving}>Save</Button>
+        <Button variant="secondary" onClick={onCancel} className="max-md:flex-1">Cancel</Button>
+        <Button onClick={handleSave} loading={saving} className="max-md:flex-1">Save</Button>
       </div>
     </Card>
   );
@@ -110,19 +110,19 @@ export default function Reviews() {
             <ReviewEditor key={r.id} review={r} onSaved={() => { setEditing(null); load(); }} onCancel={() => setEditing(null)} />
           ) : (
             <Card key={r.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 max-md:gap-2">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 max-md:flex-wrap max-md:gap-1.5">
                     <p className="font-medium text-white">{r.name}</p>
                     <Badge>{r.service}</Badge>
                     {r.isFeatured && <Badge tone="success">Featured</Badge>}
                   </div>
                   <p className="text-xs text-white/40">{r.location}</p>
-                  <p className="mt-2 line-clamp-2 text-sm text-white/60">{r.text}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-white/60 max-md:line-clamp-3">{r.text}</p>
                 </div>
-                <div className="flex shrink-0 gap-3">
-                  <button onClick={() => setEditing(r)} className="text-xs text-accent-to hover:underline">Edit</button>
-                  <button onClick={() => setPendingDelete(r)} className="text-white/30 hover:text-red-400">
+                <div className="flex shrink-0 gap-3 max-md:-mr-2 max-md:-mt-2 max-md:items-center max-md:gap-0">
+                  <button onClick={() => setEditing(r)} className="text-xs text-accent-to hover:underline max-md:p-2">Edit</button>
+                  <button onClick={() => setPendingDelete(r)} aria-label={`Delete review from ${r.name}`} className="text-white/30 hover:text-red-400 max-md:p-2">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

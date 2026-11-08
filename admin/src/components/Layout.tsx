@@ -17,10 +17,13 @@ import {
   Camera,
   AtSign,
   Music2,
+  Menu,
+  X,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import { useIsMobile } from "../hooks/useIsMobile";
 import type { DebtRequests } from "../types";
 import { AmbientBackground } from "./AmbientBackground";
 import { NotificationBell } from "./NotificationBell";
@@ -153,6 +156,26 @@ function usePendingCount() {
 export default function Layout() {
   const { user, logout } = useAuth();
   const pending = usePendingCount();
+  const isMobile = useIsMobile();
+  const { pathname } = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Any navigation (a nav link, a notification, a "Review →" link) closes
+  // the drawer — on a phone it covers most of the screen.
+  useEffect(() => setDrawerOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
+  // On mobile the aside is an off-canvas drawer; `inert` keeps its links out
+  // of the tab order and screen readers while it's slid away.
+  const drawerHidden = isMobile && !drawerOpen;
 
   return (
     // h-screen + overflow-hidden (not min-h-screen) pins the whole layout to
@@ -161,11 +184,46 @@ export default function Layout() {
     // account/logout block down with it, off the bottom of the screen. With
     // the height pinned, only `main` (overflow-y-auto below) scrolls, and the
     // aside stays exactly one viewport tall, so the account block anchored to
-    // its bottom via flex never moves.
-    <div className="relative flex h-screen overflow-hidden bg-night">
+    // its bottom via flex never moves. On phones it's h-dvh instead, which
+    // tracks Safari's collapsing toolbar rather than the largest viewport.
+    <div className="relative flex h-screen overflow-hidden bg-night max-md:h-dvh max-md:flex-col">
       <AmbientBackground />
 
-      <aside className="relative z-10 flex w-60 shrink-0 flex-col border-r border-border-subtle bg-panel/50 p-4 backdrop-blur-sm">
+      {isMobile && (
+        <header className="relative z-20 flex shrink-0 items-center justify-between border-b border-border-subtle bg-panel/80 pb-2 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label={pending > 0 ? `Open menu, ${pending} pending requests` : "Open menu"}
+            aria-expanded={drawerOpen}
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white/70 transition active:bg-white/10"
+          >
+            <Menu className="h-5 w-5" />
+            {pending > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-from" />}
+          </button>
+          <span className="font-heading text-base font-bold tracking-tight text-white">
+            NEX<span className="text-accent-from">ORYN</span>
+          </span>
+          <NotificationBell />
+        </header>
+      )}
+
+      {isMobile && (
+        <div
+          aria-hidden
+          onClick={() => setDrawerOpen(false)}
+          className={`fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 ${
+            drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        />
+      )}
+
+      <aside
+        inert={drawerHidden}
+        className={`relative z-10 flex w-60 shrink-0 flex-col border-r border-border-subtle bg-panel/50 p-4 backdrop-blur-sm max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-72 max-md:max-w-[85vw] max-md:bg-panel max-md:pb-[calc(env(safe-area-inset-bottom)+1rem)] max-md:pl-[max(1rem,env(safe-area-inset-left))] max-md:pt-[calc(env(safe-area-inset-top)+1rem)] max-md:transition-transform max-md:duration-300 max-md:ease-out ${
+          drawerHidden ? "max-md:-translate-x-full" : ""
+        }`}
+      >
         <div className="mb-6 flex items-start justify-between px-2">
           <div>
             <span className="font-heading text-lg font-bold tracking-tight text-white">
@@ -173,7 +231,20 @@ export default function Layout() {
             </span>
             <p className="text-[11px] uppercase tracking-wide text-white/30">Admin</p>
           </div>
-          <NotificationBell />
+          {/* Only one bell is ever mounted (each polls the API on its own):
+              here on desktop, in the top bar on mobile. */}
+          {isMobile ? (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Close menu"
+              className="-mr-1 flex h-10 w-10 items-center justify-center rounded-lg text-white/60 transition active:bg-white/10"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          ) : (
+            <NotificationBell />
+          )}
         </div>
 
         {/* overflow-y-auto here (not just flex-1) means a nav list too long
@@ -186,7 +257,7 @@ export default function Layout() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition max-md:py-2.5 ${
                   isActive ? "bg-accent-from/15 text-accent-to" : "text-white/60 hover:bg-white/5 hover:text-white"
                 }`
               }
@@ -207,7 +278,7 @@ export default function Layout() {
           <NavLink
             to="/account"
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition max-md:py-2.5 ${
                 isActive ? "bg-accent-from/15 text-accent-to" : "text-white/60 hover:bg-white/5 hover:text-white"
               }`
             }
@@ -218,7 +289,7 @@ export default function Layout() {
           <p className="truncate px-3 pt-1 text-[11px] text-white/30">{user?.email}</p>
           <button
             onClick={logout}
-            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition hover:bg-white/5 hover:text-white"
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition hover:bg-white/5 hover:text-white max-md:py-2.5"
           >
             <LogOut className="h-4 w-4" />
             Log out
@@ -226,7 +297,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className="relative z-10 flex-1 overflow-y-auto p-8">
+      <main className="relative z-10 flex-1 overflow-y-auto p-8 max-md:pb-[calc(env(safe-area-inset-bottom)+1.5rem)] max-md:pl-[max(1rem,env(safe-area-inset-left))] max-md:pr-[max(1rem,env(safe-area-inset-right))] max-md:pt-4">
         <IosInstallBanner />
         <Outlet />
       </main>

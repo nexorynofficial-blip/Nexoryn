@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: the Home-Screen app uses a black-translucent
+         status bar, so content draws under the notch — this exposes the
+         env(safe-area-inset-*) values the mobile shell pads itself with. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Nexoryn Admin</title>
     <meta name="robots" content="noindex, nofollow" />
     <!-- Root-absolute, not /cfokp/-relative: the admin is served from the

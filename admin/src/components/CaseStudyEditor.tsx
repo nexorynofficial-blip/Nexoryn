@@ -179,7 +179,7 @@ function SectionLabel({ children, hint }: { children: string; hint?: string }) {
 
 function AddRemoveRow({ onRemove }: { onRemove: () => void }) {
   return (
-    <button type="button" onClick={onRemove} className="shrink-0 text-white/30 hover:text-red-400">
+    <button type="button" onClick={onRemove} aria-label="Remove" className="shrink-0 text-white/30 hover:text-red-400 max-md:-m-1 max-md:p-2">
       <Trash2 className="h-4 w-4" />
     </button>
   );
@@ -192,7 +192,7 @@ export function StringListEditor({ label, hint, values, onChange }: { label: str
       <div className="flex flex-col gap-2">
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-2">
-            <Input value={v} onChange={(e) => onChange(values.map((x, j) => (j === i ? e.target.value : x)))} className="flex-1" />
+            <Input value={v} onChange={(e) => onChange(values.map((x, j) => (j === i ? e.target.value : x)))} className="flex-1 max-md:min-w-0" />
             <AddRemoveRow onRemove={() => onChange(values.filter((_, j) => j !== i))} />
           </div>
         ))}
@@ -210,8 +210,8 @@ export function TitledListEditor({ label, hint, values, onChange }: { label: str
       <SectionLabel hint={hint}>{label}</SectionLabel>
       <div className="flex flex-col gap-3">
         {values.map((v, i) => (
-          <div key={i} className="flex items-start gap-2 rounded-lg border border-white/10 p-3">
-            <div className="flex-1 space-y-2">
+          <div key={i} className="flex items-start gap-2 rounded-lg border border-white/10 p-3 max-md:p-2.5">
+            <div className="flex-1 space-y-2 max-md:min-w-0">
               <Input placeholder="Title" value={v.title} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
               <Textarea placeholder="Description" value={v.description} className="min-h-[60px] font-sans text-sm" onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
             </div>
@@ -233,8 +233,8 @@ export function WorkflowListEditor({ label, hint, values, onChange }: { label: s
       <div className="flex flex-col gap-2">
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-2">
-            <Input placeholder="Icon name" value={v.icon} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="w-40" />
-            <Input placeholder="Step label" value={v.label} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} className="flex-1" />
+            <Input placeholder="Icon name" value={v.icon} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="w-40 max-md:w-28 max-md:min-w-0" />
+            <Input placeholder="Step label" value={v.label} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} className="flex-1 max-md:min-w-0" />
             <AddRemoveRow onRemove={() => onChange(values.filter((_, j) => j !== i))} />
           </div>
         ))}
@@ -253,8 +253,8 @@ export function TechIconsEditor({ values, onChange }: { values: { name: string; 
       <div className="flex flex-col gap-2">
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-2">
-            <Input placeholder="Name (e.g. n8n)" value={v.name} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className="flex-1" />
-            <Input placeholder="Icon name (e.g. Workflow)" value={v.icon} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="flex-1" />
+            <Input placeholder="Name (e.g. n8n)" value={v.name} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className="flex-1 max-md:min-w-0" />
+            <Input placeholder="Icon name (e.g. Workflow)" value={v.icon} onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="flex-1 max-md:min-w-0" />
             <AddRemoveRow onRemove={() => onChange(values.filter((_, j) => j !== i))} />
           </div>
         ))}
@@ -289,15 +289,17 @@ export function TechStackEditor({ value, onChange }: { value: Record<string, Tec
         {groups.map(([groupName, items]) => (
           <div key={groupName} className="rounded-lg border border-white/10 p-3">
             <div className="mb-2 flex items-center gap-2">
-              <Input defaultValue={groupName} onBlur={(e) => renameGroup(groupName, e.target.value.trim())} placeholder="Group name" className="flex-1 font-semibold" />
+              <Input defaultValue={groupName} onBlur={(e) => renameGroup(groupName, e.target.value.trim())} placeholder="Group name" className="flex-1 font-semibold max-md:min-w-0" />
               <AddRemoveRow onRemove={() => removeGroup(groupName)} />
             </div>
             <div className="flex flex-col gap-2">
+              {/* Phones: Name + Role share the first line, Icon + remove the
+                  second — four controls in one row don't fit. */}
               {items.map((it, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input placeholder="Name" value={it.name} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className="flex-1" />
-                  <Input placeholder="Role" value={it.role} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))} className="flex-1" />
-                  <Input placeholder="Icon" value={it.icon} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="w-32" />
+                <div key={i} className="flex items-center gap-2 max-md:flex-wrap max-md:rounded-lg max-md:border max-md:border-white/5 max-md:p-2">
+                  <Input placeholder="Name" value={it.name} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className="flex-1 max-md:min-w-0 max-md:basis-[calc(50%-0.25rem)]" />
+                  <Input placeholder="Role" value={it.role} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))} className="flex-1 max-md:min-w-0 max-md:basis-[calc(50%-0.25rem)]" />
+                  <Input placeholder="Icon" value={it.icon} onChange={(e) => setGroup(groupName, items.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))} className="w-32 max-md:min-w-0 max-md:flex-1" />
                   <AddRemoveRow onRemove={() => setGroup(groupName, items.filter((_, j) => j !== i))} />
                 </div>
               ))}

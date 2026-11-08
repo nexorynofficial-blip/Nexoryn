@@ -62,7 +62,7 @@ function RequestCard({
   };
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-lg font-semibold text-white">
@@ -75,9 +75,9 @@ function RequestCard({
         <Badge tone={STATUS_TONE[status]}>{isChange ? "pending" : status}</Badge>
       </div>
 
-      <p className="mb-3 text-sm text-white/70">{request.description}</p>
+      <p className="mb-3 text-sm text-white/70 max-md:break-words">{request.description}</p>
 
-      <p className="mb-4 rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-white/50">
+      <p className="mb-4 rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-white/50 max-md:break-words">
         {effectOf(request)}
       </p>
 
@@ -116,7 +116,7 @@ function RequestCard({
             autoComplete="off"
           />
           <div className="flex gap-2">
-            <Button onClick={() => decide("approve")} loading={busy === "approve"} disabled={busy !== null || !passkey}>
+            <Button onClick={() => decide("approve")} loading={busy === "approve"} disabled={busy !== null || !passkey} className="max-md:flex-1">
               <Check className="h-4 w-4" /> Approve
             </Button>
             <Button
@@ -124,6 +124,7 @@ function RequestCard({
               onClick={() => decide("reject")}
               loading={busy === "reject"}
               disabled={busy !== null || !passkey}
+              className="max-md:flex-1"
             >
               <X className="h-4 w-4" /> Reject
             </Button>
@@ -156,7 +157,7 @@ function Section({
   emptyMessage: string;
 }) {
   return (
-    <section className="mb-10">
+    <section className="mb-10 max-md:mb-8">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-4 w-4 text-accent-from" />
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">{title}</h2>

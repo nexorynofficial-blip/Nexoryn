@@ -98,17 +98,18 @@ export function MultiImageUploader({
                 className="h-16 w-16 shrink-0 rounded-lg object-cover"
                 onError={(e) => (e.currentTarget.style.opacity = "0.15")}
               />
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 max-md:min-w-0">
                 <Input
                   placeholder="Alt text"
                   value={item.alt}
                   onChange={(e) => setAlt(i, e.target.value)}
+                  className="max-md:w-full"
                 />
                 {resolvable ? (
                   <button
                     type="button"
                     onClick={() => onChange(items, item.asset.id)}
-                    className={`flex items-center gap-1.5 text-xs transition ${
+                    className={`flex items-center gap-1.5 text-xs transition max-md:py-1.5 ${
                       isThumbnail ? "text-accent-to" : "text-white/40 hover:text-white"
                     }`}
                   >
@@ -125,7 +126,8 @@ export function MultiImageUploader({
               <button
                 type="button"
                 onClick={() => removeAt(i)}
-                className="shrink-0 self-start text-white/30 hover:text-red-400"
+                aria-label="Remove image"
+                className="shrink-0 self-start text-white/30 hover:text-red-400 max-md:-m-2 max-md:p-2"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

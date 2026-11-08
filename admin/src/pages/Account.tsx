@@ -39,7 +39,7 @@ function ProfileCard({ account, onSaved }: { account: AdminAccount; onSaved: () 
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 max-md:p-4">
       <div className="mb-1 flex items-center gap-2">
         <UserCog className="h-4 w-4 text-accent-from" />
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Profile</h2>
@@ -105,7 +105,7 @@ function PasswordCard({ account }: { account: AdminAccount }) {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 max-md:p-4">
       <div className="mb-1 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-accent-from" />
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Password</h2>
@@ -236,7 +236,7 @@ function PasskeyCard({ account, onChanged }: { account: AdminAccount; onChanged:
   };
 
   return (
-    <Card className="p-6 lg:col-span-2">
+    <Card className="p-6 lg:col-span-2 max-md:p-4">
       <div className="mb-1 flex items-center gap-2">
         <Fingerprint className="h-4 w-4 text-accent-from" />
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Passkey</h2>
@@ -262,7 +262,7 @@ function PasskeyCard({ account, onChanged }: { account: AdminAccount; onChanged:
             This is the only time it will be shown — we store it scrambled and cannot show it again. If
             you lose it, come back here and regenerate a new one with your password.
           </p>
-          <div className="rounded-lg bg-white/5 px-4 py-3 text-center font-mono text-lg tracking-wider text-white">
+          <div className="rounded-lg bg-white/5 px-4 py-3 text-center font-mono text-lg tracking-wider text-white max-md:break-all max-md:px-3 max-md:text-base">
             {revealed}
           </div>
           <Button className="mt-4" onClick={() => setRevealed(null)}>
@@ -365,7 +365,7 @@ function NotificationsCard() {
   };
 
   return (
-    <Card className="p-6 lg:col-span-2">
+    <Card className="p-6 lg:col-span-2 max-md:p-4">
       <div className="mb-1 flex items-center gap-2">
         <BellRing className="h-4 w-4 text-accent-from" />
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Notifications</h2>
@@ -392,7 +392,7 @@ function NotificationsCard() {
               </Button>
             </>
           ) : (
-            <Button onClick={subscribe} loading={busy}>
+            <Button onClick={subscribe} loading={busy} className="max-md:w-full">
               Enable notifications on this device
             </Button>
           )}
@@ -432,7 +432,7 @@ function NotificationsCard() {
                   onClick={() => removeDevice(d.id)}
                   disabled={removingId === d.id}
                   aria-label="Remove device"
-                  className="shrink-0 text-white/30 transition hover:text-red-400 disabled:opacity-40"
+                  className="shrink-0 text-white/30 transition hover:text-red-400 disabled:opacity-40 max-md:-m-2 max-md:p-2"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -476,7 +476,7 @@ export default function Account() {
       {loading ? (
         <Spinner />
       ) : !account ? null : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 max-md:gap-4">
           <ProfileCard
             account={account}
             onSaved={() => {
@@ -490,7 +490,7 @@ export default function Account() {
 
           <NotificationsCard />
 
-          <Card className="p-6 lg:col-span-2">
+          <Card className="p-6 lg:col-span-2 max-md:p-4">
             <div className="mb-1 flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-accent-from" />
               <h2 className="text-sm font-semibold uppercase tracking-wide text-white/70">Finance identity</h2>

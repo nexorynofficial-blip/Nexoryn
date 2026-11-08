@@ -81,8 +81,8 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-heading text-2xl font-semibold text-white">
+      <div className="mb-8 max-md:mb-6">
+        <h1 className="font-heading text-2xl font-semibold text-white max-md:text-xl">
           {greeting()}, {firstName} 👋
         </h1>
         <p className="mt-1 text-sm text-white/50">Here's what's happening with Nexoryn right now.</p>
@@ -117,30 +117,30 @@ export default function Dashboard() {
 
       {/* Finance — the main focus of this page */}
       <div className="mb-8">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">Finance</h2>
-          <Link to="/finance" className="text-xs text-accent-to hover:underline">Open Finance →</Link>
+          <Link to="/finance" className="whitespace-nowrap text-xs text-accent-to hover:underline">Open Finance →</Link>
         </div>
-        <Card className="p-6">
+        <Card className="p-6 max-md:p-4">
           {you ? (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-white/40">Invested</p>
-                  <p className="mt-1 text-2xl font-semibold text-white">{money(you.invested)}</p>
+                  <p className="mt-1 text-2xl font-semibold text-white max-md:text-lg">{money(you.invested)}</p>
                   <p className="mt-0.5 text-[11px] text-white/30">Equal share {money(you.fairShare)}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-white/40">Profit share</p>
-                  <p className="mt-1 text-2xl font-semibold text-white">{money(you.profitShare)}</p>
+                  <p className="mt-1 text-2xl font-semibold text-white max-md:text-lg">{money(you.profitShare)}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-white/40">In debt</p>
-                  <p className={`mt-1 text-2xl font-semibold ${totalDebt > 0 ? "text-red-400" : "text-white"}`}>{money(totalDebt)}</p>
+                  <p className={`mt-1 text-2xl font-semibold max-md:text-lg ${totalDebt > 0 ? "text-red-400" : "text-white"}`}>{money(totalDebt)}</p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-white/40">Net position</p>
-                  <p className="mt-1 text-2xl font-semibold text-accent-to">{money(you.netPosition)}</p>
+                  <p className="mt-1 text-2xl font-semibold text-accent-to max-md:text-lg">{money(you.netPosition)}</p>
                 </div>
               </div>
 
@@ -184,9 +184,9 @@ export default function Dashboard() {
 
       {/* Recent contact submissions — second priority */}
       <div className="mb-8">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">Recent contact submissions</h2>
-          <Link to="/contact-submissions" className="text-xs text-accent-to hover:underline">Open inbox →</Link>
+          <Link to="/contact-submissions" className="whitespace-nowrap text-xs text-accent-to hover:underline">Open inbox →</Link>
         </div>
         <Card className="overflow-hidden">
           {recent.length === 0 ? (
@@ -209,7 +209,7 @@ export default function Dashboard() {
 
       {/* Secondary content stats — lower priority */}
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/50">Content</h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 max-md:gap-3">
         <MiniStat label="Projects" value={stats.projects} icon={Briefcase} />
         <MiniStat label="Reviews" value={stats.reviews} icon={MessageSquareQuote} />
         <MiniStat label="Team Members" value={stats.team} icon={Users} />

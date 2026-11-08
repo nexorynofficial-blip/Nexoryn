@@ -25,11 +25,14 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!open) return;
-    const onClick = (e: MouseEvent) => {
+    // pointerdown, not mousedown: iOS Safari only synthesizes mouse events
+    // for taps on clickable elements, so tapping plain page content would
+    // never close the panel.
+    const onPointerDown = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open]);
 
   // Opening the bell is "I've seen these" — matches how a phone's
@@ -45,7 +48,7 @@ export function NotificationBell() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/5 hover:text-white"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/5 hover:text-white max-md:h-10 max-md:w-10"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
@@ -56,11 +59,11 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-border-subtle bg-panel shadow-2xl">
+        <div className="absolute left-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-border-subtle bg-panel shadow-2xl max-md:left-auto max-md:right-0 max-md:w-[min(20rem,calc(100vw-1.5rem))]">
           <div className="border-b border-border-subtle px-4 py-3">
             <p className="text-sm font-semibold text-white">Notifications</p>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto max-md:max-h-[65dvh]">
             {items.length === 0 ? (
               <p className="px-4 py-8 text-center text-xs text-white/40">Nothing yet.</p>
             ) : (

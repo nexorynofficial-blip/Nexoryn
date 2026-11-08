@@ -118,7 +118,7 @@ function EditReplyModal({
   // otherwise pin a fixed overlay to the card instead of the viewport.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={saving ? undefined : onCancel}>
-      <Card className="w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Edit reply">
+      <Card className="w-full max-w-lg p-6 max-md:p-4" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Edit reply">
         <h3 className="text-base font-semibold text-white">Edit Reply</h3>
         <textarea
           ref={ref}
@@ -189,7 +189,7 @@ function SuggestedReply({
               type="button"
               disabled={busy !== null}
               onClick={() => (action === "edit" ? setEditing(true) : run(action))}
-              className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${tone}`}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 max-md:py-2 ${tone}`}
             >
               {busy === action ? (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -218,7 +218,7 @@ function SuggestedReply({
 
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 max-md:p-4">
       <h2 className="mb-4 text-sm font-semibold text-white">{title}</h2>
       {children}
     </Card>

@@ -141,7 +141,7 @@ export default function FacebookDashboard() {
         <>
           <div
             role="status"
-            className={`mb-4 rounded-xl border px-5 py-4 ${
+            className={`mb-4 rounded-xl border px-5 py-4 max-md:px-4 ${
               data.status === "healthy"
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
                 : "border-amber-500/30 bg-amber-500/10 text-amber-200"

@@ -182,6 +182,19 @@ const STYLE_SHEET = `
 .nxai-review-title.warn { color: var(--accent-to); }
 .nxai-review-title.blocking { color: var(--status-red); }
 .nxai-review-list { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--body-dim); font-family: 'Manrope', sans-serif; }
+/* Phones: a fixed 380px panel is wider than the screen. Span the width
+   instead, and keep both clear of the home indicator. */
+@media not all and (min-width: 48rem) {
+  .nxai-fab {
+    width: 52px; height: 52px; right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .nxai-panel {
+    left: 12px; right: 12px; width: auto;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 180px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .nxai-fab, .nxai-panel, .nxai-btn-primary, .nxai-btn-secondary {
     animation: none !important;

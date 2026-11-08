@@ -304,12 +304,14 @@ export default function ProjectForm() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="max-w-4xl">
+    // Bottom padding on phones keeps the Save button clear of the AI
+    // assistant's floating button, which sits over the bottom-right corner.
+    <div className="max-w-4xl max-md:pb-20">
       <PageHeader title={isNew ? "New Project" : `Edit: ${title}`} />
       <ErrorBanner message={error} />
 
-      <Card className="flex flex-col gap-5 p-6">
-        <div className="grid grid-cols-2 gap-4">
+      <Card className="flex flex-col gap-5 p-6 max-md:p-4">
+        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
           <Field label="Title">
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </Field>
@@ -332,12 +334,12 @@ export default function ProjectForm() {
                   setSlugManuallyEdited(false);
                 }}
                 title="Regenerate from title"
-                className="shrink-0 whitespace-nowrap text-[11px] text-white/40 transition hover:text-white"
+                className="shrink-0 whitespace-nowrap text-[11px] text-white/40 transition hover:text-white max-md:py-2 max-md:text-xs"
               >
                 From title
               </button>
             </div>
-            <p className="mt-1 text-[11px] text-white/30">
+            <p className="mt-1 text-[11px] text-white/30 max-md:break-all">
               This project's page address: nexoryn.ai/portfolio/{slug || "…"}
             </p>
           </Field>
@@ -411,9 +413,9 @@ export default function ProjectForm() {
           </Field>
         )}
 
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+        <div className="flex items-center gap-6 max-md:flex-wrap max-md:gap-4">
+          <label className="flex items-center gap-2 text-sm text-white/70 max-md:py-1">
+            <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="max-md:h-4 max-md:w-4" />
             Featured on homepage
           </label>
           {isFeatured && (
@@ -437,7 +439,7 @@ export default function ProjectForm() {
                 key={t}
                 type="button"
                 onClick={() => setActiveTab(t)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition max-md:py-2 ${
                   activeTab === t ? "bg-accent-from/20 text-accent-to" : "text-white/50 hover:text-white"
                 }`}
               >
@@ -454,8 +456,8 @@ export default function ProjectForm() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => navigate("/projects")}>Cancel</Button>
-          <Button onClick={handleSubmit} loading={saving}>Save Project</Button>
+          <Button variant="secondary" onClick={() => navigate("/projects")} className="max-md:flex-1">Cancel</Button>
+          <Button onClick={handleSubmit} loading={saving} className="max-md:flex-1">Save Project</Button>
         </div>
       </Card>
 
