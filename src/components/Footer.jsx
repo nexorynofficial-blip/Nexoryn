@@ -36,7 +36,7 @@ const COLUMNS = [
       },
       {
         label: "LinkedIn",
-        href: "https://www.linkedin.com/company/https-www.nexoryn.tech-/",
+        href: "https://www.linkedin.com/company/nexoryn/",
         external: true,
       },
     ],
