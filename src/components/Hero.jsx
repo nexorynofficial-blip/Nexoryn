@@ -186,7 +186,16 @@ export default function Hero() {
 
           {/* Right: stats — dropped on mobile per the "projects delivered /
               client retention / countries served" card being cut there */}
-          <StatsColumn className="hero-stats hidden lg:mt-2 lg:block lg:shrink-0" />
+          <div className="hero-stats hidden lg:mt-2 lg:flex lg:shrink-0 lg:flex-col lg:items-end lg:gap-5">
+            <Link
+              to="/blog"
+              className="pressable inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.06] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-white backdrop-blur-md transition-colors duration-300 hover:border-accent-from/60 hover:text-accent-from"
+            >
+              Blog / Articles
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+            <StatsColumn />
+          </div>
         </div>
 
         {/* Phones only: the two next steps, then the same three stats the
@@ -206,7 +215,14 @@ export default function Hero() {
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
         </div>
-        <dl className="hero-stats mx-auto mt-6 grid w-full max-w-sm grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/45 py-4 backdrop-blur-md md:hidden">
+        <Link
+          to="/blog"
+          className="hero-stats pressable mx-auto mt-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/70 md:hidden"
+        >
+          Blog / Articles
+          <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
+        <dl className="hero-stats mx-auto mt-4 grid w-full max-w-sm grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/45 py-4 backdrop-blur-md md:hidden">
           {STATS.map((stat) => (
             <div key={stat.value} className="flex flex-col-reverse items-center gap-1.5 px-1">
               <dt className="text-[9px] font-semibold uppercase leading-tight tracking-[0.16em] text-white/55">

@@ -9,12 +9,31 @@ import TacticalGlobe3D from "./vendor/TacticalGlobe3D.js";
 // that's what makes the served countries read as "lit up" by contrast.
 //
 // Served countries (kept bright, left out of this list): United States,
-// Canada, Dominican Republic, Ecuador, France, Argentina, New Zealand,
-// Australia, India, Pakistan, Botswana, Oman, UAE, Saudi Arabia, Sweden,
-// UK, Germany, Netherlands, Belgium, Spain, Portugal, Switzerland, Italy,
-// Slovenia, Croatia, Serbia, Greece, Morocco, Algeria. (Puerto Rico isn't
-// present as its own shape in this simplified world-atlas dataset.)
+// Canada, UK, Germany, UAE, Saudi Arabia.
 const DIMMED_COUNTRIES = [
+  { code: "DOM", name: "Dominican Rep.", enabled: false },
+  { code: "ECU", name: "Ecuador", enabled: false },
+  { code: "FRA", name: "France", enabled: false },
+  { code: "ARG", name: "Argentina", enabled: false },
+  { code: "NZL", name: "New Zealand", enabled: false },
+  { code: "AUS", name: "Australia", enabled: false },
+  { code: "IND", name: "India", enabled: false },
+  { code: "PAK", name: "Pakistan", enabled: false },
+  { code: "BWA", name: "Botswana", enabled: false },
+  { code: "OMN", name: "Oman", enabled: false },
+  { code: "SWE", name: "Sweden", enabled: false },
+  { code: "NLD", name: "Netherlands", enabled: false },
+  { code: "BEL", name: "Belgium", enabled: false },
+  { code: "ESP", name: "Spain", enabled: false },
+  { code: "PRT", name: "Portugal", enabled: false },
+  { code: "CHE", name: "Switzerland", enabled: false },
+  { code: "ITA", name: "Italy", enabled: false },
+  { code: "SVN", name: "Slovenia", enabled: false },
+  { code: "HRV", name: "Croatia", enabled: false },
+  { code: "SRB", name: "Serbia", enabled: false },
+  { code: "GRC", name: "Greece", enabled: false },
+  { code: "MAR", name: "Morocco", enabled: false },
+  { code: "DZA", name: "Algeria", enabled: false },
   { code: "AFG", name: "Afghanistan", enabled: false },
   { code: "AGO", name: "Angola", enabled: false },
   { code: "ALB", name: "Albania", enabled: false },

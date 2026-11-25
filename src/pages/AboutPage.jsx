@@ -14,7 +14,6 @@ import abdulPhoto from "../assets/team-abdul-ahad.webp";
 import akbarPhoto from "../assets/team-akbar-khan.webp";
 import { getTeam } from "../lib/content";
 import { useContent } from "../hooks/useContent";
-import { REVIEWS } from "../data/reviews";
 
 const INTRO_PARAGRAPH =
   "At Nexoryn, we build websites that convert and automation systems that eliminate the repetitive work slowing businesses down. We don't rely on templates or one-size-fits-all solutions. Instead, we analyze how your business operates, identify inefficiencies, and create custom systems designed specifically for your workflow. Our goal is simple: help businesses save time, improve efficiency, and focus on growth by replacing manual processes with smarter, scalable solutions.";
@@ -134,8 +133,8 @@ const CARD_BG = "bg-[linear-gradient(150deg,#3a1406_0%,#140803_35%,#070707_70%)]
 
 const DISCIPLINES = ["Automation", "Web Development", "Graphic Design"];
 
-// Every country a client review comes from.
-const COUNTRIES = [...new Set(REVIEWS.map((r) => r.location).filter(Boolean))];
+// The countries shown in Global Reach (chips here, lit-up countries on the globe).
+const COUNTRIES = ["United States", "United Kingdom", "UAE", "Germany", "Saudi Arabia", "Canada"];
 
 function SectionHeading({ lead, highlight, className = "" }) {
   return (

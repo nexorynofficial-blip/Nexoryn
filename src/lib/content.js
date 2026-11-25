@@ -82,11 +82,49 @@ function withResolvedImages(project) {
 
 // ── Projects ────────────────────────────────────────────────────────────
 
-export async function getProjects() {
-  // pageSize covers the full catalogue; the grid paginates client-side.
-  const data = await apiGet("/api/v1/projects?pageSize=50");
-  if (!data?.items?.length) return PROJECTS;
-  return data.items.map(withResolvedImages);
+const PROJECTS_CACHE_KEY = "nx:projects:v1";
+let projectsInFlight = null;
+
+/**
+ * The last project list the API returned, kept in localStorage. Projects added
+ * from the admin panel are not in the bundled static list, so without this the
+ * portfolio first paints without them and they pop in a second or more later
+ * (longer on a cold backend). With it, every visit after the first paints the
+ * full, current list immediately and the API only refreshes it.
+ */
+let peeked;
+export function peekProjects() {
+  if (peeked !== undefined) return peeked;
+  try {
+    const raw = localStorage.getItem(PROJECTS_CACHE_KEY);
+    const list = raw ? JSON.parse(raw) : null;
+    peeked = Array.isArray(list) && list.length ? list : null;
+    return peeked;
+  } catch {
+    return (peeked = null);
+  }
+}
+
+export function getProjects() {
+  // Home and the portfolio page both ask; share one request.
+  if (!projectsInFlight) {
+    projectsInFlight = (async () => {
+      // pageSize covers the full catalogue; the grid paginates client-side.
+      const data = await apiGet("/api/v1/projects?pageSize=50");
+      if (!data?.items?.length) return PROJECTS;
+      const items = data.items.map(withResolvedImages);
+      try {
+        localStorage.setItem(PROJECTS_CACHE_KEY, JSON.stringify(items));
+      } catch {
+        /* storage full or blocked: just skip caching */
+      }
+      return items;
+    })().finally(() => {
+      // Allow a fresh fetch on the next navigation, not a stale forever-promise.
+      setTimeout(() => { projectsInFlight = null; }, 5000);
+    });
+  }
+  return projectsInFlight;
 }
 
 export async function getProjectBySlug(slug) {

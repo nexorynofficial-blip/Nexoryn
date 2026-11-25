@@ -10,7 +10,7 @@ import { ShowMoreButton } from "../components/ui/ShowMoreButton";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import { PROJECTS } from "../data/projects";
-import { getProjects } from "../lib/content";
+import { getProjects, peekProjects } from "../lib/content";
 import { useContent } from "../hooks/useContent";
 
 // "Show more" pagination: start with 6 cards and reveal the next batch of 6
@@ -253,7 +253,7 @@ export default function PortfolioPage() {
     if (match) setIndustry(match);
   }, [searchParams]);
 
-  const projects = useContent(getProjects, PROJECTS);
+  const projects = useContent(getProjects, peekProjects() ?? PROJECTS);
 
   const visible = useMemo(() => {
     let list = projects.filter(

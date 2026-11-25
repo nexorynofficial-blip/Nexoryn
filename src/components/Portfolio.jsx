@@ -5,7 +5,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import SplitText from "./ui/SplitText";
 import Reveal from "./ui/Reveal";
 import { PROJECTS } from "../data/projects";
-import { getProjects } from "../lib/content";
+import { getProjects, peekProjects } from "../lib/content";
 import { useContent } from "../hooks/useContent";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 
@@ -14,7 +14,7 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 // /portfolio page.
 const FEATURED_SLUGS = [
   "ai-customer-support-chatbot",
-  "personalized-cold-email-outreach",
+  "real-estate-lead-response-booking-pipeline",
   "intelligent-content-repurposing-approval-workflow",
   "aurum-luxury-ecommerce-platform",
   "analytics-hub-saas-dashboard-platform",
@@ -24,7 +24,7 @@ const FEATURED_SLUGS = [
 // above, so the section doesn't run to four screens of scrolling.
 const FEATURED_SLUGS_MOBILE = [
   "ai-customer-support-chatbot",
-  "personalized-cold-email-outreach",
+  "real-estate-lead-response-booking-pipeline",
   "aurum-luxury-ecommerce-platform",
 ];
 
@@ -147,7 +147,7 @@ function StackCard({ project, i, total, progress, isMobile }) {
 }
 
 export default function Portfolio() {
-  const projects = useContent(getProjects, PROJECTS);
+  const projects = useContent(getProjects, peekProjects() ?? PROJECTS);
   const isMobile = useMediaQuery("(max-width: 767px)");
   const featured = pickFeatured(projects, isMobile ? FEATURED_SLUGS_MOBILE : FEATURED_SLUGS);
   const stackRef = useRef(null);
