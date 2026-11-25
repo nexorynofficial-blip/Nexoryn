@@ -8,6 +8,10 @@ export const SITE_URL = "https://www.nexoryn.tech";
 export const stripInline = (text) =>
   text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*([^*]+)\*\*/g, "$1");
 
+// Google wants a full datetime with a timezone, not a bare date. The posts keep
+// plain "YYYY-MM-DD" dates (shown on the page); this adds midnight, Pakistan time.
+const isoDateTime = (date) => `${date}T00:00:00+05:00`;
+
 export const postUrl = (post) => `${SITE_URL}/blog/${post.slug}`;
 export const postOgImage = (post) => `${SITE_URL}${post.ogImage}`;
 
@@ -36,8 +40,8 @@ export function buildBlogJsonLd(post) {
           url: SITE_URL,
           logo: { "@type": "ImageObject", url: `${SITE_URL}/favicon.png` },
         },
-        datePublished: post.datePublished,
-        dateModified: post.dateModified,
+        datePublished: isoDateTime(post.datePublished),
+        dateModified: isoDateTime(post.dateModified),
         mainEntityOfPage: { "@type": "WebPage", "@id": url },
       },
       ...(faq
