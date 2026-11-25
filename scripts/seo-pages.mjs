@@ -512,10 +512,8 @@ function inlineHtml(text) {
 }
 
 function blogBody(post) {
-  let out = `<p>By ${esc(post.author.name)}, ${esc(post.author.title)}, Nexoryn. ${esc(post.byline)} Last updated: ${esc(formatPostDate(post.dateModified))}.</p>`;
+  let out = "";
   out += `<p>${esc(post.intro)}</p>`;
-  const heads = post.blocks.filter((b) => b.type === "h2" || b.type === "h3");
-  out += `<nav><ol>${heads.map((b) => `<li><a href="#${slugifyHeading(b.text)}">${esc(b.text)}</a></li>`).join("")}</ol></nav>`;
   for (const b of post.blocks) {
     if (b.type === "h2" || b.type === "h3") out += `<${b.type} id="${slugifyHeading(b.text)}">${esc(b.text)}</${b.type}>`;
     else if (b.type === "p") out += `<p>${inlineHtml(b.text)}</p>`;
@@ -528,6 +526,7 @@ function blogBody(post) {
     else if (b.type === "cta") out += `<p>${esc(b.text)} <a href="${b.to}">${esc(b.label)}</a></p>`;
     else if (b.type === "faq") out += b.items.map((i) => `<h3>${esc(i.q)}</h3><p>${inlineHtml(i.a)}</p>`).join("");
   }
+  out += `<p>${esc(post.byline)} By ${esc(post.author.name)}, ${esc(post.author.title)}, Nexoryn. Last updated: ${esc(formatPostDate(post.dateModified))}.</p>`;
   return out;
 }
 

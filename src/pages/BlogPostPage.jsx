@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useMemo } from "react";
+import { Fragment, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import SplitText from "../components/ui/SplitText";
 import Reveal from "../components/ui/Reveal";
 import { SectionsBackground } from "../components/SectionsBackground";
@@ -163,80 +163,32 @@ function Block({ block }) {
   }
 }
 
-function AuthorBox({ post }) {
+function Byline({ post }) {
   return (
-    <div className="mt-8 flex gap-4 rounded-2xl border border-white/10 bg-black/30 p-5">
-      <span
-        aria-hidden="true"
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-from to-accent-to font-heading text-lg text-black"
-      >
-        {post.author.name.charAt(0)}
-      </span>
-      <div className="min-w-0 text-sm font-light leading-relaxed text-body-dim md:text-[15px]">
-        <p>{post.byline}</p>
-        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/50">
-          Last updated: <time dateTime={post.dateModified}>{formatPostDate(post.dateModified)}</time>
-        </p>
-        <p className="mt-3 flex flex-wrap items-center gap-x-2 text-white">
-          <span className="font-semibold">{post.author.name}</span>
-          <span className="text-white/50">{post.author.title}, Nexoryn</span>
-          <a
-            href={post.author.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
-          >
-            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            LinkedIn
-          </a>
-        </p>
-      </div>
+    <div className="mt-14 border-t border-white/10 pt-8 text-sm font-light leading-relaxed text-body-dim md:text-[15px]">
+      <p>{post.byline}</p>
+      <p className="mt-3 text-white">
+        <span className="font-semibold">{post.author.name}</span>
+        <span className="text-white/50">, {post.author.title}, Nexoryn · </span>
+        <a
+          href={post.author.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
+        >
+          LinkedIn
+        </a>
+      </p>
+      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/50">
+        Last updated: <time dateTime={post.dateModified}>{formatPostDate(post.dateModified)}</time>
+      </p>
     </div>
-  );
-}
-
-function TableOfContents({ items }) {
-  // Smooth-scroll instead of a bare #hash jump so it works with the app's
-  // router and smooth-scroll layer; the href still works with no JavaScript.
-  const jump = (e, id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    e.preventDefault();
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  return (
-    <nav aria-label="Table of contents" className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 md:p-6">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-accent-from">In this article</p>
-      <ol className="mt-4 space-y-2 text-sm md:text-base">
-        {items.map((item) => (
-          <li key={item.id} className={item.level === 3 ? "ml-5" : ""}>
-            <a
-              href={`#${item.id}`}
-              onClick={(e) => jump(e, item.id)}
-              className="font-light text-body-dim transition-colors duration-300 hover:text-accent-from"
-            >
-              {item.text}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
   );
 }
 
 export default function BlogPostPage() {
   const { slug } = useParams();
   const post = getPostBySlug(slug);
-
-  const toc = useMemo(
-    () =>
-      post
-        ? post.blocks
-            .filter((b) => b.type === "h2" || b.type === "h3")
-            .map((b) => ({ id: slugifyHeading(b.text), text: b.text, level: b.type === "h2" ? 2 : 3 }))
-        : [],
-    [post],
-  );
 
   useEffect(() => {
     document.title = post ? post.seoTitle : "Article not found - Nexoryn";
@@ -308,9 +260,7 @@ export default function BlogPostPage() {
               {post.title}
             </SplitText>
 
-            <AuthorBox post={post} />
-
-            <Reveal y={24} delay={0.2} animateOnMount className="mt-8">
+            <Reveal y={24} delay={0.2} animateOnMount className="mt-10">
               <img
                 src={BLOG_IMAGES[post.image]}
                 alt={post.imageAlt}
@@ -323,13 +273,13 @@ export default function BlogPostPage() {
 
             <p className="mt-8 text-lg font-medium leading-[1.75] text-white md:text-xl">{post.intro}</p>
 
-            <TableOfContents items={toc} />
-
             <div className="mt-10">
               {post.blocks.map((block, i) => (
                 <Block key={i} block={block} />
               ))}
             </div>
+
+            <Byline post={post} />
           </div>
         </article>
 
