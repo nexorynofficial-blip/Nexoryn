@@ -1,40 +1,72 @@
-import websiteDevBanner from "../assets/blog/website-development-services-banner.webp";
-import fiveComponents from "../assets/blog/website-development-five-components.webp";
-import pricingOverview from "../assets/blog/website-development-pricing.webp";
-import vettingChecklist from "../assets/blog/website-agency-vetting-checklist.webp";
-import processFlow from "../assets/blog/website-development-process.webp";
-
 /**
- * Blog / article posts, newest first. The list page and the post page both read
- * from here; add a new object at the top of the array to publish another one.
+ * Blog / article posts, newest first. The list page, the post page and the
+ * build-time SEO script (scripts/seo-pages.mjs) all read from here; add a new
+ * object at the top of the array to publish another one. No asset imports in
+ * this file, so plain Node can load it: images are named by key and resolved
+ * through blogImages.js.
  *
- * `blocks` is the article body. Supported block types:
- *   { type: "p",     text }                      paragraph
- *   { type: "h2",    text }                      section heading
- *   { type: "ul" | "ol", items: [text, ...] }    list
- *   { type: "table", head: [..], rows: [[..]] }  table
- *   { type: "img",   src, alt }                  figure
- *   { type: "cta",   text, label, to }           call-out with a button
- *   { type: "faq",   items: [{ q, a }] }         question / answer list
- * Any text string may contain inline links written as [label](/path).
+ * `blocks` is the article body (after the intro). Block types:
+ *   { type: "p",     text }                                paragraph
+ *   { type: "h2" | "h3", text }                            heading (feeds the table of contents)
+ *   { type: "ul" | "ol", items: [text, ...] }              list
+ *   { type: "table", head: [..], rows: [[..]] }            table
+ *   { type: "img",   imageKey, file, alt, caption }        figure
+ *   { type: "cta",   text, label, to }                     call-out with a button
+ *   { type: "faq",   items: [{ q, a }] }                   question / answer list
+ * Any text string may contain inline links written as [label](/path) and
+ * **bold**.
  */
+
+// Link targets. The article was written against these pillar pages:
+//   /services/web-applications, /services/ecommerce-development,
+//   /services/cms-headless-development, /services/workflow-automation,
+//   /services/ai-agents, /services/performance-seo,
+//   /services/voice-ai-agents, /pricing
+// None of those exist on the live site yet (Services is a single page with
+// tabs, and there is no pricing page), so each link falls back to the closest
+// live page. When a pillar page ships, change its entry here and every link in
+// the article follows.
+export const LINKS = {
+  webApplications: "/services", // wanted: /services/web-applications
+  ecommerce: "/services", // wanted: /services/ecommerce-development
+  headlessCms: "/services", // wanted: /services/cms-headless-development
+  pricing: "/contact", // wanted: /pricing
+  audit: "/contact",
+  workflowAutomation: "/services", // wanted: /services/workflow-automation
+  aiAgents: "/services", // wanted: /services/ai-agents
+  portfolio: "/portfolio",
+  performanceSeo: "/services", // wanted: /services/performance-seo
+  voiceAgents: "/services", // wanted: /services/voice-ai-agents
+};
+
+const L = LINKS;
+
 export const BLOG_POSTS = [
   {
     slug: "website-development-services-whats-included-2026-pricing",
-    title: "Website Development Services: What's Included + 2026 Pricing",
+    title: "Website Development Services: What's Included and What It Costs",
+    seoTitle: "Website Development Services: 2026 Pricing Guide | Nexoryn",
+    metaDescription:
+      "Compare website development services, real pricing, and what's included — see how Nexoryn builds sites wired to automation from day one.",
     category: "Web Development",
-    date: "2026-11-25",
+    datePublished: "2026-11-25",
+    dateModified: "2026-11-25",
     readMinutes: 8,
     excerpt:
       "What website development services actually include, what drives the price, what to check before you sign, and why the build should connect to your automation from day one.",
-    image: websiteDevBanner,
-    imageAlt: "Website Development Services: What's Included and 2026 Pricing",
+    image: "thumbnail",
+    imageAlt: "Website development services: what's included and 2026 pricing — Nexoryn",
+    ogImage: "/blog/images/website-development-services-thumbnail.png",
+    author: {
+      name: "Waseem",
+      title: "Co-Founder",
+      url: "https://www.linkedin.com/in/waseem-farooq-758a74251/",
+    },
+    byline:
+      "Written by the Nexoryn team that scopes and builds these projects — not a content writer summarizing other agencies' pages.",
+    intro:
+      "Website development services cover the full design and technical build of a website — the front-end interface, the back-end systems, the content management setup, and the hosting and testing that keep it running. For mid-sized companies, these projects typically cost between $1,500 and $75,000 or more, depending on scope.",
     blocks: [
-      {
-        type: "p",
-        text: "Most website development services pages tell you what an agency does. Few tell you what it costs or how the build connects to the systems that actually run your business afterward. Website development services cover the full design and technical build of a site (the front-end, the back-end, and the infrastructure behind it), and projects for mid-sized companies typically run $1,500 to $75,000+ depending on scope. This guide breaks down what's included, what drives the price, what to check before you sign, and why the build should connect to your automation from day one.",
-      },
-
       { type: "h2", text: "What \"website development services\" actually includes" },
       {
         type: "p",
@@ -57,8 +89,12 @@ export const BLOG_POSTS = [
       { type: "p", text: "Skip any one of these and you end up patching problems after launch instead of before it." },
       {
         type: "img",
-        src: fiveComponents,
+        imageKey: "five-components",
+        width: 1600,
+        height: 900,
+        file: "website-development-services-five-components",
         alt: "The five components of a website development service: front-end, back-end, CMS, hosting, and QA.",
+        caption: "What's included in a full website development service.",
       },
 
       { type: "h2", text: "Website design vs. website development (the difference)" },
@@ -93,7 +129,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "See how we approach [custom web applications](/services), [e-commerce development](/services), and [headless CMS builds](/services) on our services page.",
+        text: `See how we approach [custom web applications](${L.webApplications}), [e-commerce development](${L.ecommerce}), and [headless CMS builds](${L.headlessCms}) on our services page.`,
       },
       {
         type: "p",
@@ -120,13 +156,17 @@ export const BLOG_POSTS = [
       },
       {
         type: "img",
-        src: pricingOverview,
+        imageKey: "pricing-table",
+        width: 1122,
+        height: 1402,
+        file: "website-development-services-pricing-table",
         alt: "Website development pricing by project type, from simple business sites to custom web applications.",
+        caption: "Typical website development costs by project size.",
         narrow: true,
       },
       {
         type: "p",
-        text: "Want the full automation and web development pricing breakdown for your project? [Talk to us](/contact) and we'll scope it with you.",
+        text: `Want the [full automation and web development pricing breakdown](${L.pricing}) for your project? Talk to us and we'll scope it with you.`,
       },
 
       { type: "h2", text: "What to look for in a website development agency" },
@@ -149,16 +189,20 @@ export const BLOG_POSTS = [
       },
       {
         type: "img",
-        src: vettingChecklist,
+        imageKey: "vetting-checklist",
+        width: 1086,
+        height: 1448,
+        file: "website-development-agency-vetting-checklist",
         alt: "Checklist for vetting a website development agency before you sign.",
+        caption: "Use this checklist before you sign with any agency.",
         narrow: true,
       },
       {
         type: "p",
-        text: "Run any vendor through this list before you sign anything. Have us walk through your project against it, and we'll answer every item directly. [Request a free audit](/contact).",
+        text: `Run any vendor through this list before you sign anything. Have us walk through your project against it, and we'll answer every item directly. Send a [free audit request](${L.audit}).`,
       },
 
-      { type: "h2", text: "Questions to ask before you sign" },
+      { type: "h3", text: "Questions to ask before you sign" },
       { type: "p", text: "Bring these into any vendor call or RFP:" },
       {
         type: "ul",
@@ -168,7 +212,14 @@ export const BLOG_POSTS = [
           "What does post-launch support cost, and what does it cover?",
           "How do you handle a scope change once the build has started?",
           "Can you show a site you've built that's still live and maintained today?",
+          "If my site needs to connect to a CRM, chatbot, or workflow tool, who builds and owns that integration?",
+          "What happens if the vendor who built my automation isn't the same team maintaining my site a year from now?",
+          "Do you test the site and its connected systems together, or only the site on its own?",
         ],
+      },
+      {
+        type: "p",
+        text: "Questions 6–8 are the ones a generic web-dev agency can't answer well — they're the gap this whole page is built around.",
       },
 
       { type: "h2", text: "Why the best sites are built to work with your automation" },
@@ -182,13 +233,42 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "A site built alongside its automation layer avoids that gap. The forms, the chat widget, and the backend workflow routing a lead to the right person are planned as one system, not stitched together after the fact. Learn more about our [workflow automation](/services) and [AI agents for your business](/services).",
+        text: `A site built alongside its automation layer avoids that gap. The forms, the chat widget, and the backend workflow routing a lead to the right person are planned as one system, not stitched together after the fact. Learn more about our [workflow automation](${L.workflowAutomation}) and [AI agents for your business](${L.aiAgents}).`,
       },
       {
         type: "cta",
         text: "See how a site and its automation can launch as one project, not two.",
         label: "See our work",
-        to: "/portfolio",
+        to: L.portfolio,
+      },
+      {
+        type: "table",
+        head: ["", "Typical web agency", "In-house hire", "Nexoryn"],
+        rows: [
+          ["Builds the website", "Yes", "Yes", "Yes"],
+          [
+            "Plans the automation layer (CRM, chat, workflows) into the build",
+            "Rarely — usually a separate vendor afterward",
+            "Depends on one person's bandwidth",
+            "Yes, from discovery onward",
+          ],
+          [
+            "Who owns the handoff between site and automation",
+            "Nobody — falls between two vendors",
+            "You",
+            "One team, one scope",
+          ],
+          [
+            "Ongoing support after launch",
+            "Often a separate contract",
+            "Depends on headcount",
+            "Defined in the original scope",
+          ],
+        ],
+      },
+      {
+        type: "p",
+        text: "**The gap that costs you later isn't the website — it's who owns what happens after someone fills out the form.**",
       },
 
       { type: "h2", text: "Our process (and what it costs)" },
@@ -208,12 +288,16 @@ export const BLOG_POSTS = [
       },
       {
         type: "img",
-        src: processFlow,
+        imageKey: "process-five-steps",
+        width: 1600,
+        height: 900,
+        file: "website-development-process-five-steps",
         alt: "Nexoryn's website development process from discovery to post-launch support.",
+        caption: "Our five-step website development process.",
       },
       {
         type: "p",
-        text: "Pricing is set after discovery and scope, not quoted blind before anyone understands what you need. That's also when timelines and payment milestones get fixed, so the number you sign off on doesn't move once the build starts. For ongoing [performance and SEO optimization](/services) after launch, see our services.",
+        text: `Pricing is set after discovery and scope, not quoted blind before anyone understands what you need. That's also when timelines and payment milestones get fixed, so the number you sign off on doesn't move once the build starts. For what comes next, see our [post-launch SEO and performance work](${L.performanceSeo}).`,
       },
 
       { type: "h2", text: "FAQ" },
@@ -230,7 +314,7 @@ export const BLOG_POSTS = [
           },
           {
             q: "How long does a website development project take?",
-            a: "It depends on project type. A business or marketing site typically takes 1–3 weeks, a web application 3–6 weeks, and an e-commerce build 2–4 weeks. See the full breakdown above.",
+            a: "It depends on project type. A business or marketing site typically takes 1–3 weeks, a web application 3–6 weeks, and an e-commerce build 2–4 weeks.",
           },
           {
             q: "Do I need ongoing support after launch?",
@@ -238,15 +322,15 @@ export const BLOG_POSTS = [
           },
           {
             q: "Should I hire a freelancer or an agency?",
-            a: "Freelancers often cost less; agencies usually offer more accountability and bandwidth for larger projects. Use the vetting checklist above regardless of which you choose.",
+            a: "Freelancers often cost less up front and can move quickly on a small, well-defined project. Agencies usually bring more accountability and bandwidth, which matters more as the project gets larger, more technical, or needs ongoing support. Neither is the right answer for everyone, so run whichever you're considering through the vetting checklist above and compare the answers.",
           },
           {
             q: "Can my website connect to my CRM, booking tools, or AI chat agents?",
-            a: "Yes, this is standard for a modern business site, including [AI chat and voice agents](/services). It works best when it's planned into the build from the start, not added later.",
+            a: `Yes, this is standard for a modern business site, including [AI chat and voice agents](${L.voiceAgents}). It works best when it's planned into the build from the start, not added later.`,
           },
           {
             q: "What should I ask a website development company before signing?",
-            a: "Cover ownership of code and logins, what's included in the price, how scope changes are handled, and post-launch support terms. See the full question list above before any vendor call.",
+            a: "Cover ownership of code and logins, what's included in the price, how scope changes are handled, and post-launch support terms.",
           },
         ],
       },
@@ -267,9 +351,19 @@ export const BLOG_POSTS = [
 
 export const getPostBySlug = (slug) => BLOG_POSTS.find((p) => p.slug === slug);
 
-export const formatPostDate = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+/** "2026-11-25" -> "November 25, 2026" (fixed locale/zone so build and browser agree). */
+export const formatPostDate = (iso) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "UTC",
   });
+};
+
+export const slugifyHeading = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");

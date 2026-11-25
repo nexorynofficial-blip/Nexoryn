@@ -32,6 +32,8 @@
 // 15s timeout and a short backoff between tries.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { BLOG_POSTS, formatPostDate, slugifyHeading } from "../src/data/blogPosts.js";
+import { buildBlogJsonLd, postUrl, postOgImage } from "../src/lib/blogSchema.js";
 
 const SITE = "https://www.nexoryn.tech";
 const DIST = "dist";
@@ -59,6 +61,8 @@ const PAGES = [
     desc: "Automation and AI (workflow automation, voice AI agents, LLM agents), web development, and brand and design services." },
   { path: "portfolio", title: "Portfolio - Nexoryn", h1: "Nexoryn Portfolio",
     desc: "Case studies of the automation, AI, web and design projects Nexoryn has delivered." },
+  { path: "blog", title: "Blog - Nexoryn", h1: "Insights & Articles", navLabel: "Nexoryn Blog",
+    desc: "Practical guides on websites, automation and AI, written for businesses that want to build it right." },
   { path: "reviews", title: "Reviews - Nexoryn", h1: "Loved by businesses we've automated.", navLabel: "Client Reviews",
     desc: "What Nexoryn's clients say about working with us." },
   { path: "contact", title: "Contact - Nexoryn", h1: "Let's build something.", navLabel: "Contact Nexoryn",
@@ -495,6 +499,45 @@ function contactFaqJsonLd() {
   return JSON.stringify(obj);
 }
 
+/* ── Blog ────────────────────────────────────────────────────────────────
+ * Static text for each article, built from the same data the React page
+ * renders (src/data/blogPosts.js). Images are left out: this block is only
+ * for crawlers that don't run JavaScript. */
+
+/** [label](/path) and **bold** -> escaped HTML. */
+function inlineHtml(text) {
+  return esc(text)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => `<a href="${href}">${label}</a>`)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function blogBody(post) {
+  let out = `<p>By ${esc(post.author.name)}, ${esc(post.author.title)}, Nexoryn. ${esc(post.byline)} Last updated: ${esc(formatPostDate(post.dateModified))}.</p>`;
+  out += `<p>${esc(post.intro)}</p>`;
+  const heads = post.blocks.filter((b) => b.type === "h2" || b.type === "h3");
+  out += `<nav><ol>${heads.map((b) => `<li><a href="#${slugifyHeading(b.text)}">${esc(b.text)}</a></li>`).join("")}</ol></nav>`;
+  for (const b of post.blocks) {
+    if (b.type === "h2" || b.type === "h3") out += `<${b.type} id="${slugifyHeading(b.text)}">${esc(b.text)}</${b.type}>`;
+    else if (b.type === "p") out += `<p>${inlineHtml(b.text)}</p>`;
+    else if (b.type === "ul" || b.type === "ol") out += `<${b.type}>${b.items.map((i) => `<li>${inlineHtml(i)}</li>`).join("")}</${b.type}>`;
+    else if (b.type === "table")
+      out += `<table><thead><tr>${b.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${b.rows
+        .map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`)
+        .join("")}</tbody></table>`;
+    else if (b.type === "img") out += `<p>${esc(b.caption ?? b.alt)}</p>`;
+    else if (b.type === "cta") out += `<p>${esc(b.text)} <a href="${b.to}">${esc(b.label)}</a></p>`;
+    else if (b.type === "faq") out += b.items.map((i) => `<h3>${esc(i.q)}</h3><p>${inlineHtml(i.a)}</p>`).join("");
+  }
+  return out;
+}
+
+function blogIndexBody() {
+  return (
+    `<p>Practical guides on websites, automation and AI, written for businesses that want to build it right.</p>` +
+    `<ul>${BLOG_POSTS.map((p) => `<li><a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>: ${esc(p.excerpt)}</li>`).join("")}</ul>`
+  );
+}
+
 /* ── Page shell ───────────────────────────────────────────────────────── */
 
 const projectLinks = projects
@@ -508,7 +551,7 @@ const HERO_INTRO =
 
 const HIDDEN = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
 
-function render({ path, title, h1, desc, bodyHtml, jsonLd }) {
+function render({ path, title, h1, desc, bodyHtml, jsonLd, ogImage, article }) {
   const url = `${SITE}/${path}`;
   let extra = `<h1>${esc(h1)}</h1>`;
   if (bodyHtml) {
@@ -545,6 +588,10 @@ function render({ path, title, h1, desc, bodyHtml, jsonLd }) {
     .replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`)
     .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${esc(title)}$2`)
     .replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${esc(desc)}$2`)
+    .replace(/(<meta property="og:type" content=")[^"]*(")/, `$1${article ? "article" : "website"}$2`)
+    .replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${ogImage ?? SITE + "/favicon.png"}$2`)
+    .replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${ogImage ?? SITE + "/favicon.png"}$2`)
+    .replace(/(<meta name="twitter:card" content=")[^"]*(")/, `$1${ogImage ? "summary_large_image" : "summary"}$2`)
     .replace('<div id="root"></div>', `${bootHero}<div id="root"></div>\n    ${block}`);
 
   if (jsonLd) out = out.replace("</head>", `  ${jsonLd}\n  </head>`);
@@ -560,6 +607,7 @@ function write(path, content) {
 function sitemap() {
   const urls = [
     ...PAGES.map((p) => `  <url><loc>${SITE}/${p.path}</loc></url>`),
+    ...BLOG_POSTS.map((p) => `  <url><loc>${postUrl(p)}</loc><lastmod>${p.dateModified}</lastmod></url>`),
     ...projects.map((p) => {
       const lastmod = p.updatedAt ? `<lastmod>${new Date(p.updatedAt).toISOString()}</lastmod>` : "";
       return `  <url><loc>${SITE}/portfolio/${esc(p.slug)}</loc>${lastmod}</url>`;
@@ -649,6 +697,7 @@ function assertContactPage(writtenHtml) {
 }
 
 const PAGE_EXTRAS = {
+  blog: { bodyHtml: blogIndexBody() },
   about: { bodyHtml: aboutBody() },
   reviews: { bodyHtml: reviewsBody() },
   contact: {
@@ -663,6 +712,34 @@ for (const page of PAGES) {
   if (page.path === "about") assertAboutPage(out);
   if (page.path === "reviews") assertReviewsPage(out);
   if (page.path === "contact") assertContactPage(out);
+}
+
+for (const post of BLOG_POSTS) {
+  const jsonLd = `<script type="application/ld+json" id="blog-jsonld">${JSON.stringify(buildBlogJsonLd(post))}</script>`;
+  const out = render({
+    path: `blog/${post.slug}`,
+    title: post.seoTitle,
+    h1: post.title,
+    desc: post.metaDescription,
+    bodyHtml: blogBody(post),
+    jsonLd,
+    ogImage: postOgImage(post),
+    article: true,
+  });
+  write(`blog/${post.slug}`, out);
+  // Built-page checks, same as case studies: the SEO-critical bits must be in
+  // the file that was actually written.
+  const m = out.match(/<script type="application\/ld\+json" id="blog-jsonld">([\s\S]*?)<\/script>/);
+  try {
+    const graph = JSON.parse(m?.[1] ?? "null")?.["@graph"] ?? [];
+    for (const t of ["BlogPosting", "FAQPage", "BreadcrumbList"])
+      if (!graph.some((n) => n["@type"] === t)) pageErrors.push(`blog/${post.slug}: JSON-LD missing ${t}`);
+  } catch (err) {
+    pageErrors.push(`blog/${post.slug}: JSON-LD does not parse: ${err.message}`);
+  }
+  if (!out.includes(`<title>${esc(post.seoTitle)}</title>`)) pageErrors.push(`blog/${post.slug}: title tag not set`);
+  if (!out.includes(`<h1>${esc(post.title)}</h1>`)) pageErrors.push(`blog/${post.slug}: h1 not found`);
+  if (/\[(IMAGE|INTERNAL LINK|SOURCE NEEDED|DATE|NEEDS)[^\]]*\]/.test(out)) pageErrors.push(`blog/${post.slug}: placeholder text left in page`);
 }
 
 for (const project of projects) {
@@ -682,7 +759,7 @@ for (const project of projects) {
 
 const sitemapXml = sitemap();
 const sitemapUrlCount = (sitemapXml.match(/<loc>/g) ?? []).length;
-const expectedUrlCount = PAGES.length + projects.length;
+const expectedUrlCount = PAGES.length + BLOG_POSTS.length + projects.length;
 if (sitemapUrlCount !== expectedUrlCount) {
   pageErrors.push(`sitemap has ${sitemapUrlCount} URLs, expected ${expectedUrlCount}`);
 }
@@ -696,5 +773,5 @@ if (pageErrors.length) {
 
 writeFileSync(join(DIST, "sitemap.xml"), sitemapXml);
 console.log(
-  `seo-pages: wrote ${PAGES.length} pages + ${projects.length} case studies + sitemap.xml (${sitemapUrlCount} urls) — all checks passed`
+  `seo-pages: wrote ${PAGES.length} pages + ${BLOG_POSTS.length} articles + ${projects.length} case studies + sitemap.xml (${sitemapUrlCount} urls) — all checks passed`
 );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   MessageCircleQuestion,
   CalendarClock,
@@ -397,6 +398,12 @@ export default function ContactPage() {
             >
               Ask a quick question, book a consultation, or tell us about your
               project, pick whichever fits.
+            </Reveal>
+            <Reveal as="p" y={24} delay={0.26} animateOnMount className="mx-auto mt-4 max-w-2xl text-base font-light text-body-dim">
+              <Link to="/blog/website-development-services-whats-included-2026-pricing" className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from">
+                Not sure what you need? Read our pricing breakdown first
+              </Link>
+              .
             </Reveal>
           </div>
 

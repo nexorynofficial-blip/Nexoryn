@@ -157,6 +157,14 @@ export default function Services() {
           </button>
         ))}
       </div>
+
+      <p className="mx-auto mt-10 max-w-xl px-4 text-center text-base font-light text-body-dim max-md:mt-6">
+        Planning a new site? Read our guide to{" "}
+        <Link to="/blog/website-development-services-whats-included-2026-pricing" className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from">
+          website development services
+        </Link>
+        : what's included and what it costs.
+      </p>
     </section>
   );
 }

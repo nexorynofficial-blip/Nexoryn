@@ -7,6 +7,7 @@ import { SectionsBackground } from "../components/SectionsBackground";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import { BLOG_POSTS, formatPostDate } from "../data/blogPosts";
+import { BLOG_IMAGES } from "../data/blogImages";
 
 function PostCard({ post }) {
   return (
@@ -16,7 +17,7 @@ function PostCard({ post }) {
     >
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0d0d0d]">
         <img
-          src={post.image}
+          src={BLOG_IMAGES[post.image]}
           alt={post.imageAlt}
           width={800}
           height={450}
@@ -31,7 +32,7 @@ function PostCard({ post }) {
 
       <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
         <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
-          <time dateTime={post.date}>{formatPostDate(post.date)}</time>
+          <time dateTime={post.datePublished}>{formatPostDate(post.datePublished)}</time>
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" aria-hidden="true" />
             {post.readMinutes} min read

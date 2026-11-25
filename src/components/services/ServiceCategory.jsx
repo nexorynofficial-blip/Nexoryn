@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   AppWindow,
   Bot,
@@ -98,6 +99,18 @@ function ServiceDetail({ sub, index, total, showHeader = true }) {
       )}
 
       <p className={`${showHeader ? "mt-6" : ""} text-[15px] leading-relaxed text-body-dim md:text-base`}>{sub.description}</p>
+      {sub.name === "Website Design & Development" && (
+        <p className="mt-4 text-[15px] leading-relaxed text-body-dim md:text-base">
+          Budgeting for a build?{" "}
+          <Link
+            to="/blog/website-development-services-whats-included-2026-pricing"
+            className="font-medium text-accent-to underline underline-offset-2 transition-colors duration-300 hover:text-accent-from"
+          >
+            Read our full website development services guide
+          </Link>
+          .
+        </p>
+      )}
 
       <div className="mt-8 grid gap-10 xl:grid-cols-[1fr_1.1fr]">
         {/* Process as a numbered timeline */}
