@@ -1883,6 +1883,327 @@ export const CASE_STUDIES = {
         },
       ],
     },
+  "halden-rowe-luxury-real-estate-brokerage-website": {
+      category: "Static Real Estate Brokerage Website",
+      techIcons: [
+        { name: "Astro 7", icon: Rocket },
+        { name: "TypeScript", icon: FileCode },
+        { name: "Tailwind CSS 4", icon: Paintbrush },
+        { name: "Vercel", icon: Cloud },
+      ],
+      summary:
+        "A complete brokerage site built as a sales demo for real brokerages. Halden Rowe, a fictional Santa Barbara firm, shows what a modern brokerage site can do: a \"folder sheet\" layout, a blueprint hero animation, an in-place floor plan, inline tour and call booking, and a built-in assistant that answers questions and books appointments. Everything a visitor sees comes from JSON files, so the same site can be re-themed for a new brokerage by editing data and not code.",
+
+      overview: {
+        problem: [
+          "Most brokerage sites are slow, template-looking portals that bury the listings and look the same as every competitor's",
+          "Booking a showing means a contact form, a wait, and a phone call back, so visitors who are ready now leave for another agent",
+          "Questions about a home, a neighborhood, or how selling works go unanswered outside office hours",
+          "Listing pages show photos but not how the house is laid out, where it sits, or who will show it",
+          "Off-the-shelf real estate themes can't be re-branded quickly, which makes a tailored demo for each prospect expensive",
+          "Agencies pay for hosting, plugins, and chat services that add monthly cost and third-party scripts to a site that should be fast",
+        ],
+        solution: [
+          "A listings-first site with filters that live in the URL, so any search can be shared or bookmarked",
+          "Booking built into the page: tours and agent calls expand inline, show only real open slots from each agent's hours, and confirm in the same panel",
+          "A floor plan that plays in place, tracing one room at a time and counting up its figures, instead of a flat image",
+          "A site assistant that finds homes from plain requests, answers questions about the firm, listings, neighborhoods, and agents, and books a tour or call",
+          "A single JSON brand file that controls name, logo, palette, fonts, copy, contact details, and lead settings, with automatic contrast checking",
+          "A fully static build with no server, no database, and no per-message cost, hosted on Vercel",
+        ],
+        workflow: [
+          { icon: Rocket, label: "Land" },
+          { icon: Search, label: "Search" },
+          { icon: Eye, label: "Explore" },
+          { icon: Calendar, label: "Book" },
+          { icon: MessageSquare, label: "Ask" },
+          { icon: Send, label: "Follow up" },
+        ],
+        breakdown: [
+          {
+            title: "1. Light Palette & Color Psychology",
+            description:
+              "Built on a warm, light palette chosen for a luxury, trustworthy feel: Spring Wood (#F9F6EE) as the page base, White for cards, Platinum (#EAE3E0) for alternating bands, Dark Gunmetal (#142334) for text and dark panels, and Rodeo Dust (#C9AD98) as the single accent. The accent is used for highlights, links, and borders; because it is a light colour, button text on it automatically switches to dark. Every colour is a CSS token, so components never hard-code a hex value, and a .scope-dark class renders any section as a dark panel inside the light page.",
+          },
+          {
+            title: "2. Signature Visual Element: The Blueprint Hero",
+            description:
+              "The home page opens on a hero that draws a blueprint of the featured home, using line data stored in hero-blueprints.json, over the property photo. The animation settles into the hero search console. It is driven by data, so a different brand or hero listing gets its own drawing, and it is switched off for visitors who prefer reduced motion.",
+          },
+          {
+            title: "3. The Front-Door Loader",
+            description:
+              "On the first page a visitor lands on, two paneled doors hold the brand seal and name. A fine line fills down the seam as the page really loads (fonts and the first image), then the name lifts away and the doors part onto the hero. It plays once per browser session on any page, takes about two seconds, becomes a simple fade for visitors who turn off motion, and can be replayed in a demo by adding ?intro to any URL.",
+          },
+          {
+            title: "4. Folder-Sheet Layout",
+            description:
+              "The home page is stacked like paper folders. Each section is a rounded \"sheet\" with a tab on top (About us, Floor plan, Listings, Agents, Neighborhoods, Clients, Private listings) and a small meta label such as \"Since 2009\" or \"10 homes\". Sheets alternate between white, platinum, base, and ink tones, with large rounded corners (28px panel radius), so the page reads as a sequence of distinct documents instead of one long scroll.",
+          },
+          {
+            title: "5. Typography Hierarchy & Brand Voice",
+            description:
+              "Bricolage Grotesque for headings and Instrument Sans for body text, both self-hosted and subset to Latin so no external font request is made. Headings rise line by line as they enter the screen, and figures count up. Tabular figures are used wherever numbers line up, such as prices, phone numbers, and slot times. The copy is plain and specific: \"17 days median time on market, against a county median of 34\", with no filler.",
+          },
+          {
+            title: "6. Responsive Architecture For All Devices",
+            description:
+              "Desktop gets a full header, multi-column sheets, and a sticky contact panel beside each listing. Tablet collapses sections to fewer columns. Mobile uses a single column, a navigation menu, and a sticky booking bar on listing pages with the chat launcher moved above it so nothing is covered. Photos are served as AVIF, WebP, and JPG at several widths, and the layout never scrolls sideways.",
+          },
+          {
+            title: "7. Session State & Persistence",
+            description:
+              "Everything runs in the browser with no account. A visitor's name, email, and phone are kept in their own localStorage only to pre-fill later forms, with a \"Not you?\" link that clears them. The chat conversation lives in sessionStorage, so it follows a visitor between pages and disappears when the tab closes. Bookings made in the chat are listed in localStorage so the assistant can answer \"when is my tour?\" and cancel or reschedule them.",
+          },
+          {
+            title: "8. Inline Booking With Premium UX",
+            description:
+              "Tour and call widgets expand in place instead of opening a modal. In demo mode they generate availability from each agent's working hours in Pacific time and show only open slots, 21 days ahead. A visitor chooses in person or live video for tours, or phone or video for calls, then enters name, email, and mobile number with live phone formatting and field-level validation. The \"You're booked\" panel gives a reference and a cancel link. If a slot is taken, the widget explains, shows refreshed times, and keeps the visitor's details. Setting the provider to Cal.com swaps in Cal.com's inline embed, themed with the brand accent, in the same panel.",
+          },
+        ],
+      },
+
+      results: {
+        keyFeatures: [
+          {
+            title: "Sophisticated listing discovery",
+            description:
+              "Filter by status, neighborhood, price, and bedrooms, and sort the results. Price options change automatically between sale and lease ranges, active filters appear as removable pills, and the whole state is written to the URL. The home page adds a hero search console and a featured-homes reel with keyboard scrolling.",
+          },
+          {
+            title: "Rich listing pages",
+            description:
+              "Each of the 10 listings has a breadcrumb, key-facts bar, photo gallery with \"All photos\", full description, \"What stands out\" list, details, location map, \"Similar homes\" row, and a contact panel for the listing agent. Pending homes carry a status tag and lease listings show monthly rent.",
+          },
+          {
+            title: "Floor plan that plays in place",
+            description:
+              "While on screen, the plan traces one room at a time and counts up that room's two figures, pausing on hover or focus. Visitors can click any room or floor to jump straight to it. Plans are line drawings stored in floorplans.json keyed by listing id.",
+          },
+          {
+            title: "Agents & booking routing",
+            description:
+              "Four agent profiles show photos, roles, languages, and hours. Each agent's hours drive their booking slots, and a call can be booked directly from their profile. The assistant routes questions to the right agent, such as leasing to Elena and Ojai to Daniel.",
+          },
+          {
+            title: "Neighborhood guides",
+            description:
+              "Nine areas are shown on a home page explorer and a full guide page, with median prices in a comparison table and written guides. The table's figures also feed the assistant's neighborhood answers and rankings.",
+          },
+          {
+            title: "Rule-based site assistant",
+            description:
+              "A \"Chat with us\" launcher on every page needs no server, API key, or per-message fee. It searches from plain requests (typos, slang, prices in words), answers about the firm, listings, neighborhoods, and agents plus about 70 common questions, books tours and calls, takes messages, signs people up for private listings, and cancels or reschedules what it booked. It hands off to a person for offers, legal, tax, mortgage, and fee questions.",
+          },
+          {
+            title: "Private listings signup & inquiries",
+            description:
+              "A \"Private listings\" sheet collects an email for a short list of off-market homes, and each listing and agent page has a question form. All submissions, bookings, and chat messages post the same JSON payload to a CRM webhook, and are simulated when no webhook URL is set.",
+          },
+          {
+            title: "Re-skinnable brand engine",
+            description:
+              "One brand file controls the name, logo, tagline, six palette colours, fonts, hero copy and image, contact details, and booking and lead settings. A second brand, Calder Sloane, shows the whole site re-theming with BRAND=calder-sloane. Colours are contrast-checked on every build against WCAG AA.",
+          },
+          {
+            title: "Demo tools for outreach",
+            description:
+              "Adding ?demo=slot-taken or ?demo=submit-error to a listing URL walks a prospect through the booking and form edge cases. A private, noindexed Before and After page shows a prospect's current homepage next to the rebuilt one at desktop and mobile sizes, with page weight and load time.",
+          },
+        ],
+        before:
+          "A brokerage site that looked like every other, loaded slowly, hid listings behind a portal, and made visitors fill in a form and wait. Questions after hours went unanswered, a home's layout could not be seen, and every prospect demo meant a custom build.",
+        after:
+          "A fast, static site where a visitor can search in the URL, open a home, watch its floor plan play, pick a real open slot, and book without leaving the page. At any hour the assistant can find homes, answer questions, and book a tour or call. The whole site can be re-skinned for a new brokerage from one JSON file, and the build checks colour contrast automatically. Lighthouse scores 100 for accessibility, best practices, and SEO on every page, with zero layout shift.",
+        proof:
+          "Halden Rowe shows that a premium brokerage experience can be built without a backend: inline booking, an in-place floor plan, and a chat assistant that books appointments, all running on a static host at no per-use cost. It is also honest about what it is: bookings made in the demo are labelled as simulated, the fictional brokerage is not presented as real, photography is credited as demo imagery, and the assistant says plainly when it does not have an answer and offers a person instead. Lighthouse scores 100 for accessibility, best practices, and SEO, axe-core is clean in real browsers, and type checks pass with 0 errors and 0 warnings.",
+      },
+
+      techStack: {
+        "Frontend Layer": [
+          {
+            name: "Astro 7",
+            role: "Static site generation with island-free pages across 21 static routes",
+            icon: Rocket,
+          },
+          {
+            name: "TypeScript",
+            role: "Typed data access, browser modules, and the chat engine, checked with astro check",
+            icon: FileCode,
+          },
+          {
+            name: "Tailwind CSS 4",
+            role: "Utility-first styling with every colour, radius, and shadow as a design token",
+            icon: Paintbrush,
+          },
+          {
+            name: "Astro Components",
+            role: "23 components including Header, Sheet, ListingCard, Gallery, BookingWidget, FloorPlan, and Chatbot",
+            icon: LayoutGrid,
+          },
+        ],
+        "Design & Animation Layer": [
+          {
+            name: "CSS & Vanilla JavaScript",
+            role: "Line-by-line heading reveals, count-up figures, blueprint hero, front-door loader, and floor-plan walkthrough with no animation library",
+            icon: Wand2,
+          },
+          {
+            name: "Sharp",
+            role: "Build-time pipeline encoding every photo to AVIF, WebP, and JPG at several widths",
+            icon: ImageIcon,
+          },
+          {
+            name: "Custom Fonts",
+            role: "Bricolage Grotesque and Instrument Sans, self-hosted as subset WOFF2",
+            icon: Type,
+          },
+        ],
+        "Data & Content Layer": [
+          {
+            name: "JSON Data Files",
+            role: "Listings, agents, neighborhoods, floor plans, hero blueprints, site content, chat FAQ, and one file per brand",
+            icon: Database,
+          },
+          {
+            name: "Knowledge Endpoint",
+            role: "/chat-knowledge.json generated at deploy from the data files so chat answers cannot drift from the pages",
+            icon: FileText,
+          },
+        ],
+        "Booking & Leads Layer": [
+          {
+            name: "Demo Booking Engine",
+            role: "Slots generated from each agent's hours in Pacific time",
+            icon: Calendar,
+          },
+          {
+            name: "Cal.com Embed",
+            role: "Optional live booking provider, themed with the brand accent",
+            icon: Link2,
+          },
+          {
+            name: "CRM Webhook",
+            role: "One URL receives tour bookings, calls, questions, signups, and chat messages as JSON",
+            icon: Send,
+          },
+          {
+            name: "Analytics",
+            role: "Plausible or GA4 by configuration, with events such as listing_view and tour_booked",
+            icon: BarChart3,
+          },
+          {
+            name: "Maps",
+            role: "OpenStreetMap tiles toned to the palette, or Mapbox static maps with a token",
+            icon: Map,
+          },
+        ],
+        "Security & Quality": [
+          {
+            name: "Content Security Policy",
+            role: "Meta CSP with a SHA-256 hash for every inline script and style",
+            icon: ShieldCheck,
+          },
+          {
+            name: "HTTP Headers",
+            role: "HSTS, X-Frame-Options DENY, nosniff, strict referrer policy, locked-down Permissions-Policy",
+            icon: Lock,
+          },
+          {
+            name: "axe-core + html-validate",
+            role: "Accessibility checks in real browsers and HTML validation on built pages",
+            icon: CheckCircle2,
+          },
+          {
+            name: "Playwright",
+            role: "Browser tests for booking, chat, phone layout, and screenshots",
+            icon: Eye,
+          },
+        ],
+        "Deployment & Infrastructure": [
+          {
+            name: "Vercel",
+            role: "Static hosting with automatic production builds from every push to main",
+            icon: Cloud,
+          },
+          {
+            name: "GitHub",
+            role: "Public repository used as the portfolio source",
+            icon: GitBranch,
+          },
+          {
+            name: "Deploy Script",
+            role: "Builds the site for its own address so canonical links, previews, and sitemap are correct, then publishes",
+            icon: Rocket,
+          },
+        ],
+      },
+
+      livePreview: "https://halden-rowe-demo.vercel.app",
+
+      scalability: [
+        {
+          title: "Brand Re-Skinning",
+          description:
+            "A new brokerage means one brand file and new data files. Layout code does not change, and the contrast check catches any palette that would fail accessibility.",
+        },
+        {
+          title: "Listing Expansion",
+          description:
+            "New homes are added to listings.json with photos in the assets folder. Pages, filters, similar homes, the sitemap, and the chat knowledge all update on the next build.",
+        },
+        {
+          title: "Floor Plan Expansion",
+          description:
+            "A plan is added by writing one entry keyed by listing id, with walls and a room tour. Listings without an entry simply skip the section.",
+        },
+        {
+          title: "Booking Provider Swap",
+          description:
+            "One setting moves booking from the built-in demo to Cal.com, with each agent's event link set in their data.",
+        },
+        {
+          title: "CRM Integration",
+          description:
+            "Setting one webhook URL turns every simulated submission into a real lead without touching components.",
+        },
+        {
+          title: "Chat Knowledge",
+          description:
+            "A new answer is a new entry in the chat FAQ file with a few phrasings and a reply. Tokens such as phone and name are filled from the brand file, so a re-skin carries over.",
+        },
+        {
+          title: "Static Hosting",
+          description:
+            "The output is plain files, so it can move between Vercel, Netlify, and Cloudflare Pages. Header files are included for each.",
+        },
+        {
+          title: "Analytics Choice",
+          description:
+            "Plausible or GA4 can be switched on by configuration, and every event is also available as a DOM event for any other tool.",
+        },
+        {
+          title: "Custom Domain",
+          description:
+            "A domain is added in the Vercel project settings, and the site is rebuilt for it with one environment variable.",
+        },
+        {
+          title: "Multiple Prospect Demos",
+          description:
+            "Each re-skinned brand can be deployed to its own address from one command.",
+        },
+        {
+          title: "Performance Budget",
+          description:
+            "Pages ship about 40 ms of JavaScript, the chat loads only on demand, and images are encoded at build time, so adding content does not slow the first load.",
+        },
+        {
+          title: "Configuration Safety",
+          description:
+            "The build prints a colour contrast report and the chat knowledge build fails if any template token is left unfilled, so mistakes are caught at build time and not by visitors.",
+        },
+      ],
+    },
   "nexoryn-executive-intelligence-platform": {
       category: "AI Automation",
       techIcons: [

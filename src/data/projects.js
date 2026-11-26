@@ -14,6 +14,7 @@ import coffeeBrandThumb from "../assets/project-coffee-brand-thumb.webp";
 import activismPosterThumb from "../assets/project-activism-poster-thumb.webp";
 import luxuryFashionStandeeThumb from "../assets/project-luxury-fashion-standee-thumb.webp";
 import citizenlinkThumb from "../assets/project-citizenlink-thumb.webp";
+import haldenRoweThumb from "../assets/project-halden-rowe-thumb.webp";
 
 /**
  * The project list for cards and grids: title, short description, tags, service,
@@ -81,6 +82,19 @@ export const PROJECTS = [
       "A premium real estate discovery platform combining a luxury emerald-and-gold design system with powerful property search, interactive maps, and side-by-side comparison, backed by a full-stack architecture built for agents, listings, and leads.",
     tags: ["Web Design", "Full-Stack", "Real Estate Platform"],
     photo: citizenlinkThumb,
+  },
+  {
+    slug: "halden-rowe-luxury-real-estate-brokerage-website",
+    title: "Halden Rowe: Luxury Real Estate Brokerage Website",
+    industry: "Real Estate",
+    service: "Web Development",
+    description:
+      "A high-end, re-skinnable website for a luxury real estate brokerage: search listings with filters that live in the URL, watch a floor plan play in place, book tours and calls inline from real open slots, and get answers at any hour from a built-in assistant, all on a fully static build with no server or per-message cost.",
+    tags: ["Web Design", "Real Estate", "Static Site", "Lead Generation"],
+    photo: haldenRoweThumb,
+    // Lives only in code (not in the admin database); content.js merges it
+    // into the API list so it still shows on the live portfolio.
+    codeOnly: true,
   },
   {
     slug: "nexoryn-executive-intelligence-platform",

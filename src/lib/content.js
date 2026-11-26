@@ -113,6 +113,10 @@ export function getProjects() {
       const data = await apiGet("/api/v1/projects?pageSize=50");
       if (!data?.items?.length) return PROJECTS;
       const items = data.items.map(withResolvedImages);
+      // Projects maintained in code only (flagged codeOnly) join the API list.
+      for (const p of PROJECTS) {
+        if (p.codeOnly && !items.some((i) => i.slug === p.slug)) items.push(p);
+      }
       try {
         localStorage.setItem(PROJECTS_CACHE_KEY, JSON.stringify(items));
       } catch {
