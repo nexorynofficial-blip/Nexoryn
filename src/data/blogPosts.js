@@ -37,11 +37,301 @@ export const LINKS = {
   portfolio: "/portfolio",
   performanceSeo: "/services", // wanted: /services/performance-seo
   voiceAgents: "/services", // wanted: /services/voice-ai-agents
+  websiteDevelopment: "/blog/website-development-services-whats-included-2026-pricing", // wanted: /services/website-development
+  integrations: "/services", // wanted: /services/api-integrations
 };
 
 const L = LINKS;
 
 export const BLOG_POSTS = [
+  {
+    slug: "ai-automation-company-what-they-do-cost-how-to-vet-one",
+    title: "AI Automation Company: What They Do, Cost & How to Vet One",
+    seoTitle: "AI Automation Company: Cost & How to Vet One | Nexoryn",
+    metaDescription:
+      "What an AI automation company does, what projects cost ($1,000–$110,000), and how to check a vendor's system is live in production, not a demo.",
+    category: "AI Automation",
+    datePublished: "2026-11-26",
+    dateModified: "2026-11-26",
+    readMinutes: 7,
+    excerpt:
+      "What an AI automation company really does, what projects cost, how long they take, and the questions that separate a system running in production from a recorded demo.",
+    image: "ai-thumbnail",
+    imageAlt: "AI automation company: what they do, cost, and how to vet one — Nexoryn",
+    ogImage: "/blog/images/ai-automation-company-thumbnail.png",
+    author: {
+      name: "Waseem",
+      title: "Co-Founder",
+      url: "https://www.linkedin.com/in/waseem-farooq-758a74251/",
+    },
+    byline:
+      "Written by the Nexoryn team that scopes and builds these projects — not a content writer summarizing other agencies' pages.",
+    intro:
+      "Most companies searching for an AI automation company run into the same problem: half the vendors they talk to are selling a chatbot demo dressed up as \"full automation.\" An AI automation company designs, builds, and maintains AI-driven systems that handle work your team currently does by hand — not just licenses you a tool and walks away. This guide covers what these companies actually do, what projects really cost, and how to tell a vendor whose system is live in production from one who's still showing you a recording.",
+    blocks: [
+      { type: "h2", text: "What does an AI automation company actually do?" },
+      {
+        type: "p",
+        text: "An AI automation company designs, builds, and maintains AI-driven systems that handle judgment-based work on your behalf — reading documents, routing requests, answering customer questions, and deciding what happens next — rather than just selling you a tool and leaving you to configure and run it yourself. That's the core distinction between a true automation company and a software vendor.",
+      },
+      { type: "p", text: "The distinction matters because a lot of \"AI automation\" marketing blurs the two. A real automation company:" },
+      {
+        type: "ul",
+        items: [
+          "Maps your actual workflow before building anything.",
+          "Builds or configures the AI system to fit that workflow, not a generic template.",
+          "Connects it to your existing tools (CRM, ERP, email, chat).",
+          "Stays on to monitor and fix it after launch.",
+        ],
+      },
+      {
+        type: "img",
+        imageKey: "ai-manual-to-automated",
+        width: 1600,
+        height: 900,
+        file: "ai-automation-manual-to-automated",
+        alt: "How an AI automation company turns a manual workflow into an automated one.",
+        caption: "From a manual process to an automated one.",
+      },
+
+      { type: "h3", text: "AI automation vs. RPA — what's the difference?" },
+      {
+        type: "p",
+        text: "Robotic process automation follows fixed rules: click here, copy this, paste there. AI automation handles judgment calls RPA can't — reading an unstructured email and deciding what it means, for example.",
+      },
+      {
+        type: "table",
+        head: ["", "Robotic process automation (RPA)", "AI automation"],
+        rows: [
+          ["Handles", "Fixed, rule-based steps", "Judgment-based, variable work"],
+          ["Breaks when", "The input format changes", "Rarely — it adapts within limits"],
+        ],
+      },
+
+      { type: "h2", text: "What services does an AI automation company offer?" },
+      {
+        type: "p",
+        text: "Most AI automation companies cover a handful of overlapping service lines. Knowing the names helps you ask for the right thing.",
+      },
+      {
+        type: "table",
+        head: ["Service", "What it replaces", "Typical use case"],
+        rows: [
+          ["Workflow automation", "Manual data entry and routing between systems", "Moving a lead from your website to your CRM automatically"],
+          ["Voice AI agents", "A human answering routine phone calls", "After-hours booking or support calls"],
+          ["LLM workflows & AI agents", "A person reading and summarizing documents or tickets", "Triaging support tickets, summarizing contracts"],
+          ["Data/document automation", "Manual data extraction from PDFs or forms", "Processing invoices or applications"],
+          ["Chatbot/customer-facing automation", "A support rep answering common questions", "Website chat that resolves simple requests before escalating"],
+        ],
+      },
+      {
+        type: "p",
+        text: `See how we approach [workflow automation](${L.workflowAutomation}), [LLM workflows and AI agents](${L.aiAgents}), and [voice AI agents](${L.voiceAgents}) on our services page.`,
+      },
+      {
+        type: "p",
+        text: "A vendor who can only build one of these is a specialist, not a full-service automation company. Neither is wrong — just confirm which one you're hiring before you sign.",
+      },
+
+      { type: "h2", text: "How much does an AI automation company cost?" },
+      {
+        type: "table",
+        head: ["Project type", "Typical range", "What's usually included"],
+        rows: [
+          ["Single-workflow automation", "$1,000–$10,000", "One process mapped, built, and connected to one or two tools"],
+          ["Multi-system integration", "$10,000–$35,000", "Several workflows, multiple tool connections, exception handling"],
+          ["Custom AI agent build", "$35,000–$110,000", "A bespoke agent handling judgment-based tasks across systems"],
+        ],
+      },
+      {
+        type: "p",
+        text: "Published pricing varies this much for a real reason: a platform-licensing fee and a custom build are priced on completely different models. Licensing a tool is a subscription. A custom build is a project — you're paying for the discovery, the integration work, and the ongoing monitoring, not just the software.",
+      },
+      {
+        type: "p",
+        text: "Ask which model a quote is based on before you compare two numbers side by side — a $2,000 licensing quote and a $90,000 custom-build quote aren't competing for the same job.",
+      },
+      {
+        type: "img",
+        imageKey: "ai-pricing-table",
+        width: 1122,
+        height: 1402,
+        file: "ai-automation-pricing-table",
+        alt: "AI automation pricing by project type, from single-workflow automation to custom AI agent builds.",
+        caption: "Typical AI automation costs by project type.",
+        narrow: true,
+      },
+      {
+        type: "p",
+        text: `Want the [full automation and web development pricing breakdown](${L.pricing}) for your project? Talk to us and we'll scope it with you.`,
+      },
+
+      { type: "h2", text: "How long does AI automation implementation take?" },
+      {
+        type: "table",
+        head: ["Project type", "Typical timeline"],
+        rows: [
+          ["Single-workflow automation", "1–3 weeks"],
+          ["Multi-system integration", "4–7 weeks"],
+          ["Custom AI agent build", "1–3 months"],
+        ],
+      },
+      {
+        type: "p",
+        text: "Three things stretch a timeline past the estimate. Legacy systems with no clean way to connect are one. Approval chains that need sign-off at every step are another. Messy data that needs cleanup before an AI system can trust it is the third. Ask a vendor which of these applies to your setup. A good one will flag it during discovery, not after the project starts slipping.",
+      },
+
+      { type: "h2", text: "How to tell if a vendor's automation is actually running in production" },
+      {
+        type: "p",
+        text: "This is the question most buyers forget to ask, and it's the one that separates a real vendor from a demo artist. Run through this before you sign anything:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Ask to see the system running live, not a recorded demo.",
+          "Ask what happens when it hits a case it can't handle — a good system escalates to a person; a weak one just fails silently.",
+          "Ask who monitors it after launch, and how often.",
+          "Ask for one reference you can actually contact, not a quote on a slide.",
+          "Ask how long their oldest live deployment has been running without a rebuild.",
+          "Ask what data the system needs access to, and who controls that access.",
+        ],
+      },
+      {
+        type: "img",
+        imageKey: "ai-verification-checklist",
+        width: 1086,
+        height: 1448,
+        file: "ai-automation-vendor-verification-checklist",
+        alt: "Checklist for verifying an AI automation vendor's system is live, not a demo.",
+        caption: "Use this checklist before you sign with any AI automation vendor.",
+        narrow: true,
+      },
+      {
+        type: "p",
+        text: `Not sure what to ask yet? Send us a quote you already have and we'll walk through it with you. [Request a free audit](${L.audit}).`,
+      },
+
+      { type: "h2", text: "Red flags when hiring an AI automation company" },
+      { type: "p", text: "Watch for these before you commit:" },
+      {
+        type: "ul",
+        items: [
+          "**Vague \"AI-powered\" claims with no specifics** — if they can't name the model or method, they may not know either.",
+          "**No named, checkable case study** — a result you can't verify isn't a result.",
+          "**Stale or unverifiable reviews** — check the dates, not just the star rating.",
+          "**Pricing that's never broken down** — a single lump number with no line items is a red flag, not a simplicity.",
+          "**No clear answer on who owns the code and data after delivery** — get this in writing before you start.",
+        ],
+      },
+
+      { type: "h2", text: "Why the best AI automation company also builds your website" },
+      {
+        type: "p",
+        text: "Most AI automation vendors treat your website as someone else's problem. They'll connect a chatbot or a lead-routing workflow to whatever site you already have. They won't check whether that site was actually built to carry it. Six months later, the automation vendor and the web vendor are both pointing at each other when something breaks.",
+      },
+      {
+        type: "table",
+        head: ["", "Typical AI vendor", "Typical web agency", "Nexoryn"],
+        rows: [
+          ["Builds the automation", "Yes", "No", "Yes"],
+          ["Builds the website", "No", "Yes", "Yes"],
+          ["Plans both together from the start", "Rarely", "Rarely", "Yes"],
+          [
+            "Who you call when the integration breaks",
+            "Them, probably pointing at your web vendor",
+            "Them, probably pointing at your AI vendor",
+            "One team",
+          ],
+        ],
+      },
+      {
+        type: "p",
+        text: `Read more about our [website development services](${L.websiteDevelopment}) and our [API and third-party integrations](${L.integrations}).`,
+      },
+      {
+        type: "cta",
+        text: "See how we've shipped a site and its automation as one project, not two.",
+        label: "See our work",
+        to: L.portfolio,
+      },
+
+      { type: "h2", text: "Our process and pricing model" },
+      {
+        type: "p",
+        text: "A clear process tells you more about a vendor than their website copy does. Here's the typical flow for a real engagement:",
+      },
+      {
+        type: "ol",
+        items: [
+          "**Discovery:** understanding what you actually need automated, and why.",
+          "**Process audit:** mapping the current manual workflow in detail.",
+          "**Build:** developing and configuring the automation.",
+          "**Integrate with your site:** connecting it to the systems your customers actually touch.",
+          "**Launch and monitor:** going live, then watching for exceptions and fixing them.",
+        ],
+      },
+      {
+        type: "img",
+        imageKey: "ai-process-five-steps",
+        width: 1600,
+        height: 900,
+        file: "ai-automation-process-five-steps",
+        alt: "Nexoryn's AI automation process from discovery to post-launch monitoring.",
+        caption: "Our five-step AI automation process.",
+      },
+      {
+        type: "p",
+        text: `Pricing is set after discovery and the process audit, not quoted blind before anyone has mapped what you actually need built. That's also when the timeline above gets fixed to your specific setup, so the number and the date you sign off on don't move once the build starts. For what comes next, see our [ongoing performance and SEO work](${L.performanceSeo}).`,
+      },
+
+      { type: "h2", text: "FAQ" },
+      {
+        type: "faq",
+        items: [
+          {
+            q: "How much does an AI automation company cost?",
+            a: "It depends heavily on the pricing model. A single-workflow automation runs $1,000–$10,000; a custom AI agent build runs $35,000–$110,000. Ask which model — licensing or custom build — a quote is based on before comparing numbers.",
+          },
+          {
+            q: "How long does AI automation implementation take?",
+            a: "Simple single-workflow projects typically take 1–3 weeks. Multi-system integrations run 4–7 weeks, and custom agent builds take 1–3 months, especially with legacy systems or messy data involved.",
+          },
+          {
+            q: "What's the difference between RPA and AI automation?",
+            a: "RPA follows fixed, rule-based steps and breaks when the input changes. AI automation handles judgment-based work and adapts within limits — it's built for the cases RPA can't touch.",
+          },
+          {
+            q: "What are red flags of a bad AI automation vendor?",
+            a: "Vague \"AI-powered\" claims with no specifics, no checkable case study, unverifiable reviews, and pricing that's never broken into line items. See the full list above before signing anything.",
+          },
+          {
+            q: "How do I know if a vendor's automation is actually running in production?",
+            a: "Ask to see it live, not in a recorded demo, and ask what happens when it hits a case it can't handle. A vendor who dodges either question probably doesn't have a production system yet.",
+          },
+          {
+            q: "Can an AI automation company also build or update our website?",
+            a: "Yes — and it's worth asking for upfront. A site and its automation planned together avoid the handoff gap that shows up when two separate vendors built them months apart.",
+          },
+          {
+            q: "Do I need an AI automation company, or can my team build this ourselves?",
+            a: "If you already have in-house engineering bandwidth, maybe. Most mid-sized companies don't, which is why they bring in a vendor rather than building and maintaining it themselves.",
+          },
+        ],
+      },
+
+      {
+        type: "p",
+        text: "AI automation companies vary widely in what they actually deliver, so the question isn't just \"what do they offer\" — it's whether what they've built is real, running, and maintained. Use the verification checklist above before you sign anything, and ask for a line-item quote, not a single number. If you want a team that plans your automation and your website as one project instead of two separate headaches, send us your details and we'll walk through it with you.",
+      },
+      {
+        type: "cta",
+        text: "Prefer a quicker chat? Use the contact form, or message us on WhatsApp.",
+        label: "Get a project-based quote",
+        to: "/contact",
+      },
+    ],
+  },
   {
     slug: "website-development-services-whats-included-2026-pricing",
     title: "Website Development Services: What's Included and What It Costs",

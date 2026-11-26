@@ -9,7 +9,6 @@ import { SERVICE_TABS } from "../components/ui/ServiceFilter";
 import { ShowMoreButton } from "../components/ui/ShowMoreButton";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
-import { PROJECTS } from "../data/projects";
 import { getProjects, peekProjects } from "../lib/content";
 import { useContent } from "../hooks/useContent";
 
@@ -54,6 +53,12 @@ const pad = (n) => String(n).padStart(2, "0");
 
 function ProjectCard({ project, index }) {
   const [lead, highlight] = splitTitle(project.title);
+  // Fade the photo in once it has decoded instead of letting it pop in.
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
   return (
     <Link
       to={`/portfolio/${project.slug}`}
@@ -62,13 +67,18 @@ function ProjectCard({ project, index }) {
       {/* Image */}
       <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0d0d0d]">
         <img
+          ref={imgRef}
           src={project.photo}
           alt={project.title}
           width={800}
           height={500}
-          loading="lazy"
+          loading={index < 6 ? "eager" : "lazy"}
           decoding="async"
-          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+          className={`h-full w-full object-cover transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06] ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-3 py-1 font-mono-tech text-[11px] font-semibold tracking-[0.15em] text-accent-from backdrop-blur-md">
@@ -105,6 +115,28 @@ function ProjectCard({ project, index }) {
         </span>
       </div>
     </Link>
+  );
+}
+
+/** Same footprint as ProjectCard, shown while the project list is still loading. */
+function SkeletonCard() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-[linear-gradient(160deg,rgba(107,37,8,0.25)_0%,rgba(20,8,3,0.7)_35%,#050505_70%)] p-3"
+    >
+      <div className="aspect-[16/10] animate-pulse rounded-2xl bg-white/[0.05]" />
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
+        <div className="h-6 w-4/5 animate-pulse rounded bg-white/[0.07]" />
+        <div className="mt-3 h-3 w-full animate-pulse rounded bg-white/[0.05]" />
+        <div className="mt-2 h-3 w-2/3 animate-pulse rounded bg-white/[0.05]" />
+        <div className="mt-5 flex gap-2">
+          <div className="h-5 w-16 animate-pulse rounded-full bg-white/[0.05]" />
+          <div className="h-5 w-16 animate-pulse rounded-full bg-white/[0.05]" />
+        </div>
+        <div className="mt-auto h-3 w-28 animate-pulse rounded bg-white/[0.07]" />
+      </div>
+    </div>
   );
 }
 
@@ -253,9 +285,14 @@ export default function PortfolioPage() {
     if (match) setIndustry(match);
   }, [searchParams]);
 
-  const projects = useContent(getProjects, peekProjects() ?? PROJECTS);
+  // null while loading (first-ever visit): placeholders show instead of the
+  // older bundled list, so the grid is drawn once, in its final order. Repeat
+  // visits start from the cached list and render at once.
+  const projects = useContent(getProjects, peekProjects());
+  const loading = projects == null;
 
   const visible = useMemo(() => {
+    if (!projects) return [];
     let list = projects.filter(
       (p) =>
         p.service === SERVICE_VALUE[service] &&
@@ -339,7 +376,13 @@ export default function PortfolioPage() {
           </m.div>
 
           {/* Grid — 2 wide split-layout cards per row on desktop */}
-          {visible.length > 0 ? (
+          {loading ? (
+            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: INITIAL_COUNT }, (_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : visible.length > 0 ? (
             <>
               <m.div layout className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                 <AnimatePresence mode="popLayout" initial={false}>

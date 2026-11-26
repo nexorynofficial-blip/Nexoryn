@@ -2,6 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { getProjects } from './lib/content'
+
+// Landing straight on the portfolio: start the project request now, in parallel
+// with the page chunk, instead of waiting for the page to mount.
+if (location.pathname.startsWith('/portfolio')) getProjects().catch(() => {})
 
 // Mount only after the browser has painted once. index.html's static intro
 // plate (and the home page's intro text under it) are then on screen first,
